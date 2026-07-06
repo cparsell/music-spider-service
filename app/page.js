@@ -1,47 +1,46 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import TopArtistsTab from "./components/TopArtistsTab";
+import ArtistListManager from "./components/ArtistListManager";
+import EventsTab from "./components/EventsTab";
+
+const TABS = [
+  { id: "top", label: "Top Artists" },
+  { id: "custom", label: "Custom Artists" },
+  { id: "ignored", label: "Ignore List" },
+  { id: "events", label: "Events" },
+];
 
 export default function Home() {
-  const [term, setTerm] = useState("medium_term");
-  const [artists, setArtists] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setLoading(true);
-    fetch(`/api/top-artists?term=${term}&count=200`)
-      .then((res) => {
-        console.log("Fetched response:", res);
-        return res.json();
-      })
-      .then((data) => setArtists(data.artists || []))
-      .finally(() => setLoading(false));
-  }, [term]);
+  const [tab, setTab] = useState("top");
 
   return (
     <main className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Top Artists</h1>
-      <div className="flex gap-2 mb-4">
-        {["short_term", "medium_term", "long_term"].map((t) => (
+      <h1 className="text-2xl font-bold mb-4">Music Spider</h1>
+      <div className="flex gap-2 mb-6 border-b">
+        {TABS.map((t) => (
           <button
-            key={t}
-            onClick={() => setTerm(t)}
-            className={`px-3 py-1 rounded ${term === t ? "bg-black text-white" : "bg-gray-200"}`}
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`px-3 py-2 -mb-px border-b-2 ${
+              tab === t.id
+                ? "border-black font-semibold"
+                : "border-transparent text-gray-500"
+            }`}
           >
-            {t.replace("_", " ")}
+            {t.label}
           </button>
         ))}
       </div>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <ul>
-          {artists.map((a, i) => (
-            <li key={i}>
-              {i + 1}. {a.artist} ({a.plays} plays)
-            </li>
-          ))}
-        </ul>
+
+      {tab === "top" && <TopArtistsTab />}
+      {tab === "custom" && (
+        <ArtistListManager apiPath="/api/artists/manual" addLabel="Add artist" />
       )}
+      {tab === "ignored" && (
+        <ArtistListManager apiPath="/api/artists/ignored" addLabel="Ignore artist" />
+      )}
+      {tab === "events" && <EventsTab />}
     </main>
   );
 }

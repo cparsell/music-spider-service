@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# local persistent data (artist lists, events cache)
+/data
+
 # vercel
 .vercel
 
