@@ -11,7 +11,6 @@ export default function Home() {
     fetch(`/api/top-artists?term=${term}&count=200`)
       .then((res) => {
         console.log("Fetched response:", res);
-        console.log(res.json());
         return res.json();
       })
       .then((data) => setArtists(data.artists || []))
