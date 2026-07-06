@@ -1,4 +1,4 @@
-// "use client";
+"use client";
 import { useState, useEffect } from "react";
 
 export default function Home() {
@@ -9,7 +9,11 @@ export default function Home() {
   useEffect(() => {
     setLoading(true);
     fetch(`/api/top-artists?term=${term}&count=200`)
-      .then((res) => res.json())
+      .then((res) => {
+        console.log("Fetched response:", res);
+        console.log(res.json());
+        return res.json();
+      })
       .then((data) => setArtists(data.artists || []))
       .finally(() => setLoading(false));
   }, [term]);

@@ -1,4 +1,4 @@
-import { getTopArtists } from "@/lib/tautulli";
+import { getTopArtists } from "@/lib/tautulli.js";
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
