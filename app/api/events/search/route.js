@@ -6,28 +6,18 @@ import { upsertEvent, getEvents } from "@/lib/eventsStore.js";
 export async function POST() {
   const artistList = await getCombinedArtistList();
 
-  const [
-    raEvents,
-    // tmEvents
-  ] = await Promise.all([
+  const [raEvents, tmEvents] = await Promise.all([
     searchRA(artistList),
-    // searchTMLoop(artistList),
+    searchTMLoop(artistList),
   ]);
 
-  for (const event of [
-    ...raEvents,
-    // ...tmEvents
-  ]) {
+  for (const event of [...raEvents, ...tmEvents]) {
     await upsertEvent(event);
   }
-
-  console.log("Test");
-  console.log(raEvents);
 
   return Response.json({
     events: await getEvents(),
     artistsSearched: artistList.length,
-    found: raEvents.length,
-    // + tmEvents.length,
+    found: raEvents.length + tmEvents.length,
   });
 }
