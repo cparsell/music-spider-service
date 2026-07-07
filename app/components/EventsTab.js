@@ -15,6 +15,7 @@ export default function EventsTab() {
   const [statusMessage, setStatusMessage] = useState("");
   const [statusError, setStatusError] = useState(false);
   const [progress, setProgress] = useState(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const loadEvents = () => {
     setLoading(true);
@@ -79,6 +80,24 @@ export default function EventsTab() {
     await fetch("/api/events/search/cancel", { method: "POST" });
   };
 
+  const sendEmail = async () => {
+    setSendingEmail(true);
+    setStatusMessage("Sending email...");
+    setStatusError(false);
+    try {
+      const res = await fetch("/api/events/email", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send email");
+      setStatusMessage(`Email sent with ${data.count} upcoming events.`);
+      setStatusError(false);
+    } catch (err) {
+      setStatusMessage(err.message);
+      setStatusError(true);
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   const deleteEvent = async (id) => {
     const res = await fetch("/api/events", {
       method: "DELETE",
@@ -120,6 +139,13 @@ export default function EventsTab() {
                 Cancel
               </button>
             )}
+            <button
+              onClick={sendEmail}
+              disabled={sendingEmail}
+              className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
+            >
+              {sendingEmail ? "Sending..." : "Send Email"}
+            </button>
           </div>
           <StatusBar message={statusMessage} error={statusError} progress={progress} />
         </>

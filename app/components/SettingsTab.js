@@ -111,11 +111,25 @@ const SECTIONS = [
     ],
   },
   {
-    title: "Email & Calendar (future feature)",
+    title: "Email (Gmail)",
+    description:
+      "To send event emails, connect a Google account via OAuth: in the Google Cloud Console, create/select a project, enable the Gmail API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI below as an authorized redirect URI. Enter the Client ID/Secret below, then click \"Connect Google Account.\"",
+    warning:
+      'Connecting a Google account grants this app permission to send email as you, via the Gmail API\'s "gmail.send" scope (send-only - it cannot read, delete, or otherwise access your existing mail). If you plan to use this feature, you should review this app\'s source code yourself first to confirm there is no misuse of that access.',
     fields: [
-      { key: "emailRecipient", label: "Email recipient", type: "text" },
-      { key: "calendarId", label: "Calendar ID", type: "text" },
+      { key: "emailRecipient", label: "Recipient email", type: "text" },
+      { key: "googleClientId", label: "Google Client ID", type: "text" },
+      {
+        key: "googleClientSecret",
+        label: "Google Client Secret",
+        type: "password",
+      },
+      { key: "googleRedirectUri", label: "Google Redirect URI", type: "text" },
     ],
+  },
+  {
+    title: "Calendar (future feature)",
+    fields: [{ key: "calendarId", label: "Calendar ID", type: "text" }],
   },
 ];
 
@@ -209,6 +223,99 @@ function SpotifyConnection({ redirectUri }) {
             className="text-sm px-2 py-0.5 rounded bg-green-600 text-white"
           >
             Connect Spotify Account
+          </button>
+        </>
+      )}
+      {statusMessage && (
+        <span className="text-sm text-gray-600">({statusMessage})</span>
+      )}
+    </div>
+  );
+}
+
+function GoogleConnection({ redirectUri }) {
+  const [connected, setConnected] = useState(null);
+  const [statusMessage, setStatusMessage] = useState("");
+
+  const loadStatus = () => {
+    fetch("/api/google/status")
+      .then((res) => res.json())
+      .then((data) => setConnected(data.connected));
+  };
+
+  useEffect(() => {
+    loadStatus();
+
+    const params = new URLSearchParams(window.location.search);
+    const googleParam = params.get("google");
+    if (googleParam) {
+      setStatusMessage(googleParam);
+      params.delete("google");
+      params.delete("tab");
+      const rest = params.toString();
+      window.history.replaceState(
+        null,
+        "",
+        rest ? `?${rest}` : window.location.pathname,
+      );
+    }
+
+    const onMessage = (event) => {
+      if (event.data?.source !== "google-oauth") return;
+      // Same loopback-host caveat as the Spotify popup - see there for why.
+      try {
+        const eventUrl = new URL(event.origin);
+        const isLoopback =
+          eventUrl.hostname === "localhost" ||
+          eventUrl.hostname === "127.0.0.1";
+        if (!isLoopback || eventUrl.port !== window.location.port) return;
+      } catch {
+        return;
+      }
+      setStatusMessage(event.data.message);
+      loadStatus();
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
+  const disconnect = async () => {
+    await fetch("/api/google/status", { method: "DELETE" });
+    setConnected(false);
+  };
+
+  const connect = () => {
+    let base = "";
+    try {
+      base = new URL(redirectUri).origin;
+    } catch {
+      base = "";
+    }
+    window.open(`${base}/api/google`, "google-auth", "width=500,height=700");
+  };
+
+  return (
+    <div className="mt-2 flex items-center gap-3">
+      {connected === null ? null : connected ? (
+        <>
+          <span className="text-sm text-green-700">Connected</span>
+          <button
+            type="button"
+            onClick={disconnect}
+            className="text-sm text-red-600 hover:underline"
+          >
+            Disconnect
+          </button>
+        </>
+      ) : (
+        <>
+          <span className="text-sm text-gray-500">Not connected</span>
+          <button
+            type="button"
+            onClick={connect}
+            className="text-sm px-2 py-0.5 rounded bg-green-600 text-white"
+          >
+            Connect Google Account
           </button>
         </>
       )}
@@ -379,6 +486,16 @@ export default function SettingsTab() {
         {SECTIONS.map((section) => (
           <div key={section.title}>
             <h2 className="font-semibold mb-2">{section.title}</h2>
+            {section.description && (
+              <p className="text-sm text-gray-600 mb-2">
+                {section.description}
+              </p>
+            )}
+            {section.warning && (
+              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded p-2 mb-3">
+                ⚠️ {section.warning}
+              </p>
+            )}
             <div className="flex flex-col gap-2">
               {section.fields.map((f) =>
                 f.type === "switch" ? (
@@ -418,6 +535,21 @@ export default function SettingsTab() {
             </div>
             {section.title === "Spotify" && (
               <SpotifyConnection redirectUri={form.spotifyRedirectUri} />
+            )}
+            {section.title === "Email (Gmail)" && (
+              <>
+                <GoogleConnection redirectUri={form.googleRedirectUri} />
+                <label className="flex items-center gap-2 text-sm mt-3">
+                  <input
+                    type="checkbox"
+                    checked={form.weeklyEmailEnabled}
+                    onChange={(e) =>
+                      updateField("weeklyEmailEnabled", e.target.checked)
+                    }
+                  />
+                  Send a weekly email digest of upcoming events
+                </label>
+              </>
             )}
           </div>
         ))}
