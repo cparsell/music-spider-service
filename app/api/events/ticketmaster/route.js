@@ -1,5 +1,6 @@
 import { sleep } from "@/lib/common.js";
 import { getResolvedConfig } from "@/lib/settings.js";
+import { isCancelRequested } from "@/lib/searchProgress.js";
 
 const TICKETMASTER_URL =
   "https://app.ticketmaster.com/discovery/v2/events.json";
@@ -17,9 +18,10 @@ const TICKETMASTER_URL =
  * API Explorer: https://developer.ticketmaster.com/api-explorer/v2/
  * Reference: https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/#search-events-v2
  * @param {array} artistsArr
+ * @param {(completed: number, total: number) => void} [onProgress] called after each artist is searched
  * @returns {array} matched events, shaped for lib/eventsStore.js
  */
-export const searchTMLoop = async (artistsArr) => {
+export const searchTMLoop = async (artistsArr, onProgress) => {
   const resolved = await getResolvedConfig();
   const config = {
     apiKey: resolved.ticketmasterApiKey,
@@ -30,9 +32,11 @@ export const searchTMLoop = async (artistsArr) => {
 
   let results = [];
   try {
-    for (const artist of artistsArr) {
-      const data = await ticketSearch(artist, artistsArr, config);
+    for (let i = 0; i < artistsArr.length; i++) {
+      if (isCancelRequested()) break;
+      const data = await ticketSearch(artistsArr[i], artistsArr, config);
       if (data) results.push(...data);
+      onProgress?.(i + 1, artistsArr.length);
       await sleep(180);
     }
 

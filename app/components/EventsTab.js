@@ -14,6 +14,7 @@ export default function EventsTab() {
   const [searching, setSearching] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusError, setStatusError] = useState(false);
+  const [progress, setProgress] = useState(null);
 
   const loadEvents = () => {
     setLoading(true);
@@ -37,23 +38,45 @@ export default function EventsTab() {
 
   const runSearch = async () => {
     setSearching(true);
-    setStatusMessage("Searching Ticketmaster and Resident Advisor...");
+    setStatusMessage("Starting search...");
     setStatusError(false);
+    setProgress(null);
+
+    const pollProgress = setInterval(async () => {
+      try {
+        const res = await fetch("/api/events/search/progress");
+        const data = await res.json();
+        if (data.phase) setStatusMessage(data.phase);
+        setProgress(data.total > 0 ? { completed: data.completed, total: data.total } : null);
+      } catch {
+        // ignore transient poll errors, next tick will retry
+      }
+    }, 1000);
+
     try {
       const res = await fetch("/api/events/search", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Search failed");
       setEvents(data.events || []);
       setStatusMessage(
-        `Searched ${data.artistsSearched} artists, found ${data.found} matching events.`,
+        data.canceled
+          ? `Search canceled. Searched ${data.artistsSearched} artists, found ${data.found} matching events before stopping.`
+          : `Searched ${data.artistsSearched} artists, found ${data.found} matching events.`,
       );
       setStatusError(false);
     } catch (err) {
       setStatusMessage(err.message);
       setStatusError(true);
     } finally {
+      clearInterval(pollProgress);
+      setProgress(null);
       setSearching(false);
     }
+  };
+
+  const cancelSearch = async () => {
+    setStatusMessage("Canceling search...");
+    await fetch("/api/events/search/cancel", { method: "POST" });
   };
 
   const deleteEvent = async (id) => {
@@ -89,8 +112,16 @@ export default function EventsTab() {
             >
               {searching ? "Searching..." : "Run Search"}
             </button>
+            {searching && (
+              <button
+                onClick={cancelSearch}
+                className="px-3 py-1 rounded bg-red-600 text-white"
+              >
+                Cancel
+              </button>
+            )}
           </div>
-          <StatusBar message={statusMessage} error={statusError} />
+          <StatusBar message={statusMessage} error={statusError} progress={progress} />
         </>
       }
     >

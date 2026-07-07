@@ -1,6 +1,7 @@
 import { queryRAEventListings } from "@/lib/resAdv.js";
 import { formatDateDashes, formatDateTimeB } from "@/lib/common.js";
 import { getResolvedConfig } from "@/lib/settings.js";
+import { isCancelRequested } from "@/lib/searchProgress.js";
 
 /**
  * ----------------------------------------------------------------------------------------------------------------
@@ -39,6 +40,7 @@ const fetchAllPagesForArea = async (areaId) => {
   let allEvents = [];
   console.debug(`Searching RA for events in Area: ${areaId}`);
   const fetchPage = async (page) => {
+    if (isCancelRequested()) return allEvents;
     const result = await fetchEventsForArea(returnRAOptions(page, areaId));
     allEvents = allEvents.concat(result.events);
     if (page < result.totalPages) {
