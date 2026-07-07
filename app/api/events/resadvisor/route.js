@@ -1,12 +1,6 @@
 import { queryRAEventListings } from "@/lib/resAdv.js";
 import { formatDateDashes, formatDateTimeB } from "@/lib/common.js";
-
-// Comma-separated Resident Advisor area IDs to search, e.g. "518,552"
-const RA_REGIONS = (process.env.RA_REGION || "218")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean)
-  .map((id) => parseInt(id, 10));
+import { getResolvedConfig } from "@/lib/settings.js";
 
 /**
  * ----------------------------------------------------------------------------------------------------------------
@@ -100,6 +94,14 @@ const returnRAOptions = (page, area) => {
  * @returns {array} matched events, shaped for lib/eventsStore.js
  */
 export const searchRA = async (artistList) => {
+  const config = await getResolvedConfig();
+  // Comma-separated Resident Advisor area IDs to search, e.g. "518,552"
+  const RA_REGIONS = (config.raRegion || "218")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((id) => parseInt(id, 10));
+
   if (RA_REGIONS.length === 0) {
     console.info("searchRA() - No RA_REGION configured, skipping");
     return [];

@@ -40,6 +40,16 @@ export default function EventsTab() {
     }
   };
 
+  const deleteEvent = async (id) => {
+    const res = await fetch("/api/events", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const data = await res.json();
+    setEvents(data.events || []);
+  };
+
   const sortedEvents = [...events].sort(
     (a, b) => new Date(a.date) - new Date(b.date),
   );
@@ -75,7 +85,7 @@ export default function EventsTab() {
                   className="w-24 h-24 object-cover rounded shrink-0"
                 />
               )}
-              <div>
+              <div className="flex-1">
                 <p className="font-semibold">{event.eName}</p>
                 <p className="text-sm text-gray-600">
                   {formatDate(event.date)}
@@ -104,6 +114,12 @@ export default function EventsTab() {
                   ))}
                 </div>
               </div>
+              <button
+                onClick={() => deleteEvent(event.id)}
+                className="text-sm text-red-600 hover:underline self-start"
+              >
+                delete
+              </button>
             </li>
           ))}
         </ul>

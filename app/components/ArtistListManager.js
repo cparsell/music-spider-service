@@ -72,19 +72,23 @@ export default function ArtistListManager({ apiPath, addLabel }) {
       ) : artists.length === 0 ? (
         <p className="text-gray-500">No artists yet.</p>
       ) : (
-        <ul>
-          {artists.map((name) => (
-            <li key={name} className="flex items-center gap-2 py-1">
-              <span>{name}</span>
-              <button
-                onClick={() => removeArtist(name)}
-                className="text-sm text-red-600 hover:underline"
-              >
-                remove
-              </button>
-            </li>
-          ))}
-        </ul>
+        <table className="w-full max-w-md border-collapse">
+          <tbody>
+            {artists.map((name) => (
+              <tr key={name} className="border-b last:border-0">
+                <td className="py-1 pr-4">{name}</td>
+                <td className="py-1">
+                  <button
+                    onClick={() => removeArtist(name)}
+                    className="text-sm text-red-600 hover:underline"
+                  >
+                    remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );

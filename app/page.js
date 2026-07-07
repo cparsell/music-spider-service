@@ -3,16 +3,22 @@ import { useState } from "react";
 import TopArtistsTab from "./components/TopArtistsTab";
 import ArtistListManager from "./components/ArtistListManager";
 import EventsTab from "./components/EventsTab";
+import SettingsTab from "./components/SettingsTab";
 
 const TABS = [
   { id: "top", label: "Top Artists" },
   { id: "custom", label: "Custom Artists" },
   { id: "ignored", label: "Ignore List" },
   { id: "events", label: "Events" },
+  { id: "settings", label: "Settings" },
 ];
 
 export default function Home() {
-  const [tab, setTab] = useState("top");
+  const [tab, setTab] = useState(() => {
+    if (typeof window === "undefined") return "top";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("tab") || "top";
+  });
 
   return (
     <main className="p-8">
@@ -41,6 +47,7 @@ export default function Home() {
         <ArtistListManager apiPath="/api/artists/ignored" addLabel="Ignore artist" />
       )}
       {tab === "events" && <EventsTab />}
+      {tab === "settings" && <SettingsTab />}
     </main>
   );
 }

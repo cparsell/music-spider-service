@@ -1,4 +1,5 @@
 import { sleep } from "@/lib/common.js";
+import { getResolvedConfig } from "@/lib/settings.js";
 
 const TICKETMASTER_URL =
   "https://app.ticketmaster.com/discovery/v2/events.json";
@@ -19,10 +20,12 @@ const TICKETMASTER_URL =
  * @returns {array} matched events, shaped for lib/eventsStore.js
  */
 export const searchTMLoop = async (artistsArr) => {
+  const resolved = await getResolvedConfig();
   const config = {
-    latlong: process.env.LAT_LONG,
-    radius: process.env.RADIUS,
-    units: process.env.UNITS,
+    apiKey: resolved.ticketmasterApiKey,
+    latlong: resolved.latLong,
+    radius: resolved.radius,
+    units: resolved.units,
   };
 
   let results = [];
@@ -156,6 +159,7 @@ const tmSearch = async (keyword, config) => {
     config.latlong,
     config.radius,
     config.units,
+    config.apiKey,
   );
 
   try {
@@ -185,6 +189,7 @@ const tmSearch = async (keyword, config) => {
         config.latlong,
         config.radius,
         config.units,
+        config.apiKey,
       );
       const nextPage = await fetch(TICKETMASTER_URL + params);
       const nextPageParsed = await nextPage.json();
@@ -207,8 +212,8 @@ const tmSearch = async (keyword, config) => {
  * @param {number} pageSize number of results returned in each response
  * @returns {string} params encoded parameters for Ticketmaster API query
  */
-const returnTMParams = (keyword, page, pageSize, latlong, radius, units) => {
-  let params = `?apikey=${process.env.TICKETMASTER_API_KEY}`;
+const returnTMParams = (keyword, page, pageSize, latlong, radius, units, apiKey) => {
+  let params = `?apikey=${apiKey}`;
   params += `&latlong=${latlong}`;
   params += `&radius=${radius}`;
   params += `&unit=${units}`;
