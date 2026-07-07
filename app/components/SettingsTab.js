@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import StatusBar from "./StatusBar";
+import TabLayout from "./TabLayout";
 
 const ARTIST_SOURCES = [
   {
@@ -296,123 +297,131 @@ export default function SettingsTab() {
           : "";
 
   return (
-    <div className="h-full overflow-y-auto flex flex-col gap-6 w-full">
-      <StatusBar message={statusText} error={saveState === "error"} />
-
-      <div>
-        <h2 className="font-semibold mb-2">Artist Source</h2>
-        <div className="flex flex-col gap-3">
-          {ARTIST_SOURCES.map((s) => (
-            <label
-              key={s.value}
-              className="flex items-start gap-3 border rounded p-3 cursor-pointer"
-            >
-              <input
-                type="radio"
-                name="artistSource"
-                checked={form.artistSource === s.value}
-                onChange={() => updateField("artistSource", s.value)}
-                className="mt-1"
-              />
-              <div>
-                <p className="font-medium">{s.label}</p>
-                <p className="text-sm text-gray-600">{s.description}</p>
-              </div>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h2 className="font-semibold mb-2">Event Search Artist Terms</h2>
-        <p className="text-sm text-gray-600 mb-2">
-          Which top-artists window(s) to pull from when building the artist list
-          used for event searches. Selecting more than one combines them using
-          the Combined Top Artists Mode below.
-        </p>
-        <div className="flex flex-col gap-2">
-          {EVENT_SEARCH_TERM_OPTIONS.map((t) => (
-            <label key={t.value} className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.eventSearchTerms?.includes(t.value) ?? false}
-                onChange={(e) =>
-                  toggleEventSearchTerm(t.value, e.target.checked)
-                }
-              />
-              {t.label}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h2 className="font-semibold mb-2">Combined Top Artists Mode</h2>
-        <div className="flex flex-col gap-3">
-          {COMBINED_MODES.map((m) => (
-            <label
-              key={m.value}
-              className="flex items-start gap-3 border rounded p-3 cursor-pointer"
-            >
-              <input
-                type="radio"
-                name="combinedTopArtistsMode"
-                checked={form.combinedTopArtistsMode === m.value}
-                onChange={() => updateField("combinedTopArtistsMode", m.value)}
-                className="mt-1"
-              />
-              <div>
-                <p className="font-medium">{m.label}</p>
-                <p className="text-sm text-gray-600">{m.description}</p>
-              </div>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {SECTIONS.map((section) => (
-        <div key={section.title}>
-          <h2 className="font-semibold mb-2">{section.title}</h2>
-          <div className="flex flex-col gap-2">
-            {section.fields.map((f) =>
-              f.type === "switch" ? (
-                <div key={f.key} className="flex flex-col gap-1 text-sm">
-                  {f.label}
-                  <div className="flex gap-2">
-                    {f.options.map((o) => (
-                      <button
-                        key={o.value}
-                        type="button"
-                        onClick={() => updateField(f.key, o.value)}
-                        className={`px-3 py-1 rounded text-sm ${
-                          form[f.key] === o.value
-                            ? "bg-black text-white"
-                            : "bg-gray-200"
-                        }`}
-                      >
-                        {o.label}
-                      </button>
-                    ))}
-                  </div>
+    <TabLayout
+      controls={
+        <StatusBar message={statusText} error={saveState === "error"} />
+      }
+    >
+      <div className="flex flex-col gap-6 w-full pr-3">
+        <div>
+          <h2 className="font-semibold mb-2">Artist Source</h2>
+          <div className="flex flex-col gap-3">
+            {ARTIST_SOURCES.map((s) => (
+              <label
+                key={s.value}
+                className="flex items-start gap-3 border rounded p-3 cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  name="artistSource"
+                  checked={form.artistSource === s.value}
+                  onChange={() => updateField("artistSource", s.value)}
+                  className="mt-1"
+                />
+                <div>
+                  <p className="font-medium">{s.label}</p>
+                  <p className="text-sm text-gray-600">{s.description}</p>
                 </div>
-              ) : (
-                <label key={f.key} className="flex flex-col gap-1 text-sm">
-                  {f.label}
-                  <input
-                    type={f.type}
-                    value={form[f.key] ?? ""}
-                    onChange={(e) => updateField(f.key, e.target.value, f.type)}
-                    className="border rounded px-2 py-1"
-                  />
-                </label>
-              ),
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="font-semibold mb-2">Event Search Artist Terms</h2>
+          <p className="text-sm text-gray-600 mb-2">
+            Which top-artists window(s) to pull from when building the artist
+            list used for event searches. Selecting more than one combines them
+            using the Combined Top Artists Mode below.
+          </p>
+          <div className="flex flex-col gap-2">
+            {EVENT_SEARCH_TERM_OPTIONS.map((t) => (
+              <label key={t.value} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.eventSearchTerms?.includes(t.value) ?? false}
+                  onChange={(e) =>
+                    toggleEventSearchTerm(t.value, e.target.checked)
+                  }
+                />
+                {t.label}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="font-semibold mb-2">Combined Top Artists Mode</h2>
+          <div className="flex flex-col gap-3">
+            {COMBINED_MODES.map((m) => (
+              <label
+                key={m.value}
+                className="flex items-start gap-3 border rounded p-3 cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  name="combinedTopArtistsMode"
+                  checked={form.combinedTopArtistsMode === m.value}
+                  onChange={() =>
+                    updateField("combinedTopArtistsMode", m.value)
+                  }
+                  className="mt-1"
+                />
+                <div>
+                  <p className="font-medium">{m.label}</p>
+                  <p className="text-sm text-gray-600">{m.description}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {SECTIONS.map((section) => (
+          <div key={section.title}>
+            <h2 className="font-semibold mb-2">{section.title}</h2>
+            <div className="flex flex-col gap-2">
+              {section.fields.map((f) =>
+                f.type === "switch" ? (
+                  <div key={f.key} className="flex flex-col gap-1 text-sm">
+                    {f.label}
+                    <div className="flex gap-2">
+                      {f.options.map((o) => (
+                        <button
+                          key={o.value}
+                          type="button"
+                          onClick={() => updateField(f.key, o.value)}
+                          className={`px-3 py-1 rounded text-sm ${
+                            form[f.key] === o.value
+                              ? "bg-black text-white"
+                              : "bg-gray-200"
+                          }`}
+                        >
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <label key={f.key} className="flex flex-col gap-1 text-sm">
+                    {f.label}
+                    <input
+                      type={f.type}
+                      value={form[f.key] ?? ""}
+                      onChange={(e) =>
+                        updateField(f.key, e.target.value, f.type)
+                      }
+                      className="border rounded px-2 py-1"
+                    />
+                  </label>
+                ),
+              )}
+            </div>
+            {section.title === "Spotify" && (
+              <SpotifyConnection redirectUri={form.spotifyRedirectUri} />
             )}
           </div>
-          {section.title === "Spotify" && (
-            <SpotifyConnection redirectUri={form.spotifyRedirectUri} />
-          )}
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </TabLayout>
   );
 }

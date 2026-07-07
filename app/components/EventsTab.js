@@ -100,9 +100,12 @@ export default function EventsTab() {
             No events yet. Run a search to find some.
           </p>
         ) : (
-          <ul className="flex flex-col gap-4">
+          <ul className="flex flex-wrap gap-4 overflow-auto">
             {sortedEvents.map((event) => (
-              <li key={event.id} className="flex gap-4 border rounded p-3">
+              <li
+                key={event.id}
+                className="flex gap-4 border rounded p-3 flex-1 min-w-[320px] max-w-md"
+              >
                 {event.image && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -121,10 +124,14 @@ export default function EventsTab() {
                     {event.city ? `, ${event.city}` : ""}
                   </p>
                   {event.address && (
-                    <p className="text-xs text-gray-500">{event.address}</p>
+                    <p className="text-xs text-gray-500">
+                      {event.address.trim()}
+                    </p>
                   )}
                   {event.acts?.length > 0 && (
-                    <p className="text-sm mt-1">Acts: {event.acts.join(", ")}</p>
+                    <p className="text-sm mt-1">
+                      Acts: {event.acts.join(", ")}
+                    </p>
                   )}
                   <div className="flex gap-2 mt-1">
                     {event.urls?.map((u) => (
