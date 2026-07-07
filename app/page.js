@@ -21,33 +21,45 @@ export default function Home() {
   });
 
   return (
-    <main className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Music Spider</h1>
-      <div className="flex gap-2 mb-6 border-b">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`px-3 py-2 -mb-px border-b-2 ${
-              tab === t.id
-                ? "border-black font-semibold"
-                : "border-transparent text-gray-500"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+    <main className="h-screen overflow-hidden flex flex-col items-center">
+      <div className="w-full max-w-5xl h-full flex flex-col px-8">
+        <div className="shrink-0 pt-8">
+          <h1 className="text-2xl font-bold mb-4">Music Spider</h1>
+          <div className="flex gap-2 mb-6 border-b">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`px-3 py-2 -mb-px border-b-2 ${
+                  tab === t.id
+                    ? "border-black font-semibold"
+                    : "border-transparent text-gray-500"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-      {tab === "top" && <TopArtistsTab />}
-      {tab === "custom" && (
-        <ArtistListManager apiPath="/api/artists/manual" addLabel="Add artist" />
-      )}
-      {tab === "ignored" && (
-        <ArtistListManager apiPath="/api/artists/ignored" addLabel="Ignore artist" />
-      )}
-      {tab === "events" && <EventsTab />}
-      {tab === "settings" && <SettingsTab />}
+        <div className="flex-1 min-h-0 pb-8">
+          {tab === "top" && <TopArtistsTab />}
+          {tab === "custom" && (
+            <ArtistListManager
+              apiPath="/api/artists/manual"
+              addLabel="Add artist"
+            />
+          )}
+          {tab === "ignored" && (
+            <ArtistListManager
+              apiPath="/api/artists/ignored"
+              addLabel="Ignore artist"
+            />
+          )}
+          {tab === "events" && <EventsTab />}
+          {tab === "settings" && <SettingsTab />}
+        </div>
+      </div>
     </main>
   );
 }

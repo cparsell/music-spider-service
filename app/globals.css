@@ -14,7 +14,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #0b0b0b;
     --foreground: #ededed;
   }
 }
@@ -23,4 +23,18 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Darken the scrollbar track slightly relative to the page background,
+   leaving the thumb ("pill") at its default appearance.
+   Note: var() is unreliable inside ::-webkit-scrollbar* pseudo-elements in
+   most browsers, so these use literal colors instead of a CSS variable. */
+::-webkit-scrollbar-track {
+  background: #e3e3e3;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: #252525;
+  }
 }

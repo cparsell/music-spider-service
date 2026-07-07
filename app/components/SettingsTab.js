@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import StatusBar from "./StatusBar";
 
 const ARTIST_SOURCES = [
   {
@@ -10,7 +11,8 @@ const ARTIST_SOURCES = [
   {
     value: "spotify",
     label: "Spotify only",
-    description: "Your Spotify top artists (requires connecting your account below).",
+    description:
+      "Your Spotify top artists (requires connecting your account below).",
   },
   {
     value: "both",
@@ -20,18 +22,24 @@ const ARTIST_SOURCES = [
   },
 ];
 
+const EVENT_SEARCH_TERM_OPTIONS = [
+  { value: "short_term", label: "Short term (~4 weeks)" },
+  { value: "medium_term", label: "Medium term (~6 months)" },
+  { value: "long_term", label: "Long term (all time)" },
+];
+
 const COMBINED_MODES = [
   {
     value: "weighted",
     label: "Weighted score",
     description:
-      "Combines all three windows into one score per artist, weighting recent plays more heavily than older ones.",
+      "Combines whichever selected 'terms lists' into one list, weighting recent plays more heavily than older ones while still including old favorites.",
   },
   {
     value: "union",
     label: "Union of top lists",
     description:
-      "Takes the top artists from each individual window (short/medium/long term) and merges them into one deduplicated list.",
+      "Takes the top artists from each individual window (seletected terms) and merges them into one deduplicated list.",
   },
 ];
 
@@ -51,7 +59,12 @@ const SECTIONS = [
     fields: [
       { key: "tautulliUrl", label: "URL", type: "text" },
       { key: "tautulliApiKey", label: "API Key", type: "password" },
-      { key: "tautulliMusicSectionId", label: "Music Section ID", type: "text" },
+      {
+        key: "tautulliMusicSectionId",
+        label:
+          "Music Section ID (optional, limits to a specific library - can be found in Tautulli's library settings. Tautulli > Libraries > Music, then it shows in the URL, e.g. .../library?section_id=X)",
+        type: "text",
+      },
     ],
   },
   {
@@ -68,7 +81,15 @@ const SECTIONS = [
       { key: "ticketmasterApiKey", label: "API Key", type: "password" },
       { key: "latLong", label: "Lat/Long", type: "text" },
       { key: "radius", label: "Radius", type: "text" },
-      { key: "units", label: "Units (miles/km)", type: "text" },
+      {
+        key: "units",
+        label: "Units",
+        type: "switch",
+        options: [
+          { value: "miles", label: "Miles" },
+          { value: "km", label: "Kilometers" },
+        ],
+      },
     ],
   },
   {
@@ -117,7 +138,11 @@ function SpotifyConnection({ redirectUri }) {
       params.delete("spotify");
       params.delete("tab");
       const rest = params.toString();
-      window.history.replaceState(null, "", rest ? `?${rest}` : window.location.pathname);
+      window.history.replaceState(
+        null,
+        "",
+        rest ? `?${rest}` : window.location.pathname,
+      );
     }
 
     const onMessage = (event) => {
@@ -129,7 +154,8 @@ function SpotifyConnection({ redirectUri }) {
       try {
         const eventUrl = new URL(event.origin);
         const isLoopback =
-          eventUrl.hostname === "localhost" || eventUrl.hostname === "127.0.0.1";
+          eventUrl.hostname === "localhost" ||
+          eventUrl.hostname === "127.0.0.1";
         if (!isLoopback || eventUrl.port !== window.location.port) return;
       } catch {
         return;
@@ -192,10 +218,13 @@ function SpotifyConnection({ redirectUri }) {
   );
 }
 
+const SAVE_DEBOUNCE_MS = 600;
+
 export default function SettingsTab() {
   const [form, setForm] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saveState, setSaveState] = useState("idle"); // idle | pending | saving | saved | error
+  const skipNextSave = useRef(true);
+  const debounceRef = useRef(null);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -203,31 +232,73 @@ export default function SettingsTab() {
       .then(setForm);
   }, []);
 
+  // Auto-save: any change to `form` (text, radio, checkbox) is persisted a
+  // short beat after the user stops changing things, instead of on every
+  // keystroke or requiring a manual save button.
+  useEffect(() => {
+    if (!form) return;
+    if (skipNextSave.current) {
+      // Don't save immediately after the initial GET populates the form.
+      skipNextSave.current = false;
+      return;
+    }
+
+    setSaveState("pending");
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setSaveState("saving");
+      try {
+        const res = await fetch("/api/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        if (!res.ok) throw new Error("Failed to save settings");
+        setSaveState("saved");
+      } catch {
+        setSaveState("error");
+      }
+    }, SAVE_DEBOUNCE_MS);
+
+    return () => clearTimeout(debounceRef.current);
+  }, [form]);
+
   const updateField = (key, value, type) => {
-    setSaved(false);
-    setForm((f) => ({ ...f, [key]: type === "number" ? Number(value) : value }));
+    setForm((f) => ({
+      ...f,
+      [key]: type === "number" ? Number(value) : value,
+    }));
   };
 
-  const save = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const res = await fetch("/api/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      setForm(await res.json());
-      setSaved(true);
-    } finally {
-      setSaving(false);
-    }
+  const toggleEventSearchTerm = (term, checked) => {
+    setForm((f) => {
+      const current = f.eventSearchTerms || [];
+      if (checked) {
+        return current.includes(term)
+          ? f
+          : { ...f, eventSearchTerms: [...current, term] };
+      }
+      const next = current.filter((t) => t !== term);
+      if (next.length === 0) return f; // always keep at least one selected
+      return { ...f, eventSearchTerms: next };
+    });
   };
 
   if (!form) return <p>Loading...</p>;
 
+  const statusText =
+    saveState === "pending" || saveState === "saving"
+      ? "Saving..."
+      : saveState === "saved"
+        ? "All changes saved"
+        : saveState === "error"
+          ? "Failed to save changes"
+          : "";
+
   return (
-    <form onSubmit={save} className="flex flex-col gap-6 max-w-lg">
+    <div className="h-full overflow-y-auto flex flex-col gap-6 w-full">
+      <StatusBar message={statusText} error={saveState === "error"} />
+
       <div>
         <h2 className="font-semibold mb-2">Artist Source</h2>
         <div className="flex flex-col gap-3">
@@ -247,6 +318,29 @@ export default function SettingsTab() {
                 <p className="font-medium">{s.label}</p>
                 <p className="text-sm text-gray-600">{s.description}</p>
               </div>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h2 className="font-semibold mb-2">Event Search Artist Terms</h2>
+        <p className="text-sm text-gray-600 mb-2">
+          Which top-artists window(s) to pull from when building the artist list
+          used for event searches. Selecting more than one combines them using
+          the Combined Top Artists Mode below.
+        </p>
+        <div className="flex flex-col gap-2">
+          {EVENT_SEARCH_TERM_OPTIONS.map((t) => (
+            <label key={t.value} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.eventSearchTerms?.includes(t.value) ?? false}
+                onChange={(e) =>
+                  toggleEventSearchTerm(t.value, e.target.checked)
+                }
+              />
+              {t.label}
             </label>
           ))}
         </div>
@@ -280,34 +374,45 @@ export default function SettingsTab() {
         <div key={section.title}>
           <h2 className="font-semibold mb-2">{section.title}</h2>
           <div className="flex flex-col gap-2">
-            {section.fields.map((f) => (
-              <label key={f.key} className="flex flex-col gap-1 text-sm">
-                {f.label}
-                <input
-                  type={f.type}
-                  value={form[f.key] ?? ""}
-                  onChange={(e) => updateField(f.key, e.target.value, f.type)}
-                  className="border rounded px-2 py-1"
-                />
-              </label>
-            ))}
+            {section.fields.map((f) =>
+              f.type === "switch" ? (
+                <div key={f.key} className="flex flex-col gap-1 text-sm">
+                  {f.label}
+                  <div className="flex gap-2">
+                    {f.options.map((o) => (
+                      <button
+                        key={o.value}
+                        type="button"
+                        onClick={() => updateField(f.key, o.value)}
+                        className={`px-3 py-1 rounded text-sm ${
+                          form[f.key] === o.value
+                            ? "bg-black text-white"
+                            : "bg-gray-200"
+                        }`}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <label key={f.key} className="flex flex-col gap-1 text-sm">
+                  {f.label}
+                  <input
+                    type={f.type}
+                    value={form[f.key] ?? ""}
+                    onChange={(e) => updateField(f.key, e.target.value, f.type)}
+                    className="border rounded px-2 py-1"
+                  />
+                </label>
+              ),
+            )}
           </div>
           {section.title === "Spotify" && (
             <SpotifyConnection redirectUri={form.spotifyRedirectUri} />
           )}
         </div>
       ))}
-
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={saving}
-          className="px-3 py-1 rounded bg-black text-white disabled:opacity-50 self-start"
-        >
-          {saving ? "Saving..." : "Save Settings"}
-        </button>
-        {saved && <p className="text-sm text-green-700">Saved.</p>}
-      </div>
-    </form>
+    </div>
   );
 }
