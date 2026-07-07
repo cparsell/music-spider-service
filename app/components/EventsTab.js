@@ -63,12 +63,17 @@ export default function EventsTab() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Search failed");
       setEvents(data.events || []);
-      setStatusMessage(
-        data.canceled
-          ? `Search canceled. Searched ${data.artistsSearched} artists, found ${data.found} matching events before stopping.`
-          : `Searched ${data.artistsSearched} artists, found ${data.found} matching events.`,
-      );
-      setStatusError(false);
+      let message = data.canceled
+        ? `Search canceled. Searched ${data.artistsSearched} artists, found ${data.found} matching events before stopping.`
+        : `Searched ${data.artistsSearched} artists, found ${data.found} matching events.`;
+      if (data.calendarSynced > 0) {
+        message += ` Added ${data.calendarSynced} to Google Calendar.`;
+      }
+      if (data.calendarError) {
+        message += ` Calendar sync issue: ${data.calendarError}`;
+      }
+      setStatusMessage(message);
+      setStatusError(!!data.calendarError);
     } catch (err) {
       setStatusMessage(err.message);
       setStatusError(true);

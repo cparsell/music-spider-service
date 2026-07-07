@@ -71,6 +71,7 @@ export async function GET(request) {
       access_token: data.access_token,
       refresh_token: data.refresh_token,
       expires_at: Date.now() + data.expires_in * 1000,
+      scope: data.scope || "",
     });
     return finish("success", "connected");
   } catch (err) {

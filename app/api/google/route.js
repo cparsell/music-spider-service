@@ -12,12 +12,17 @@ export async function GET() {
     );
   }
 
+  const scopes = ["https://www.googleapis.com/auth/gmail.send"];
+  if (config.googleCalendarSyncEnabled) {
+    scopes.push("https://www.googleapis.com/auth/calendar.events");
+  }
+
   const state = randomUUID();
   const params = new URLSearchParams({
     client_id: config.googleClientId,
     response_type: "code",
     redirect_uri: config.googleRedirectUri,
-    scope: "https://www.googleapis.com/auth/gmail.send",
+    scope: scopes.join(" "),
     access_type: "offline",
     prompt: "consent",
     state,

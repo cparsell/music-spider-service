@@ -1,9 +1,40 @@
 import { getCombinedArtistList } from "@/lib/combinedArtistList.js";
 import { searchRA } from "../resadvisor/route.js";
 import { searchTMLoop } from "../ticketmaster/route.js";
-import { upsertEvent, getEvents } from "@/lib/eventsStore.js";
+import {
+  upsertEvent,
+  getEvents,
+  setDateCalendarEventId,
+} from "@/lib/eventsStore.js";
 import { setProgress, isCancelRequested } from "@/lib/searchProgress.js";
 import { attachActsDisplay } from "@/lib/formatActs.js";
+import { getResolvedConfig } from "@/lib/settings.js";
+import { hasCalendarScope } from "@/lib/googleTokens.js";
+import { createCalendarEvent } from "@/lib/googleCalendar.js";
+
+async function syncNewDatesToCalendar(newDates, calendarId) {
+  let synced = 0;
+  let error = null;
+  for (const { eventId, date, eventSnapshot } of newDates) {
+    try {
+      const dateEntry = eventSnapshot.dates.find((d) => d.date === date);
+      const created = await createCalendarEvent({
+        calendarId,
+        summary: eventSnapshot.eName,
+        description: (eventSnapshot.acts || []).join(", "),
+        location: eventSnapshot.address || eventSnapshot.venue,
+        start: date,
+        url: dateEntry?.urls?.[0]?.url,
+      });
+      await setDateCalendarEventId(eventId, date, created.id);
+      synced++;
+    } catch (err) {
+      console.error("Calendar sync error:", err.message);
+      error = err.message;
+    }
+  }
+  return { synced, error };
+}
 
 export async function POST() {
   setProgress({
@@ -35,9 +66,27 @@ export async function POST() {
     ]);
 
     // Save whatever was found even if the search was canceled partway
-    // through, rather than discarding partial progress.
+    // through, rather than discarding partial progress. Track which dates
+    // were genuinely new (not just a merged duplicate URL) for calendar sync.
+    const newDates = [];
     for (const event of [...raEvents, ...tmEvents]) {
-      await upsertEvent(event);
+      const result = await upsertEvent(event);
+      if (result.isNewDate) {
+        newDates.push(result);
+      }
+    }
+
+    let calendarSynced = 0;
+    let calendarError = null;
+    const config = await getResolvedConfig();
+    if (config.googleCalendarSyncEnabled && newDates.length > 0) {
+      if (await hasCalendarScope()) {
+        ({ synced: calendarSynced, error: calendarError } =
+          await syncNewDatesToCalendar(newDates, config.calendarId));
+      } else {
+        calendarError =
+          "Google Calendar sync is enabled but not authorized. Reconnect Google in Settings.";
+      }
     }
 
     return Response.json({
@@ -45,6 +94,8 @@ export async function POST() {
       artistsSearched: artistList.length,
       found: raEvents.length + tmEvents.length,
       canceled: isCancelRequested(),
+      calendarSynced,
+      calendarError,
     });
   } finally {
     setProgress({ running: false });

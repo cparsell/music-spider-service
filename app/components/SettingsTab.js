@@ -111,13 +111,18 @@ const SECTIONS = [
     ],
   },
   {
-    title: "Email (Gmail)",
+    title: "Google (Email & Calendar)",
     description:
-      "To send event emails, connect a Google account via OAuth: in the Google Cloud Console, create/select a project, enable the Gmail API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI below as an authorized redirect URI. Enter the Client ID/Secret below, then click \"Connect Google Account.\"",
+      "To send event emails and/or add events to Google Calendar, connect a Google account via OAuth: in the Google Cloud Console, create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI below as an authorized redirect URI. Enter the Client ID/Secret below, then click \"Connect Google Account.\"",
     warning:
-      'Connecting a Google account grants this app permission to send email as you, via the Gmail API\'s "gmail.send" scope (send-only - it cannot read, delete, or otherwise access your existing mail). If you plan to use this feature, you should review this app\'s source code yourself first to confirm there is no misuse of that access.',
+      'Connecting a Google account grants this app permission to send email as you (Gmail\'s "gmail.send" scope, send-only) and, if Calendar sync is enabled below, to create events on your calendar ("calendar.events" scope). Neither scope can read, delete, or otherwise access your existing mail or calendar. If you plan to use this feature, you should review this app\'s source code yourself first to confirm there is no misuse of that access.',
     fields: [
       { key: "emailRecipient", label: "Recipient email", type: "text" },
+      {
+        key: "calendarId",
+        label: "Calendar ID (blank = primary calendar)",
+        type: "text",
+      },
       { key: "googleClientId", label: "Google Client ID", type: "text" },
       {
         key: "googleClientSecret",
@@ -126,10 +131,6 @@ const SECTIONS = [
       },
       { key: "googleRedirectUri", label: "Google Redirect URI", type: "text" },
     ],
-  },
-  {
-    title: "Calendar (future feature)",
-    fields: [{ key: "calendarId", label: "Calendar ID", type: "text" }],
   },
 ];
 
@@ -233,14 +234,14 @@ function SpotifyConnection({ redirectUri }) {
   );
 }
 
-function GoogleConnection({ redirectUri }) {
-  const [connected, setConnected] = useState(null);
+function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
+  const [status, setStatus] = useState(null); // { connected, scope }
   const [statusMessage, setStatusMessage] = useState("");
 
   const loadStatus = () => {
     fetch("/api/google/status")
       .then((res) => res.json())
-      .then((data) => setConnected(data.connected));
+      .then(setStatus);
   };
 
   useEffect(() => {
@@ -281,7 +282,7 @@ function GoogleConnection({ redirectUri }) {
 
   const disconnect = async () => {
     await fetch("/api/google/status", { method: "DELETE" });
-    setConnected(false);
+    setStatus({ connected: false, scope: "" });
   };
 
   const connect = () => {
@@ -294,33 +295,55 @@ function GoogleConnection({ redirectUri }) {
     window.open(`${base}/api/google`, "google-auth", "width=500,height=700");
   };
 
+  const needsCalendarReauth =
+    calendarSyncEnabled &&
+    status?.connected &&
+    !status.scope?.includes("calendar.events");
+
   return (
-    <div className="mt-2 flex items-center gap-3">
-      {connected === null ? null : connected ? (
-        <>
-          <span className="text-sm text-green-700">Connected</span>
-          <button
-            type="button"
-            onClick={disconnect}
-            className="text-sm text-red-600 hover:underline"
-          >
-            Disconnect
-          </button>
-        </>
-      ) : (
-        <>
-          <span className="text-sm text-gray-500">Not connected</span>
+    <div className="mt-2 flex flex-col gap-1">
+      <div className="flex items-center gap-3">
+        {status === null ? null : status.connected ? (
+          <>
+            <span className="text-sm text-green-700">Connected</span>
+            <button
+              type="button"
+              onClick={disconnect}
+              className="text-sm text-red-600 hover:underline"
+            >
+              Disconnect
+            </button>
+          </>
+        ) : (
+          <>
+            <span className="text-sm text-gray-500">Not connected</span>
+            <button
+              type="button"
+              onClick={connect}
+              className="text-sm px-2 py-0.5 rounded bg-green-600 text-white"
+            >
+              Connect Google Account
+            </button>
+          </>
+        )}
+        {statusMessage && (
+          <span className="text-sm text-gray-600">({statusMessage})</span>
+        )}
+      </div>
+      {needsCalendarReauth && (
+        <div className="text-sm text-amber-800 flex items-center gap-2">
+          <span>
+            ⚠️ Calendar sync is enabled, but this connection doesn&apos;t have
+            Calendar access yet.
+          </span>
           <button
             type="button"
             onClick={connect}
-            className="text-sm px-2 py-0.5 rounded bg-green-600 text-white"
+            className="underline shrink-0"
           >
-            Connect Google Account
+            Reconnect
           </button>
-        </>
-      )}
-      {statusMessage && (
-        <span className="text-sm text-gray-600">({statusMessage})</span>
+        </div>
       )}
     </div>
   );
@@ -536,9 +559,12 @@ export default function SettingsTab() {
             {section.title === "Spotify" && (
               <SpotifyConnection redirectUri={form.spotifyRedirectUri} />
             )}
-            {section.title === "Email (Gmail)" && (
+            {section.title === "Google (Email & Calendar)" && (
               <>
-                <GoogleConnection redirectUri={form.googleRedirectUri} />
+                <GoogleConnection
+                  redirectUri={form.googleRedirectUri}
+                  calendarSyncEnabled={form.googleCalendarSyncEnabled}
+                />
                 <label className="flex items-center gap-2 text-sm mt-3">
                   <input
                     type="checkbox"
@@ -548,6 +574,19 @@ export default function SettingsTab() {
                     }
                   />
                   Send a weekly email digest of upcoming events
+                </label>
+                <label className="flex items-center gap-2 text-sm mt-1">
+                  <input
+                    type="checkbox"
+                    checked={form.googleCalendarSyncEnabled}
+                    onChange={(e) =>
+                      updateField(
+                        "googleCalendarSyncEnabled",
+                        e.target.checked,
+                      )
+                    }
+                  />
+                  Add newly found events to Google Calendar
                 </label>
               </>
             )}
