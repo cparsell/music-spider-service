@@ -131,37 +131,37 @@ export default function EventsTab() {
   return (
     <TabLayout
       controls={
-        <>
-          <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={runSearch}
+            disabled={searching}
+            className="px-3 py-1 rounded bg-black text-white disabled:opacity-50"
+          >
+            {searching ? "Searching..." : "Run Search"}
+          </button>
+          {searching && (
             <button
-              onClick={runSearch}
-              disabled={searching}
-              className="px-3 py-1 rounded bg-black text-white disabled:opacity-50"
+              onClick={cancelSearch}
+              className="px-3 py-1 rounded bg-red-300 text-white"
             >
-              {searching ? "Searching..." : "Run Search"}
+              Cancel
             </button>
-            {searching && (
-              <button
-                onClick={cancelSearch}
-                className="px-3 py-1 rounded bg-red-300 text-white"
-              >
-                Cancel
-              </button>
-            )}
-            <button
-              onClick={sendEmail}
-              disabled={sendingEmail}
-              className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
-            >
-              {sendingEmail ? "Sending..." : "Send Email"}
-            </button>
-          </div>
-          <StatusBar
-            message={statusMessage}
-            error={statusError}
-            progress={progress}
-          />
-        </>
+          )}
+          <button
+            onClick={sendEmail}
+            disabled={sendingEmail}
+            className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
+          >
+            {sendingEmail ? "Sending..." : "Send Email"}
+          </button>
+        </div>
+      }
+      statusBar={
+        <StatusBar
+          message={statusMessage}
+          error={statusError}
+          progress={progress}
+        />
       }
     >
       {!loading &&
@@ -170,7 +170,7 @@ export default function EventsTab() {
             No events yet. Run a search to find some.
           </p>
         ) : (
-          <ul className="flex flex-wrap gap-4 overflow-auto">
+          <ul className="flex flex-wrap gap-4 overflow-auto pr-2">
             {sortedEvents.map((event) => (
               <li
                 key={event.id}
@@ -178,7 +178,6 @@ export default function EventsTab() {
               >
                 <div className="flex flex-col justify-between shrink-0">
                   {event.image && (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <a href={event.image} target="_blank" rel="noreferrer">
                       <img
                         src={event.image}

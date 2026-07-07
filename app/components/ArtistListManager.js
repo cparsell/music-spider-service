@@ -41,9 +41,7 @@ export default function ArtistListManager({ apiPath, addLabel }) {
     const res = await fetch(apiPath, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(
-        names.length === 1 ? { name: names[0] } : { names },
-      ),
+      body: JSON.stringify(names.length === 1 ? { name: names[0] } : { names }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -54,7 +52,9 @@ export default function ArtistListManager({ apiPath, addLabel }) {
     setArtists(data.artists);
     setInput("");
     setStatusMessage(
-      names.length === 1 ? `Added ${names[0]}` : `Added ${names.length} artists`,
+      names.length === 1
+        ? `Added ${names[0]}`
+        : `Added ${names.length} artists`,
     );
     setStatusError(false);
   };
@@ -79,31 +79,34 @@ export default function ArtistListManager({ apiPath, addLabel }) {
   return (
     <TabLayout
       controls={
-        <>
-          <form onSubmit={addArtist} className="flex gap-2 mb-4 items-start">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                  e.preventDefault();
-                  e.currentTarget.form?.requestSubmit();
-                }
-              }}
-              placeholder={"Artist name, or paste a list (one per line)"}
-              rows={3}
-              className="border rounded px-2 py-1 flex-1 max-w-sm"
-            />
-            <div className="flex flex-col items-start gap-1">
-              <button type="submit" className="px-3 py-1 rounded bg-black text-white">
-                {addLabel}
-              </button>
-              <span className="text-xs text-gray-500">⌘+Enter / Ctrl+Enter</span>
-            </div>
-          </form>
-          <StatusBar message={statusMessage} error={statusError} />
-        </>
+        <form onSubmit={addArtist} className="flex gap-2 mb-4 items-start">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                e.preventDefault();
+                e.currentTarget.form?.requestSubmit();
+              }
+            }}
+            placeholder={"Artist name, or paste a list (one per line)"}
+            rows={3}
+            className="border rounded px-2 py-1 flex-1 max-w-sm"
+          />
+          <div className="flex flex-col items-start gap-1">
+            <button
+              type="submit"
+              className="px-3 py-1 rounded bg-black text-white"
+            >
+              {addLabel}
+            </button>
+            <span className="text-xs text-gray-500">
+              ⌘+Enter / Ctrl+Enter
+            </span>
+          </div>
+        </form>
       }
+      statusBar={<StatusBar message={statusMessage} error={statusError} />}
     >
       {!loading &&
         (artists.length === 0 ? (

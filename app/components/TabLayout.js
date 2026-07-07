@@ -2,9 +2,9 @@
 import { useEffect, useRef } from "react";
 
 // Shared shell for the list-style tabs: keeps `controls` (term/action
-// buttons + status bar) pinned in place while `children` (the table/list)
-// scrolls independently underneath.
-export default function TabLayout({ controls, children }) {
+// buttons) pinned at the top and `statusBar` pinned at the bottom, while
+// `children` (the table/list) scrolls independently between them.
+export default function TabLayout({ controls, statusBar, children }) {
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -32,6 +32,7 @@ export default function TabLayout({ controls, children }) {
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         {children}
       </div>
+      <div className="shrink-0">{statusBar}</div>
     </div>
   );
 }

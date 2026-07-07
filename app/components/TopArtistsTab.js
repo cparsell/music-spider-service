@@ -106,21 +106,19 @@ export default function TopArtistsTab() {
   return (
     <TabLayout
       controls={
-        <>
-          <div className="flex gap-2 mb-4">
-            {["short_term", "medium_term", "long_term", "combined"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTerm(t)}
-                className={`px-3 py-1 rounded ${term === t ? "bg-neutral-900 text-white" : "bg-neutral-400 text-neutral-900"}`}
-              >
-                {t.replace("_", " ")}
-              </button>
-            ))}
-          </div>
-          <StatusBar message={statusMessage} error={statusError} />
-        </>
+        <div className="flex gap-2 mb-4">
+          {["short_term", "medium_term", "long_term", "combined"].map((t) => (
+            <button
+              key={t}
+              onClick={() => setTerm(t)}
+              className={`px-3 py-1 rounded ${term === t ? "bg-neutral-900 text-white" : "bg-neutral-400 text-neutral-900"}`}
+            >
+              {t.replace("_", " ")}
+            </button>
+          ))}
+        </div>
       }
+      statusBar={<StatusBar message={statusMessage} error={statusError} />}
     >
       {!loading && (
         <table className="w-full border-collapse">
