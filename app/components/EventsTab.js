@@ -48,7 +48,11 @@ export default function EventsTab() {
         const res = await fetch("/api/events/search/progress");
         const data = await res.json();
         if (data.phase) setStatusMessage(data.phase);
-        setProgress(data.total > 0 ? { completed: data.completed, total: data.total } : null);
+        setProgress(
+          data.total > 0
+            ? { completed: data.completed, total: data.total }
+            : null,
+        );
       } catch {
         // ignore transient poll errors, next tick will retry
       }
@@ -116,7 +120,7 @@ export default function EventsTab() {
   };
 
   const sortedEvents = [...events].sort(
-    (a, b) => new Date(a.date) - new Date(b.date),
+    (a, b) => new Date(a.dates?.[0]?.date) - new Date(b.dates?.[0]?.date),
   );
 
   return (
@@ -134,7 +138,7 @@ export default function EventsTab() {
             {searching && (
               <button
                 onClick={cancelSearch}
-                className="px-3 py-1 rounded bg-red-600 text-white"
+                className="px-3 py-1 rounded bg-red-300 text-white"
               >
                 Cancel
               </button>
@@ -142,12 +146,16 @@ export default function EventsTab() {
             <button
               onClick={sendEmail}
               disabled={sendingEmail}
-              className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
+              className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
             >
               {sendingEmail ? "Sending..." : "Send Email"}
             </button>
           </div>
-          <StatusBar message={statusMessage} error={statusError} progress={progress} />
+          <StatusBar
+            message={statusMessage}
+            error={statusError}
+            progress={progress}
+          />
         </>
       }
     >
@@ -163,19 +171,26 @@ export default function EventsTab() {
                 key={event.id}
                 className="flex gap-4 border rounded p-3 flex-1 min-w-[320px] max-w-md"
               >
-                {event.image && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={event.image}
-                    alt={event.eName}
-                    className="w-24 h-24 object-cover rounded shrink-0"
-                  />
-                )}
+                <div className="flex flex-col justify-between shrink-0">
+                  {event.image && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <a href={event.image} target="_blank" rel="noreferrer">
+                      <img
+                        src={event.image}
+                        alt={event.eName}
+                        className="w-24 h-24 object-cover rounded"
+                      />
+                    </a>
+                  )}
+                  <button
+                    onClick={() => deleteEvent(event.id)}
+                    className="text-sm text-red-800 hover:underline"
+                  >
+                    delete
+                  </button>
+                </div>
                 <div className="flex-1">
                   <p className="font-semibold">{event.eName}</p>
-                  <p className="text-sm text-gray-600">
-                    {formatDate(event.date)}
-                  </p>
                   <p className="text-sm text-gray-600">
                     {event.venue}
                     {event.city ? `, ${event.city}` : ""}
@@ -185,31 +200,32 @@ export default function EventsTab() {
                       {event.address.trim()}
                     </p>
                   )}
-                  {event.acts?.length > 0 && (
-                    <p className="text-sm mt-1">
-                      Acts: {event.acts.join(", ")}
-                    </p>
+                  {event.actsDisplay && (
+                    <p className="text-sm mt-1">Acts: {event.actsDisplay}</p>
                   )}
-                  <div className="flex gap-2 mt-1">
-                    {event.urls?.map((u) => (
-                      <a
-                        key={u.name}
-                        href={u.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sm text-blue-600 hover:underline"
-                      >
-                        {u.name}
-                      </a>
+                  <div className="flex flex-col gap-1 mt-1">
+                    {event.dates?.map((d) => (
+                      <div key={d.date} className="flex gap-2 text-sm">
+                        <span className="text-gray-600 shrink-0">
+                          {formatDate(d.date)}
+                        </span>
+                        <div className="flex flex-col">
+                          {d.urls?.map((u) => (
+                            <a
+                              key={u.name}
+                              href={u.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {u.name}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
-                <button
-                  onClick={() => deleteEvent(event.id)}
-                  className="text-sm text-red-600 hover:underline self-start"
-                >
-                  delete
-                </button>
               </li>
             ))}
           </ul>

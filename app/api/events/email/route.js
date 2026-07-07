@@ -1,5 +1,6 @@
-import { getEvents } from "@/lib/eventsStore.js";
+import { getUpcomingEvents } from "@/lib/eventsStore.js";
 import { getResolvedConfig } from "@/lib/settings.js";
+import { getCombinedArtistList } from "@/lib/combinedArtistList.js";
 import {
   buildEventsEmailHtml,
   buildEventsEmailSubject,
@@ -15,10 +16,7 @@ export async function POST() {
     );
   }
 
-  const events = await getEvents();
-  const upcoming = events
-    .filter((e) => new Date(e.date) >= new Date())
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
+  const upcoming = await getUpcomingEvents();
 
   if (upcoming.length === 0) {
     return Response.json(
@@ -28,10 +26,11 @@ export async function POST() {
   }
 
   try {
+    const knownArtists = new Set(await getCombinedArtistList());
     await sendGmailMessage({
       to: config.emailRecipient,
-      subject: buildEventsEmailSubject(upcoming),
-      html: buildEventsEmailHtml(upcoming),
+      subject: buildEventsEmailSubject(upcoming, knownArtists),
+      html: buildEventsEmailHtml(upcoming, knownArtists),
     });
     return Response.json({ sent: true, count: upcoming.length });
   } catch (err) {

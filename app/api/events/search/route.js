@@ -3,6 +3,7 @@ import { searchRA } from "../resadvisor/route.js";
 import { searchTMLoop } from "../ticketmaster/route.js";
 import { upsertEvent, getEvents } from "@/lib/eventsStore.js";
 import { setProgress, isCancelRequested } from "@/lib/searchProgress.js";
+import { attachActsDisplay } from "@/lib/formatActs.js";
 
 export async function POST() {
   setProgress({
@@ -14,7 +15,7 @@ export async function POST() {
   });
 
   try {
-    const artistList = await getCombinedArtistList();
+    const artistList = await getCombinedArtistList({ fresh: true });
 
     setProgress({
       phase: `Searching Ticketmaster and Resident Advisor (0/${artistList.length} artists)...`,
@@ -40,7 +41,7 @@ export async function POST() {
     }
 
     return Response.json({
-      events: await getEvents(),
+      events: await attachActsDisplay(await getEvents()),
       artistsSearched: artistList.length,
       found: raEvents.length + tmEvents.length,
       canceled: isCancelRequested(),
