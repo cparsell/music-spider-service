@@ -42,3 +42,8 @@ body {
 #imglogo {
   filter: invert(100%) !important;
 }
+
+h2 {
+  font-size: 1.1rem !important;
+  margin-top: 0.5rem !important;
+}

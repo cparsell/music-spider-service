@@ -364,7 +364,8 @@ function RegionPicker({ value, onChange }) {
     const term = search.trim().toLowerCase();
     if (!term) return [];
     return RA_REGIONS.filter(
-      (r) => !selectedIds.includes(r.id) && r.label.toLowerCase().includes(term),
+      (r) =>
+        !selectedIds.includes(r.id) && r.label.toLowerCase().includes(term),
     ).slice(0, 20);
   }, [search, selectedIds]);
 
@@ -384,13 +385,13 @@ function RegionPicker({ value, onChange }) {
           {selectedIds.map((id) => (
             <span
               key={id}
-              className="flex items-center gap-1 bg-gray-200 rounded px-2 py-1 text-sm"
+              className="flex items-center gap-1 bg-neutral-700 rounded px-2 py-1 text-sm"
             >
               {RA_REGIONS_BY_ID.get(id) || `Unknown region (${id})`}
               <button
                 type="button"
                 onClick={() => removeRegion(id)}
-                className="text-gray-600 hover:text-red-600"
+                className="text-gray-300 hover:text-red-600"
                 aria-label={`Remove ${RA_REGIONS_BY_ID.get(id) || id}`}
               >
                 ×
@@ -405,16 +406,16 @@ function RegionPicker({ value, onChange }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search for a city or country to add..."
-          className="border rounded px-2 py-1 text-sm w-full"
+          className="border border-gray-600rounded px-2 py-1 text-sm w-full"
         />
         {matches.length > 0 && (
-          <ul className="absolute z-10 mt-1 w-full max-h-56 overflow-auto border rounded bg-white shadow">
+          <ul className="absolute z-10 mt-1 w-full max-h-56 overflow-auto border border-gray-600 rounded bg-white shadow">
             {matches.map((r) => (
               <li key={r.id}>
                 <button
                   type="button"
                   onClick={() => addRegion(r.id)}
-                  className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100"
+                  className="w-full text-left px-2 py-1 text-sm bg-neutral-700 text-neutral-200 hover:bg-gray-200 hover:text-neutral-800"
                 >
                   {r.label}
                 </button>
@@ -427,7 +428,7 @@ function RegionPicker({ value, onChange }) {
   );
 }
 
-const SAVE_DEBOUNCE_MS = 600;
+const SAVE_DEBOUNCE_MS = 1000;
 
 export default function SettingsTab() {
   const [form, setForm] = useState(null);
@@ -512,7 +513,7 @@ export default function SettingsTab() {
     >
       <div className="flex flex-col gap-6 w-full pr-3">
         <div>
-          <h2 className="font-semibold mb-2">Artist Source</h2>
+          <h2 className="font-semibold mb-2 text-neutral-200">Artist Source</h2>
           <div className="flex flex-col gap-3">
             {ARTIST_SOURCES.map((s) => (
               <label
@@ -536,7 +537,9 @@ export default function SettingsTab() {
         </div>
 
         <div>
-          <h2 className="font-semibold mb-2">Event Search Artist Terms</h2>
+          <h2 className="font-semibold mb-2 text-neutral-200">
+            Event Search Artist Terms
+          </h2>
           <p className="text-sm text-gray-600 mb-2">
             Which top-artists window(s) to pull from when building the artist
             list used for event searches. Selecting more than one combines them
@@ -559,12 +562,14 @@ export default function SettingsTab() {
         </div>
 
         <div>
-          <h2 className="font-semibold mb-2">Combined Top Artists Mode</h2>
+          <h2 className="font-semibold mb-2 text-neutral-200">
+            Combined Top Artists Mode
+          </h2>
           <div className="flex flex-col gap-3">
             {COMBINED_MODES.map((m) => (
               <label
                 key={m.value}
-                className="flex items-start gap-3 border rounded p-3 cursor-pointer"
+                className="flex items-start gap-3 border border-gray-600 rounded p-3 cursor-pointer"
               >
                 <input
                   type="radio"
@@ -586,9 +591,11 @@ export default function SettingsTab() {
 
         {SECTIONS.map((section) => (
           <div key={section.title}>
-            <h2 className="font-semibold mb-2">{section.title}</h2>
+            <h2 className="font-semibold mb-2 text-neutral-200">
+              {section.title}
+            </h2>
             {section.description && (
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-neutral-500 mb-2">
                 {section.description}
               </p>
             )}

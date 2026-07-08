@@ -9,6 +9,13 @@ export default function ArtistListManager({ apiPath, addLabel }) {
   const [input, setInput] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [statusError, setStatusError] = useState(false);
+  const [shortcutHint, setShortcutHint] = useState("⌘+Enter / Ctrl+Enter");
+
+  useEffect(() => {
+    const platform =
+      navigator.userAgentData?.platform || navigator.platform || "";
+    setShortcutHint(/mac/i.test(platform) ? "⌘+Enter" : "Ctrl+Enter");
+  }, []);
 
   const load = () => {
     setLoading(true);
@@ -100,8 +107,8 @@ export default function ArtistListManager({ apiPath, addLabel }) {
             >
               {addLabel}
             </button>
-            <span className="text-xs text-gray-500">
-              ⌘+Enter / Ctrl+Enter
+            <span className="text-xs text-gray-500 mt-1 ml-5">
+              {shortcutHint}
             </span>
           </div>
         </form>

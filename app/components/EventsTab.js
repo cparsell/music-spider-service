@@ -195,12 +195,12 @@ export default function EventsTab() {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold">{event.eName}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-neutral-500">
                     {event.venue}
-                    {event.city ? `, ${event.city}` : ""}
+                    {/* {event.city ? `, ${event.city}` : ""} */}
                   </p>
                   {event.address && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-neutral-500">
                       {event.address.trim()}
                     </p>
                   )}
