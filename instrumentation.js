@@ -1,22 +1,28 @@
-// Runs once when the Next.js server starts. Used to set up the weekly
-// events-digest email check (see lib/emailScheduler.js) - this app has no
-// external cron/queue infra, so a simple in-process interval is enough for
-// a single-instance, personal-use deployment.
+// Runs once when the Next.js server starts. Used to set up periodic
+// background checks (weekly events-digest email, top-artists auto-refresh)
+// - this app has no external cron/queue infra, so a simple in-process
+// interval is enough for a single-instance, personal-use deployment.
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
   const { checkAndSendWeeklyEmail } = await import("./lib/emailScheduler.js");
+  const { checkAndRefreshTopArtists } = await import(
+    "./lib/topArtistsRefreshScheduler.js"
+  );
   const CHECK_INTERVAL_MS = 60 * 60 * 1000; // hourly
 
-  setInterval(() => {
+  const runChecks = () => {
     checkAndSendWeeklyEmail().catch((err) =>
       console.error("Weekly email scheduler error:", err),
     );
-  }, CHECK_INTERVAL_MS);
+    checkAndRefreshTopArtists().catch((err) =>
+      console.error("Top artists refresh scheduler error:", err),
+    );
+  };
 
-  // Also check shortly after startup, in case a week elapsed while the
-  // server was down and the next hourly check would otherwise be a while.
-  checkAndSendWeeklyEmail().catch((err) =>
-    console.error("Weekly email scheduler error:", err),
-  );
+  setInterval(runChecks, CHECK_INTERVAL_MS);
+
+  // Also check shortly after startup, in case the interval elapsed while
+  // the server was down and the next hourly check would otherwise be a while.
+  runChecks();
 }

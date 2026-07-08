@@ -15,19 +15,30 @@ async function addArtist(apiPath, name) {
   }
 }
 
+function formatCacheAge(cachedAt) {
+  if (!cachedAt) return "";
+  const minutes = Math.round((Date.now() - cachedAt) / 60000);
+  if (minutes < 1) return " (just refreshed)";
+  if (minutes < 60) return ` (cached ${minutes}m ago)`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return ` (cached ${hours}h ago)`;
+  return ` (cached ${Math.round(hours / 24)}d ago)`;
+}
+
 export default function TopArtistsTab() {
   const [term, setTerm] = useState("medium_term");
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [status, setStatus] = useState({});
   const [statusMessage, setStatusMessage] = useState("");
   const [statusError, setStatusError] = useState(false);
 
-  useEffect(() => {
+  const loadArtists = () => {
     setLoading(true);
     setStatusMessage("Loading top artists...");
     setStatusError(false);
-    fetch(`/api/top-artists?term=${term}`)
+    return fetch(`/api/top-artists?term=${term}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.error) {
@@ -37,11 +48,12 @@ export default function TopArtistsTab() {
           return;
         }
         setArtists(data.artists || []);
+        const age = formatCacheAge(data.cachedAt);
         if (data.spotifyError) {
           setStatusMessage(`Spotify: ${data.spotifyError}`);
           setStatusError(true);
         } else {
-          setStatusMessage(`Loaded ${data.artists?.length || 0} artists`);
+          setStatusMessage(`Loaded ${data.artists?.length || 0} artists${age}`);
           setStatusError(false);
         }
       })
@@ -51,7 +63,34 @@ export default function TopArtistsTab() {
         setStatusError(true);
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadArtists();
   }, [term]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setStatusMessage("Refreshing all top artist lists...");
+    setStatusError(false);
+    try {
+      const res = await fetch("/api/top-artists/refresh", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Refresh failed");
+      await loadArtists();
+      if (data.errors) {
+        setStatusMessage(
+          `Refreshed with some issues: ${Object.values(data.errors).join("; ")}`,
+        );
+        setStatusError(true);
+      }
+    } catch (err) {
+      setStatusMessage(err.message);
+      setStatusError(true);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleSave = async (name) => {
     try {
@@ -116,6 +155,13 @@ export default function TopArtistsTab() {
               {t.replace("_", " ")}
             </button>
           ))}
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
+          >
+            {refreshing ? "Refreshing..." : "Refresh All"}
+          </button>
         </div>
       }
       statusBar={<StatusBar message={statusMessage} error={statusError} />}

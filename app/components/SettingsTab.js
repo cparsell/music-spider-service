@@ -549,6 +549,37 @@ export default function SettingsTab() {
                 ),
               )}
             </div>
+            {section.title === "Top Artists" && (
+              <div className="flex items-center gap-2 mt-3 text-sm">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.topArtistsAutoRefreshEnabled}
+                    onChange={(e) =>
+                      updateField(
+                        "topArtistsAutoRefreshEnabled",
+                        e.target.checked,
+                      )
+                    }
+                  />
+                  Automatically refresh every
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.topArtistsAutoRefreshDays ?? 1}
+                  onChange={(e) =>
+                    updateField(
+                      "topArtistsAutoRefreshDays",
+                      e.target.value,
+                      "number",
+                    )
+                  }
+                  className="border rounded px-2 py-1 w-16"
+                />
+                <span>day(s)</span>
+              </div>
+            )}
             {section.title === "Spotify" && (
               <SpotifyConnection redirectUri={form.spotifyRedirectUri} />
             )}

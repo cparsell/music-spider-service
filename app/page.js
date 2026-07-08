@@ -24,7 +24,15 @@ export default function Home() {
     <main className="h-screen overflow-hidden flex flex-col items-center">
       <div className="w-full max-w-5xl h-full flex flex-col px-8">
         <div className="shrink-0 pt-8">
-          <h1 className="text-2xl font-bold mb-4">Music Spider</h1>
+          <div className="flex items-center gap-4 mb-4">
+            <img
+              id="imglogo"
+              src="https://i.postimg.cc/xjv4nbBV/music-spider-logo-nobg.png"
+              height="5%"
+              width="5%"
+            />
+            <h1 className="text-2xl font-bold">Music Spider</h1>
+          </div>
           <div className="flex gap-2 mb-6 border-b">
             {TABS.map((t) => (
               <button
