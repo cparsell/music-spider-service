@@ -86,7 +86,7 @@ export default function ArtistListManager({ apiPath, addLabel }) {
   return (
     <TabLayout
       controls={
-        <form onSubmit={addArtist} className="flex gap-2 mb-4 items-start">
+        <form onSubmit={addArtist} className="flex  gap-2 mb-4 w-full">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -98,16 +98,16 @@ export default function ArtistListManager({ apiPath, addLabel }) {
             }}
             placeholder={"Artist name, or paste a list (one per line)"}
             rows={3}
-            className="border rounded px-2 py-1 flex-1 max-w-sm"
+            className="border rounded px-2 py-1 w-full"
           />
-          <div className="flex flex-col items-start gap-1">
+          <div className="flex flex-col items-center gap-2">
             <button
               type="submit"
-              className="px-3 py-1 rounded bg-black text-white"
+              className="flex-1 px-3 py-1 rounded bg-neutral-900 text-neutral-200 hover:underline"
             >
               {addLabel}
             </button>
-            <span className="text-xs text-gray-500 mt-1 ml-5">
+            <span className="text-xs text-neutral-500 shrink-0">
               {shortcutHint}
             </span>
           </div>
@@ -117,7 +117,7 @@ export default function ArtistListManager({ apiPath, addLabel }) {
     >
       {!loading &&
         (artists.length === 0 ? (
-          <p className="text-gray-500">No artists yet.</p>
+          <p className="text-neutral-500">No artists yet.</p>
         ) : (
           <table className="w-full border-collapse">
             <tbody>

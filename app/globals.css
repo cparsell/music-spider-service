@@ -42,8 +42,23 @@ body {
   }
 }
 
-#imglogo {
+/* .imglogo {
   filter: invert(100%) !important;
+} */
+
+/* .imglogo path {
+  fill: #ff0000 !important;
+} */
+
+.imglogo {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+
+  background-color: var(--color-white) !important;
+  /* color: #ff0000 !important; */
+  mask: url("ms-logo.svg") no-repeat center / contain;
+  -webkit-mask: url("ms-logo.svg") no-repeat center / contain;
 }
 
 /* Theme: "Grayscale" is the default and needs no override block here since
@@ -57,33 +72,34 @@ body {
    app uses (e.g. red-800 for a "delete" link, amber-800/green-600 needing
    enough contrast to sit on their own light chip/button backgrounds). */
 [data-theme="catppuccin-mocha"] {
-  --background: #11111b; /* Crust */
-  --foreground: #cdd6f4; /* Text */
+  --background: #11111b !important; /* Crust */
+  --foreground: #cdd6f4 !important; /* Text */
+  --color-white: var(--foreground) !important;
 
-  --color-gray-100: #cdd6f4; /* Text */
-  --color-gray-200: #bac2de; /* Subtext1 */
-  --color-gray-300: #a6adc8; /* Subtext0 */
-  --color-gray-400: #9399b2; /* Overlay2 */
-  --color-gray-500: #7f849c; /* Overlay1 */
-  --color-gray-600: #6c7086; /* Overlay0 */
-  --color-gray-700: #585b70; /* Surface2 */
-  --color-gray-800: #45475a; /* Surface1 */
-  --color-gray-900: #313244; /* Surface0 */
+  --color-neutral-100: #cdd6f4 !important; /* Text */
+  --color-neutral-200: #bac2de !important; /* Subtext1 */
+  --color-neutral-300: #a6adc8 !important; /* Subtext0 */
+  --color-neutral-400: #9399b2 !important; /* Overlay2 */
+  --color-neutral-500: #7f849c !important; /* Overlay1 */
+  --color-neutral-600: #6c7086 !important; /* Overlay0 */
+  --color-neutral-700: #585b70 !important; /* Surface2 */
+  --color-neutral-800: #45475a !important; /* Surface1 */
+  --color-neutral-900: #313244 !important; /* Surface0 */
 
-  --color-black: #11111b; /* Crust */
+  --color-black: #11111b !important; /* Crust */
 
   --color-red-300: #f38ba8; /* Red */
-  --color-red-600: #eba0ac; /* Maroon */
+  --color-red-600: #eba0ac !important; /* Maroon */
   --color-red-800: #8f4058; /* extended: darker maroon */
 
-  --color-blue-600: #89b4fa; /* Blue */
+  --color-blue-600: #89b4fa !important; /* Blue */
 
   --color-amber-100: #f9e2af !important; /* Yellow */
   --color-amber-200: #fab387 !important; /* Peach */
   --color-amber-800: #6e3b12 !important; /* extended: dark peach, for contrast on amber-100 */
 
-  --color-green-600: #40a02b; /* extended: saturated enough for white button text */
-  --color-green-700: #2f7d1f; /* extended: darker still */
+  --color-green-600: #40a02b !important; /* extended: saturated enough for white button text */
+  --color-green-700: #2f7d1f !important; /* extended: darker still */
 
   --border-black: #333333 !important; /* Surface0 */
 }

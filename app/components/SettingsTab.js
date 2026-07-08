@@ -228,7 +228,7 @@ function SpotifyConnection({ redirectUri }) {
         </>
       ) : (
         <>
-          <span className="text-sm text-gray-500">Not connected</span>
+          <span className="text-sm text-neutral-500">Not connected</span>
           <button
             type="button"
             onClick={connect}
@@ -239,7 +239,7 @@ function SpotifyConnection({ redirectUri }) {
         </>
       )}
       {statusMessage && (
-        <span className="text-sm text-gray-600">({statusMessage})</span>
+        <span className="text-sm text-neutral-600">({statusMessage})</span>
       )}
     </div>
   );
@@ -327,7 +327,7 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
           </>
         ) : (
           <>
-            <span className="text-sm text-gray-500">Not connected</span>
+            <span className="text-sm text-neutral-500">Not connected</span>
             <button
               type="button"
               onClick={connect}
@@ -338,7 +338,7 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
           </>
         )}
         {statusMessage && (
-          <span className="text-sm text-gray-600">({statusMessage})</span>
+          <span className="text-sm text-neutral-600">({statusMessage})</span>
         )}
       </div>
       {needsCalendarReauth && (
@@ -398,13 +398,13 @@ function RegionPicker({ value, onChange }) {
           {selectedIds.map((id) => (
             <span
               key={id}
-              className="flex items-center gap-1 bg-gray-700 rounded px-2 py-1 text-sm"
+              className="flex items-center gap-1 bg-neutral-700 rounded px-2 py-1 text-sm"
             >
               {RA_REGIONS_BY_ID.get(id) || `Unknown region (${id})`}
               <button
                 type="button"
                 onClick={() => removeRegion(id)}
-                className="text-gray-300 hover:text-red-600"
+                className="text-neutral-300 hover:text-red-600"
                 aria-label={`Remove ${RA_REGIONS_BY_ID.get(id) || id}`}
               >
                 ×
@@ -419,16 +419,16 @@ function RegionPicker({ value, onChange }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search for a city or country to add..."
-          className="border border-gray-600 rounded px-2 py-1 text-sm w-full"
+          className="border border-neutral-600 rounded px-2 py-1 text-sm w-full"
         />
         {matches.length > 0 && (
-          <ul className="absolute z-10 mt-1 w-full max-h-56 overflow-auto border border-gray-600 rounded bg-white shadow">
+          <ul className="absolute z-10 mt-1 w-full max-h-56 overflow-auto border border-neutral-600 rounded bg-white shadow">
             {matches.map((r) => (
               <li key={r.id}>
                 <button
                   type="button"
                   onClick={() => addRegion(r.id)}
-                  className="w-full text-left px-2 py-1 text-sm bg-gray-700 text-gray-200 hover:bg-gray-200 hover:text-gray-800"
+                  className="w-full text-left px-2 py-1 text-sm bg-neutral-700 text-neutral-200 hover:bg-neutral-200 hover:text-neutral-800"
                 >
                   {r.label}
                 </button>
@@ -556,12 +556,12 @@ export default function SettingsTab() {
     >
       <div className="flex flex-col gap-6 w-full pr-3">
         <div>
-          <h2 className="font-semibold mb-2 text-gray-200">Appearance</h2>
+          <h2 className="font-semibold mb-2 text-neutral-200">Appearance</h2>
           <div className="flex flex-col gap-3">
             {THEMES.map((t) => (
               <label
                 key={t.value}
-                className="flex items-start gap-3 border border-gray-800 rounded p-3 cursor-pointer"
+                className="flex items-start gap-3 border border-neutral-800 rounded p-3 cursor-pointer"
               >
                 <input
                   type="radio"
@@ -572,7 +572,7 @@ export default function SettingsTab() {
                 />
                 <div>
                   <p className="font-medium">{t.label}</p>
-                  <p className="text-sm text-gray-600">{t.description}</p>
+                  <p className="text-sm text-neutral-600">{t.description}</p>
                 </div>
               </label>
             ))}
@@ -580,12 +580,12 @@ export default function SettingsTab() {
         </div>
 
         <div>
-          <h2 className="font-semibold mb-2 text-gray-200">Artist Source</h2>
+          <h2 className="font-semibold mb-2 text-neutral-200">Artist Source</h2>
           <div className="flex flex-col gap-3">
             {ARTIST_SOURCES.map((s) => (
               <label
                 key={s.value}
-                className="flex items-start gap-3 border border-gray-800 rounded p-3 cursor-pointer"
+                className="flex items-start gap-3 border border-neutral-800 rounded p-3 cursor-pointer"
               >
                 <input
                   type="radio"
@@ -596,7 +596,7 @@ export default function SettingsTab() {
                 />
                 <div>
                   <p className="font-medium">{s.label}</p>
-                  <p className="text-sm text-gray-600">{s.description}</p>
+                  <p className="text-sm text-neutral-600">{s.description}</p>
                 </div>
               </label>
             ))}
@@ -604,10 +604,10 @@ export default function SettingsTab() {
         </div>
 
         <div>
-          <h2 className="font-semibold mb-2 text-gray-200">
+          <h2 className="font-semibold mb-2 text-neutral-200">
             Event Search Artist Terms
           </h2>
-          <p className="text-sm text-gray-600 mb-2">
+          <p className="text-sm text-neutral-600 mb-2">
             Which top-artists window(s) to pull from when building the artist
             list used for event searches. Selecting more than one combines them
             using the Combined Top Artists Mode below.
@@ -629,14 +629,14 @@ export default function SettingsTab() {
         </div>
 
         <div>
-          <h2 className="font-semibold mb-2 text-gray-200">
+          <h2 className="font-semibold mb-2 text-neutral-200">
             Combined Top Artists Mode
           </h2>
           <div className="flex flex-col gap-3">
             {COMBINED_MODES.map((m) => (
               <label
                 key={m.value}
-                className="flex items-start gap-3 border border-gray-800 rounded p-3 cursor-pointer"
+                className="flex items-start gap-3 border border-neutral-800 rounded p-3 cursor-pointer"
               >
                 <input
                   type="radio"
@@ -649,7 +649,7 @@ export default function SettingsTab() {
                 />
                 <div>
                   <p className="font-medium">{m.label}</p>
-                  <p className="text-sm text-gray-600">{m.description}</p>
+                  <p className="text-sm text-neutral-600">{m.description}</p>
                 </div>
               </label>
             ))}
@@ -658,11 +658,11 @@ export default function SettingsTab() {
 
         {SECTIONS.map((section) => (
           <div key={section.title}>
-            <h2 className="font-semibold mb-2 text-gray-200">
+            <h2 className="font-semibold mb-2 text-neutral-200">
               {section.title}
             </h2>
             {section.description && (
-              <p className="text-sm text-gray-500 mb-2">
+              <p className="text-sm text-neutral-500 mb-2">
                 {section.description}
               </p>
             )}
@@ -692,8 +692,8 @@ export default function SettingsTab() {
                           onClick={() => updateField(f.key, o.value)}
                           className={`px-3 py-1 rounded text-sm ${
                             form[f.key] === o.value
-                              ? "bg-black text-gray-200"
-                              : "bg-gray-300 text-gray-700"
+                              ? "bg-black text-neutral-200"
+                              : "bg-neutral-300 text-neutral-700"
                           }`}
                         >
                           {o.label}
@@ -710,7 +710,7 @@ export default function SettingsTab() {
                       onChange={(e) =>
                         updateField(f.key, e.target.value, f.type)
                       }
-                      className="border border-gray-400 rounded px-2 py-1"
+                      className="border border-neutral-400 rounded px-2 py-1"
                     />
                   </label>
                 ),

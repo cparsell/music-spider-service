@@ -145,24 +145,30 @@ export default function TopArtistsTab() {
   return (
     <TabLayout
       controls={
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-2">
           {["short_term", "medium_term", "long_term", "combined"].map((t) => (
             <button
               key={t}
               onClick={() => setTerm(t)}
-              className={`px-3 py-1 rounded ${term === t ? "bg-gray-200 text-gray-800" : "bg-gray-800 text-gray-300"}`}
+              className={`px-3 py-1 rounded ${
+                term === t
+                  ? "bg-neutral-200 text-neutral-900"
+                  : "bg-neutral-900 text-neutral-200"
+              }`}
             >
               {t.replace("_", " ").charAt(0).toUpperCase() +
                 t.replace("_", " ").slice(1)}
             </button>
           ))}
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="px-3 py-1 rounded bg-gray-800 text-gray-200 disabled:opacity-50"
-          >
-            {refreshing ? "Refreshing..." : "Force Refresh"}
-          </button>
+          <div className="flex-1 flex justify-end">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="px-3 py-1 rounded bg-neutral-900 text-neutral-200 disabled:opacity-50"
+            >
+              {refreshing ? "Refreshing..." : "Force Refresh"}
+            </button>
+          </div>
         </div>
       }
       statusBar={<StatusBar message={statusMessage} error={statusError} />}
@@ -170,7 +176,7 @@ export default function TopArtistsTab() {
       {!loading && (
         <table className="w-full border-collapse">
           <thead>
-            <tr className="text-left text-sm text-gray-500 border-b">
+            <tr className="text-left text-sm text-neutral-500 border-b">
               <th className="py-1 pr-4 font-normal">#</th>
               <th className="py-1 pr-4 font-normal">Artist</th>
               <th className="py-1 pr-4 font-normal">Plays</th>
@@ -181,16 +187,16 @@ export default function TopArtistsTab() {
             {rankedArtists.map((a) => (
               <tr
                 key={a.artist}
-                className={`border-b last:border-0 ${a.ignored ? "text-gray-500" : ""}`}
+                className={`border-b last:border-0 ${a.ignored ? "text-neutral-500" : ""}`}
               >
-                <td className="py-1 pr-4 text-gray-400">{a.rank ?? "–"}</td>
+                <td className="py-1 pr-4 text-neutral-400">{a.rank ?? "–"}</td>
                 <td className="py-1 pr-4">{a.artist}</td>
                 <td className="py-1 pr-4">{a.plays ?? "–"}</td>
                 <td className="py-1">
                   {a.ignored ? (
                     <button
                       onClick={() => handleUnignore(a.artist)}
-                      className="text-sm px-2 py-0.5 rounded text-gray-300 hover:underline"
+                      className="text-sm px-2 py-0.5 rounded text-neutral-300 hover:underline"
                     >
                       Unignore
                     </button>

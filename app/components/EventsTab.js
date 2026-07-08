@@ -135,7 +135,7 @@ export default function EventsTab() {
           <button
             onClick={runSearch}
             disabled={searching}
-            className="px-3 py-1 rounded bg-black text-white disabled:opacity-50"
+            className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
           >
             {searching ? "Searching..." : "Run Search"}
           </button>
@@ -147,13 +147,15 @@ export default function EventsTab() {
               Cancel
             </button>
           )}
-          <button
-            onClick={sendEmail}
-            disabled={sendingEmail}
-            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
-          >
-            {sendingEmail ? "Sending..." : "Send Email"}
-          </button>
+          <div className="flex-1 flex justify-end">
+            <button
+              onClick={sendEmail}
+              disabled={sendingEmail}
+              className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
+            >
+              {sendingEmail ? "Sending..." : "Send Email"}
+            </button>
+          </div>
         </div>
       }
       statusBar={
@@ -166,7 +168,7 @@ export default function EventsTab() {
     >
       {!loading &&
         (sortedEvents.length === 0 ? (
-          <p className="text-gray-500">
+          <p className="text-neutral-500">
             No events yet. Run a search to find some.
           </p>
         ) : (
@@ -174,7 +176,7 @@ export default function EventsTab() {
             {sortedEvents.map((event) => (
               <li
                 key={event.id}
-                className="flex gap-4 border rounded p-3 flex-1 min-w-[320px] max-w-md"
+                className="flex gap-4 border border-neutral-600 rounded p-3 flex-1 min-w-[320px] max-w-md"
               >
                 <div className="flex flex-col justify-between shrink-0">
                   {event.image && (
@@ -188,19 +190,19 @@ export default function EventsTab() {
                   )}
                   <button
                     onClick={() => deleteEvent(event.id)}
-                    className="text-sm text-red-800 hover:underline"
+                    className="text-sm text-red-600 hover:underline"
                   >
                     delete
                   </button>
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold">{event.eName}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-neutral-500">
                     {event.venue}
                     {/* {event.city ? `, ${event.city}` : ""} */}
                   </p>
                   {event.address && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-neutral-500">
                       {event.address.trim()}
                     </p>
                   )}
@@ -210,7 +212,7 @@ export default function EventsTab() {
                   <div className="flex flex-col gap-1 mt-1">
                     {event.dates?.map((d) => (
                       <div key={d.date} className="flex gap-2 text-sm">
-                        <span className="text-gray-600 shrink-0">
+                        <span className="text-neutral-600 shrink-0">
                           {formatDate(d.date)}
                         </span>
                         <div className="flex flex-col">
