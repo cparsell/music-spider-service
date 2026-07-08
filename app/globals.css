@@ -1,8 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0b0b0b;
+  --foreground: #ededed;
+  --color-red-600: color-mix(
+    in srgb,
+    var(--color-red-700) 35%,
+    var(--color-neutral-400) 65%
+  ) !important;
+  --color-blue-600: color-mix(
+    in srgb,
+    var(--color-blue-700) 35%,
+    var(--color-neutral-400) 65%
+  ) !important;
 }
 
 @theme inline {
@@ -10,13 +20,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0b0b0b;
-    --foreground: #ededed;
-  }
 }
 
 body {
@@ -41,6 +44,48 @@ body {
 
 #imglogo {
   filter: invert(100%) !important;
+}
+
+/* Theme: "Grayscale" is the default and needs no override block here since
+   it IS Tailwind's built-in palette. "Catppuccin-like" re-skins the exact
+   --color-gray, --color-black, --color-red, --color-blue variables (and the
+   amber/green warning/success accents) that those utility classes are
+   generated from, so every existing utility class updates app-wide with no
+   component changes. Values are drawn from the Catppuccin Mocha palette;
+   the red/amber/green shades beyond Mocha's own two-tone accents are
+   hand-extended within the same hue to cover the extra Tailwind steps this
+   app uses (e.g. red-800 for a "delete" link, amber-800/green-600 needing
+   enough contrast to sit on their own light chip/button backgrounds). */
+[data-theme="catppuccin-mocha"] {
+  --background: #11111b; /* Crust */
+  --foreground: #cdd6f4; /* Text */
+
+  --color-gray-100: #cdd6f4; /* Text */
+  --color-gray-200: #bac2de; /* Subtext1 */
+  --color-gray-300: #a6adc8; /* Subtext0 */
+  --color-gray-400: #9399b2; /* Overlay2 */
+  --color-gray-500: #7f849c; /* Overlay1 */
+  --color-gray-600: #6c7086; /* Overlay0 */
+  --color-gray-700: #585b70; /* Surface2 */
+  --color-gray-800: #45475a; /* Surface1 */
+  --color-gray-900: #313244; /* Surface0 */
+
+  --color-black: #11111b; /* Crust */
+
+  --color-red-300: #f38ba8; /* Red */
+  --color-red-600: #eba0ac; /* Maroon */
+  --color-red-800: #8f4058; /* extended: darker maroon */
+
+  --color-blue-600: #89b4fa; /* Blue */
+
+  --color-amber-100: #f9e2af !important; /* Yellow */
+  --color-amber-200: #fab387 !important; /* Peach */
+  --color-amber-800: #6e3b12 !important; /* extended: dark peach, for contrast on amber-100 */
+
+  --color-green-600: #40a02b; /* extended: saturated enough for white button text */
+  --color-green-700: #2f7d1f; /* extended: darker still */
+
+  --border-black: #333333 !important; /* Surface0 */
 }
 
 h2 {

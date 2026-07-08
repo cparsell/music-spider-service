@@ -2,7 +2,7 @@ services:
   concert-finder:
     build: .
     ports:
-      - "3100:3100"
+      - "6100:6100"
     env_file:
       - .env.local
     volumes:

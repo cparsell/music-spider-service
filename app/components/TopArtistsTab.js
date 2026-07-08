@@ -150,17 +150,18 @@ export default function TopArtistsTab() {
             <button
               key={t}
               onClick={() => setTerm(t)}
-              className={`px-3 py-1 rounded ${term === t ? "bg-neutral-900 text-white" : "bg-neutral-400 text-neutral-900"}`}
+              className={`px-3 py-1 rounded ${term === t ? "bg-gray-200 text-gray-800" : "bg-gray-800 text-gray-300"}`}
             >
-              {t.replace("_", " ")}
+              {t.replace("_", " ").charAt(0).toUpperCase() +
+                t.replace("_", " ").slice(1)}
             </button>
           ))}
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
+            className="px-3 py-1 rounded bg-gray-800 text-gray-200 disabled:opacity-50"
           >
-            {refreshing ? "Refreshing..." : "Refresh All"}
+            {refreshing ? "Refreshing..." : "Force Refresh"}
           </button>
         </div>
       }
@@ -189,7 +190,7 @@ export default function TopArtistsTab() {
                   {a.ignored ? (
                     <button
                       onClick={() => handleUnignore(a.artist)}
-                      className="text-sm px-2 py-0.5 rounded bg-neutral-400 text-gray-900"
+                      className="text-sm px-2 py-0.5 rounded text-gray-300 hover:underline"
                     >
                       Unignore
                     </button>
@@ -198,13 +199,13 @@ export default function TopArtistsTab() {
                       <button
                         onClick={() => handleSave(a.artist)}
                         disabled={status[a.artist] === "saved"}
-                        className="text-sm px-2 py-0.5 rounded bg-neutral-400 text-neutral-900 disabled:opacity-50"
+                        className="text-sm px-2 py-0.5 rounded  text-blue-600 hover:underline disabled:opacity-50"
                       >
                         {status[a.artist] === "saved" ? "Saved" : "Save"}
                       </button>
                       <button
                         onClick={() => handleIgnore(a.artist)}
-                        className="text-sm px-2 py-0.5 rounded bg-neutral-400 text-red-900"
+                        className="text-sm px-2 py-0.5 rounded text-red-600 hover:underline"
                       >
                         Ignore
                       </button>

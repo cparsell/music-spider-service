@@ -31,17 +31,17 @@ export default function Home() {
               height="5%"
               width="5%"
             />
-            <h1 className="text-2xl font-bold">Music Spider</h1>
+            <h1 className="text-2xl font-bold text-gray-200">Music Spider</h1>
           </div>
-          <div className="flex gap-2 mb-6 border-b">
+          <div className="flex gap-2 mb-6 border-b-2">
             {TABS.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`px-3 py-2 -mb-px border-b-2 ${
+                className={`px-3 py-2 -mb-0.5 border-b-2 ${
                   tab === t.id
-                    ? "border-black font-semibold bg-neutral-200 text-neutral-800"
-                    : "border-transparent text-neutral-500"
+                    ? "border-gray-900 font-semibold bg-gray-300 text-gray-800"
+                    : "border-transparent text-gray-500 "
                 }`}
               >
                 {t.label}

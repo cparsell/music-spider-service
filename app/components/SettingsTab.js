@@ -6,6 +6,19 @@ import { RA_REGIONS } from "@/lib/raRegions.js";
 
 const RA_REGIONS_BY_ID = new Map(RA_REGIONS.map((r) => [r.id, r.label]));
 
+const THEMES = [
+  {
+    value: "grayscale",
+    label: "Grayscale",
+    description: "The default black/white/gray look.",
+  },
+  {
+    value: "catppuccin-mocha",
+    label: "Catppuccin Mocha",
+    description: "Re-skins the same UI with the Catppuccin Mocha palette.",
+  },
+];
+
 const ARTIST_SOURCES = [
   {
     value: "tautulli",
@@ -385,7 +398,7 @@ function RegionPicker({ value, onChange }) {
           {selectedIds.map((id) => (
             <span
               key={id}
-              className="flex items-center gap-1 bg-neutral-700 rounded px-2 py-1 text-sm"
+              className="flex items-center gap-1 bg-gray-700 rounded px-2 py-1 text-sm"
             >
               {RA_REGIONS_BY_ID.get(id) || `Unknown region (${id})`}
               <button
@@ -406,7 +419,7 @@ function RegionPicker({ value, onChange }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search for a city or country to add..."
-          className="border border-gray-600rounded px-2 py-1 text-sm w-full"
+          className="border border-gray-600 rounded px-2 py-1 text-sm w-full"
         />
         {matches.length > 0 && (
           <ul className="absolute z-10 mt-1 w-full max-h-56 overflow-auto border border-gray-600 rounded bg-white shadow">
@@ -415,7 +428,7 @@ function RegionPicker({ value, onChange }) {
                 <button
                   type="button"
                   onClick={() => addRegion(r.id)}
-                  className="w-full text-left px-2 py-1 text-sm bg-neutral-700 text-neutral-200 hover:bg-gray-200 hover:text-neutral-800"
+                  className="w-full text-left px-2 py-1 text-sm bg-gray-700 text-gray-200 hover:bg-gray-200 hover:text-gray-800"
                 >
                   {r.label}
                 </button>
@@ -435,12 +448,34 @@ export default function SettingsTab() {
   const [saveState, setSaveState] = useState("idle"); // idle | pending | saving | saved | error
   const skipNextSave = useRef(true);
   const debounceRef = useRef(null);
+  const pendingSaveRef = useRef(false);
+  const formRef = useRef(null);
+
+  useEffect(() => {
+    formRef.current = form;
+  }, [form]);
 
   useEffect(() => {
     fetch("/api/settings")
       .then((res) => res.json())
       .then(setForm);
   }, []);
+
+  const saveNow = async () => {
+    pendingSaveRef.current = false;
+    setSaveState("saving");
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formRef.current),
+      });
+      if (!res.ok) throw new Error("Failed to save settings");
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
+  };
 
   // Auto-save: any change to `form` (text, radio, checkbox) is persisted a
   // short beat after the user stops changing things, instead of on every
@@ -454,24 +489,32 @@ export default function SettingsTab() {
     }
 
     setSaveState("pending");
+    pendingSaveRef.current = true;
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(async () => {
-      setSaveState("saving");
-      try {
-        const res = await fetch("/api/settings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-        if (!res.ok) throw new Error("Failed to save settings");
-        setSaveState("saved");
-      } catch {
-        setSaveState("error");
-      }
-    }, SAVE_DEBOUNCE_MS);
+    debounceRef.current = setTimeout(saveNow, SAVE_DEBOUNCE_MS);
 
     return () => clearTimeout(debounceRef.current);
   }, [form]);
+
+  // The cleanup above cancels the debounce timer on every re-run, which also
+  // fires on unmount (e.g. switching tabs) - without this, a save still
+  // waiting out its debounce window gets silently dropped instead of ever
+  // reaching settings.json. Flush it immediately here instead.
+  useEffect(() => {
+    return () => {
+      if (pendingSaveRef.current) {
+        clearTimeout(debounceRef.current);
+        saveNow();
+      }
+    };
+  }, []);
+
+  // Apply the theme to the document immediately on change, rather than
+  // waiting for the debounced save + a full page reload (layout.js only
+  // sets data-theme on first server render).
+  useEffect(() => {
+    if (form?.theme) document.documentElement.dataset.theme = form.theme;
+  }, [form?.theme]);
 
   const updateField = (key, value, type) => {
     setForm((f) => ({
@@ -513,12 +556,36 @@ export default function SettingsTab() {
     >
       <div className="flex flex-col gap-6 w-full pr-3">
         <div>
-          <h2 className="font-semibold mb-2 text-neutral-200">Artist Source</h2>
+          <h2 className="font-semibold mb-2 text-gray-200">Appearance</h2>
+          <div className="flex flex-col gap-3">
+            {THEMES.map((t) => (
+              <label
+                key={t.value}
+                className="flex items-start gap-3 border border-gray-800 rounded p-3 cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  name="theme"
+                  checked={form.theme === t.value}
+                  onChange={() => updateField("theme", t.value)}
+                  className="mt-1"
+                />
+                <div>
+                  <p className="font-medium">{t.label}</p>
+                  <p className="text-sm text-gray-600">{t.description}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="font-semibold mb-2 text-gray-200">Artist Source</h2>
           <div className="flex flex-col gap-3">
             {ARTIST_SOURCES.map((s) => (
               <label
                 key={s.value}
-                className="flex items-start gap-3 border rounded p-3 cursor-pointer"
+                className="flex items-start gap-3 border border-gray-800 rounded p-3 cursor-pointer"
               >
                 <input
                   type="radio"
@@ -537,7 +604,7 @@ export default function SettingsTab() {
         </div>
 
         <div>
-          <h2 className="font-semibold mb-2 text-neutral-200">
+          <h2 className="font-semibold mb-2 text-gray-200">
             Event Search Artist Terms
           </h2>
           <p className="text-sm text-gray-600 mb-2">
@@ -562,14 +629,14 @@ export default function SettingsTab() {
         </div>
 
         <div>
-          <h2 className="font-semibold mb-2 text-neutral-200">
+          <h2 className="font-semibold mb-2 text-gray-200">
             Combined Top Artists Mode
           </h2>
           <div className="flex flex-col gap-3">
             {COMBINED_MODES.map((m) => (
               <label
                 key={m.value}
-                className="flex items-start gap-3 border border-gray-600 rounded p-3 cursor-pointer"
+                className="flex items-start gap-3 border border-gray-800 rounded p-3 cursor-pointer"
               >
                 <input
                   type="radio"
@@ -591,16 +658,16 @@ export default function SettingsTab() {
 
         {SECTIONS.map((section) => (
           <div key={section.title}>
-            <h2 className="font-semibold mb-2 text-neutral-200">
+            <h2 className="font-semibold mb-2 text-gray-200">
               {section.title}
             </h2>
             {section.description && (
-              <p className="text-sm text-neutral-500 mb-2">
+              <p className="text-sm text-gray-500 mb-2">
                 {section.description}
               </p>
             )}
             {section.warning && (
-              <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded p-2 mb-3">
+              <p className="text-sm text-amber-200   border border-amber-200 rounded p-2 mb-3">
                 ⚠️ {section.warning}
               </p>
             )}
@@ -625,8 +692,8 @@ export default function SettingsTab() {
                           onClick={() => updateField(f.key, o.value)}
                           className={`px-3 py-1 rounded text-sm ${
                             form[f.key] === o.value
-                              ? "bg-black text-white"
-                              : "bg-gray-200"
+                              ? "bg-black text-gray-200"
+                              : "bg-gray-300 text-gray-700"
                           }`}
                         >
                           {o.label}
@@ -643,7 +710,7 @@ export default function SettingsTab() {
                       onChange={(e) =>
                         updateField(f.key, e.target.value, f.type)
                       }
-                      className="border rounded px-2 py-1"
+                      className="border border-gray-400 rounded px-2 py-1"
                     />
                   </label>
                 ),

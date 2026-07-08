@@ -5,20 +5,20 @@ export default function StatusBar({ message, error, progress }) {
       : null;
 
   return (
-    <div className="relative min-h-2 mb-3 rounded bg-neutral-700 overflow-hidden">
+    <div className="relative min-h-2 mb-3 rounded bg-gray-700 overflow-hidden">
       {pct !== null && (
         <div
-          className="absolute inset-y-0 left-0 bg-neutral-500 transition-[width] duration-300"
+          className="absolute inset-y-0 left-0 bg-gray-500 transition-[width] duration-300"
           style={{ width: `${pct}%` }}
         />
       )}
       <div
         className={`relative flex items-center gap-2 px-3 py-1 text-sm ${
-          error ? "text-red-300" : "text-neutral-200"
+          error ? "text-red-300" : "text-gray-200"
         }`}
       >
         <span>{message}</span>
-        {pct !== null && <span className="ml-auto text-neutral-300">{pct}%</span>}
+        {pct !== null && <span className="ml-auto text-gray-300">{pct}%</span>}
       </div>
     </div>
   );

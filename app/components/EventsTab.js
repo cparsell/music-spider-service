@@ -150,7 +150,7 @@ export default function EventsTab() {
           <button
             onClick={sendEmail}
             disabled={sendingEmail}
-            className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
+            className="px-3 py-1 rounded bg-gray-700 text-white disabled:opacity-50"
           >
             {sendingEmail ? "Sending..." : "Send Email"}
           </button>
@@ -195,12 +195,12 @@ export default function EventsTab() {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold">{event.eName}</p>
-                  <p className="text-sm text-neutral-500">
+                  <p className="text-sm text-gray-500">
                     {event.venue}
                     {/* {event.city ? `, ${event.city}` : ""} */}
                   </p>
                   {event.address && (
-                    <p className="text-xs text-neutral-500">
+                    <p className="text-xs text-gray-500">
                       {event.address.trim()}
                     </p>
                   )}
