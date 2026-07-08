@@ -70,6 +70,8 @@ const SECTIONS = [
   },
   {
     title: "Spotify",
+    description:
+      "To fetch Spotify listening history, go to the Spotify Developer Dashboard \(https://developer.spotify.com/), create up an application, and add the Redirect URI below. Save the Client ID and Client Secret below. Then press 'Connect'",
     fields: [
       { key: "spotifyClientId", label: "Client ID", type: "text" },
       { key: "spotifyClientSecret", label: "Client Secret", type: "password" },
@@ -108,7 +110,7 @@ const SECTIONS = [
     description:
       'To send event emails and/or add events to Google Calendar, connect a Google account via OAuth: in the Google Cloud Console, create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI below as an authorized redirect URI. Enter the Client ID/Secret below, then click "Connect Google Account."',
     warning:
-      'Connecting a Google account grants this app permission to send email as you (Gmail\'s "gmail.send" scope, send-only) and, if Calendar sync is enabled below, to create events on your calendar ("calendar.events" scope). Neither scope can read, delete, or otherwise access your existing mail or calendar. If you plan to use this feature, you should review this app\'s source code yourself first to confirm there is no misuse of that access.',
+      'Connecting a Google account grants this app permission to send email as you (Gmail\'s "gmail.send" scope, send-only) and, if Calendar sync is enabled below, to create events on your calendar ("calendar.events" scope). Neither scope can read, delete, or otherwise access your existing mail or calendar. If you plan to use this feature, review this app\'s source code yourself to confirm there is no misuse of that access.',
     fields: [
       { key: "emailRecipient", label: "Recipient email", type: "text" },
       {
