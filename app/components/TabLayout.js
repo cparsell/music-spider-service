@@ -27,9 +27,12 @@ export default function TabLayout({ controls, statusBar, children }) {
   }, []);
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="shrink-0">{controls}</div>
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
+    <div className="h-full flex flex-col ">
+      <div className="shrink-0 mb-3">{controls}</div>
+      <div
+        ref={scrollRef}
+        className="flex-1 min-h-0 overflow-y-auto border rounded border-neutral-300 p-2"
+      >
         {children}
       </div>
       <div className="shrink-0">{statusBar}</div>

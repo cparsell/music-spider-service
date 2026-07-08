@@ -24,14 +24,13 @@ export default function HomeClient({ defaultTab }) {
     <main className="h-screen overflow-hidden flex flex-col items-center">
       <div className="w-full max-w-5xl h-full flex flex-col px-3">
         <div className="shrink-0 pt-8">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-2 mb-4">
             <span className="imglogo"></span>
-            {/* <img className="imglogo" src="ms-logo.svg" height="5%" width="5%" /> */}
             <h1 className="text-2xl font-bold text-neutral-200">
               Music Spider
             </h1>
           </div>
-          <div className="flex gap-1 mb-6 border-b-2">
+          <div className="flex gap-1 mb-3 border-b-2">
             {TABS.map((t) => (
               <button
                 key={t.id}

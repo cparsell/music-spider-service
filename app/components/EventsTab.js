@@ -131,7 +131,7 @@ export default function EventsTab() {
   return (
     <TabLayout
       controls={
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 ">
           <button
             onClick={runSearch}
             disabled={searching}
@@ -147,7 +147,7 @@ export default function EventsTab() {
               Cancel
             </button>
           )}
-          <div className="flex-1 flex justify-end">
+          <div className="">
             <button
               onClick={sendEmail}
               disabled={sendingEmail}
@@ -176,7 +176,7 @@ export default function EventsTab() {
             {sortedEvents.map((event) => (
               <li
                 key={event.id}
-                className="flex gap-4 border border-neutral-600 rounded p-3 flex-1 min-w-[320px] max-w-md"
+                className="flex gap-4 border border-neutral-700 rounded p-3 flex-1 min-w-[320px] max-w-md"
               >
                 <div className="flex flex-col justify-between shrink-0">
                   {event.image && (

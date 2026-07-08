@@ -5,7 +5,7 @@ export default function StatusBar({ message, error, progress }) {
       : null;
 
   return (
-    <div className="relative min-h-2 mb-3 rounded bg-neutral-800 overflow-hidden">
+    <div className="relative min-h-2 mt-2 mb-1 rounded bg-neutral-800 overflow-hidden">
       {pct !== null && (
         <div
           className="absolute inset-y-0 left-0 bg-neutral-500 transition-[width] duration-300"

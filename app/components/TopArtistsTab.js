@@ -145,7 +145,7 @@ export default function TopArtistsTab() {
   return (
     <TabLayout
       controls={
-        <div className="flex gap-2 mb-2">
+        <div className="flex gap-2">
           {["short_term", "medium_term", "long_term", "combined"].map((t) => (
             <button
               key={t}

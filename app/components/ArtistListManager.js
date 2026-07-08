@@ -86,7 +86,7 @@ export default function ArtistListManager({ apiPath, addLabel }) {
   return (
     <TabLayout
       controls={
-        <form onSubmit={addArtist} className="flex  gap-2 mb-4 w-full">
+        <form onSubmit={addArtist} className="flex  gap-2 w-full">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
