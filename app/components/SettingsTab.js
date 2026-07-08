@@ -1,7 +1,10 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import StatusBar from "./StatusBar";
 import TabLayout from "./TabLayout";
+import { RA_REGIONS } from "@/lib/raRegions.js";
+
+const RA_REGIONS_BY_ID = new Map(RA_REGIONS.map((r) => [r.id, r.label]));
 
 const ARTIST_SOURCES = [
   {
@@ -100,8 +103,8 @@ const SECTIONS = [
     fields: [
       {
         key: "raRegion",
-        label: "Region ID(s), comma-separated",
-        type: "text",
+        label: "Regions",
+        type: "regionPicker",
       },
     ],
   },
@@ -344,6 +347,86 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
   );
 }
 
+function RegionPicker({ value, onChange }) {
+  const [search, setSearch] = useState("");
+
+  const selectedIds = useMemo(
+    () =>
+      (value || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((s) => parseInt(s, 10)),
+    [value],
+  );
+
+  const matches = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return [];
+    return RA_REGIONS.filter(
+      (r) => !selectedIds.includes(r.id) && r.label.toLowerCase().includes(term),
+    ).slice(0, 20);
+  }, [search, selectedIds]);
+
+  const addRegion = (id) => {
+    onChange([...selectedIds, id].join(","));
+    setSearch("");
+  };
+
+  const removeRegion = (id) => {
+    onChange(selectedIds.filter((existing) => existing !== id).join(","));
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedIds.map((id) => (
+            <span
+              key={id}
+              className="flex items-center gap-1 bg-gray-200 rounded px-2 py-1 text-sm"
+            >
+              {RA_REGIONS_BY_ID.get(id) || `Unknown region (${id})`}
+              <button
+                type="button"
+                onClick={() => removeRegion(id)}
+                className="text-gray-600 hover:text-red-600"
+                aria-label={`Remove ${RA_REGIONS_BY_ID.get(id) || id}`}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="relative">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search for a city or country to add..."
+          className="border rounded px-2 py-1 text-sm w-full"
+        />
+        {matches.length > 0 && (
+          <ul className="absolute z-10 mt-1 w-full max-h-56 overflow-auto border rounded bg-white shadow">
+            {matches.map((r) => (
+              <li key={r.id}>
+                <button
+                  type="button"
+                  onClick={() => addRegion(r.id)}
+                  className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100"
+                >
+                  {r.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const SAVE_DEBOUNCE_MS = 600;
 
 export default function SettingsTab() {
@@ -516,7 +599,15 @@ export default function SettingsTab() {
             )}
             <div className="flex flex-col gap-2">
               {section.fields.map((f) =>
-                f.type === "switch" ? (
+                f.type === "regionPicker" ? (
+                  <div key={f.key} className="flex flex-col gap-1 text-sm">
+                    {f.label}
+                    <RegionPicker
+                      value={form[f.key]}
+                      onChange={(v) => updateField(f.key, v)}
+                    />
+                  </div>
+                ) : f.type === "switch" ? (
                   <div key={f.key} className="flex flex-col gap-1 text-sm">
                     {f.label}
                     <div className="flex gap-2">
