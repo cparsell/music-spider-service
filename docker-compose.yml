@@ -6,5 +6,5 @@ services:
     env_file:
       - .env.local
     volumes:
-      - ./data:/app/data
+      - /mnt/user/appdata/music-spider-service:/app/data
     restart: unless-stopped
