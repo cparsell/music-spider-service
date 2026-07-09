@@ -818,58 +818,58 @@ export default function SettingsTab() {
               {section.fields
                 .filter((f) => (f.showIf ? f.showIf(form) : true))
                 .map((f) =>
-                f.type === "regionPicker" ? (
-                  <div key={f.key} className="flex flex-col gap-1 text-sm">
-                    {f.label}
-                    <RegionPicker
-                      value={form[f.key]}
-                      onChange={(v) => updateField(f.key, v)}
-                    />
-                  </div>
-                ) : f.type === "switch" ? (
-                  <div key={f.key} className="flex flex-col gap-1 text-sm">
-                    {f.label}
-                    <div className="flex gap-2">
-                      {f.options.map((o) => (
-                        <button
-                          key={o.value}
-                          type="button"
-                          onClick={() => updateField(f.key, o.value)}
-                          className={`px-3 py-1 rounded text-sm ${
-                            form[f.key] === o.value
-                              ? "bg-black text-neutral-200"
-                              : "bg-neutral-300 text-neutral-700"
-                          }`}
-                        >
-                          {o.label}
-                        </button>
-                      ))}
+                  f.type === "regionPicker" ? (
+                    <div key={f.key} className="flex flex-col gap-1 text-sm">
+                      {f.label}
+                      <RegionPicker
+                        value={form[f.key]}
+                        onChange={(v) => updateField(f.key, v)}
+                      />
                     </div>
-                  </div>
-                ) : f.type === "textarea" ? (
-                  <label key={f.key} className="flex flex-col gap-1 text-sm">
-                    {f.label}
-                    <textarea
-                      value={form[f.key] ?? ""}
-                      onChange={(e) => updateField(f.key, e.target.value)}
-                      rows={5}
-                      className="border border-neutral-400 rounded px-2 py-1 font-mono text-xs"
-                    />
-                  </label>
-                ) : (
-                  <label key={f.key} className="flex flex-col gap-1 text-sm">
-                    {f.label}
-                    <input
-                      type={f.type}
-                      value={form[f.key] ?? ""}
-                      onChange={(e) =>
-                        updateField(f.key, e.target.value, f.type)
-                      }
-                      className="border border-neutral-400 rounded px-2 py-1"
-                    />
-                  </label>
-                ),
-              )}
+                  ) : f.type === "switch" ? (
+                    <div key={f.key} className="flex flex-col gap-1 text-sm">
+                      {f.label}
+                      <div className="flex gap-2">
+                        {f.options.map((o) => (
+                          <button
+                            key={o.value}
+                            type="button"
+                            onClick={() => updateField(f.key, o.value)}
+                            className={`px-3 py-1 rounded text-sm ${
+                              form[f.key] === o.value
+                                ? "bg-gray-800 text-neutral-400 border border-neutral-400"
+                                : "bg-neutral-300 text-neutral-700"
+                            }`}
+                          >
+                            {o.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : f.type === "textarea" ? (
+                    <label key={f.key} className="flex flex-col gap-1 text-sm">
+                      {f.label}
+                      <textarea
+                        value={form[f.key] ?? ""}
+                        onChange={(e) => updateField(f.key, e.target.value)}
+                        rows={5}
+                        className="border border-neutral-400 rounded px-2 py-1 font-mono text-xs"
+                      />
+                    </label>
+                  ) : (
+                    <label key={f.key} className="flex flex-col gap-1 text-sm">
+                      {f.label}
+                      <input
+                        type={f.type}
+                        value={form[f.key] ?? ""}
+                        onChange={(e) =>
+                          updateField(f.key, e.target.value, f.type)
+                        }
+                        className="border border-neutral-400 rounded px-2 py-1"
+                      />
+                    </label>
+                  ),
+                )}
             </div>
             {section.title === "Top Artists" && (
               <div className="flex items-center gap-2 mt-3 text-sm">
