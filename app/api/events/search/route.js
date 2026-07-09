@@ -80,7 +80,14 @@ export async function POST() {
     let calendarError = null;
     const config = await getResolvedConfig();
     if (config.googleCalendarSyncEnabled && newDates.length > 0) {
-      if (await hasCalendarScope()) {
+      // hasCalendarScope() checks the OAuth token's granted scope, which
+      // has no equivalent in Apps Script mode - there's no token to check,
+      // so just attempt the sync and let a bad webhook URL/secret surface
+      // as a calendarError from syncNewDatesToCalendar itself.
+      const authorized =
+        config.googleIntegrationMode === "appsScript" ||
+        (await hasCalendarScope());
+      if (authorized) {
         ({ synced: calendarSynced, error: calendarError } =
           await syncNewDatesToCalendar(newDates, config.calendarId));
       } else {

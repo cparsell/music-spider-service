@@ -6,6 +6,9 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
   const { checkAndSendWeeklyEmail } = await import("./lib/emailScheduler.js");
+  const { checkAndSendWeeklyWebhook } = await import(
+    "./lib/webhookScheduler.js"
+  );
   const { checkAndRefreshTopArtists } = await import(
     "./lib/topArtistsRefreshScheduler.js"
   );
@@ -14,6 +17,9 @@ export async function register() {
   const runChecks = () => {
     checkAndSendWeeklyEmail().catch((err) =>
       console.error("Weekly email scheduler error:", err),
+    );
+    checkAndSendWeeklyWebhook().catch((err) =>
+      console.error("Weekly webhook scheduler error:", err),
     );
     checkAndRefreshTopArtists().catch((err) =>
       console.error("Top artists refresh scheduler error:", err),

@@ -124,9 +124,9 @@ const SECTIONS = [
   {
     title: "Google (Email & Calendar)",
     description:
-      'To send event emails and/or add events to Google Calendar, connect a Google account via OAuth: in the Google Cloud Console, create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI below as an authorized redirect URI. Enter the Client ID/Secret below, then click "Connect Google Account."',
+      'Two ways to let Music Spider send event emails and/or add events to Google Calendar - pick one below. "OAuth" connects a Google account directly: in the Google Cloud Console, create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI below as an authorized redirect URI. Enter the Client ID/Secret below, then click "Connect Google Account." Note this requires an HTTPS connection to the redirect URI once accessed from anywhere other than 127.0.0.1/localhost. "Apps Script Webhook" instead sends requests to a small script you deploy yourself at script.google.com (see apps-script/Code.gs in the repo) - no OAuth client, redirect URI, or HTTPS needed on Music Spider\'s end, at the cost of maintaining that script.',
     warning:
-      'Connecting a Google account grants this app permission to send email as you (Gmail\'s "gmail.send" scope, send-only) and, if Calendar sync is enabled below, to create events on your calendar ("calendar.events" scope). Neither scope can read, delete, or otherwise access your existing mail or calendar. If you plan to use this feature, review this app\'s source code yourself to confirm there is no misuse of that access.',
+      'Connecting a Google account via OAuth grants this app permission to send email as you (Gmail\'s "gmail.send" scope, send-only) and, if Calendar sync is enabled below, to create events on your calendar ("calendar.events" scope). Neither scope can read, delete, or otherwise access your existing mail or calendar. The Apps Script webhook option grants no such permissions to this app directly - instead your own script (which you control and can review) does the sending. Either way, if you plan to use this feature, review this app\'s source code yourself to confirm there is no misuse of that access.',
     fields: [
       { key: "emailRecipient", label: "Recipient email", type: "text" },
       {
@@ -134,13 +134,58 @@ const SECTIONS = [
         label: "Calendar ID (blank = primary calendar)",
         type: "text",
       },
-      { key: "googleClientId", label: "Google Client ID", type: "text" },
+      {
+        key: "googleIntegrationMode",
+        label: "Integration method",
+        type: "switch",
+        options: [
+          { value: "oauth", label: "OAuth" },
+          { value: "appsScript", label: "Apps Script Webhook" },
+        ],
+      },
+      {
+        key: "googleClientId",
+        label: "Google Client ID",
+        type: "text",
+        showIf: (f) => f.googleIntegrationMode !== "appsScript",
+      },
       {
         key: "googleClientSecret",
         label: "Google Client Secret",
         type: "password",
+        showIf: (f) => f.googleIntegrationMode !== "appsScript",
       },
-      { key: "googleRedirectUri", label: "Google Redirect URI", type: "text" },
+      {
+        key: "googleRedirectUri",
+        label: "Google Redirect URI",
+        type: "text",
+        showIf: (f) => f.googleIntegrationMode !== "appsScript",
+      },
+      {
+        key: "appsScriptWebhookUrl",
+        label: "Apps Script Webhook URL",
+        type: "text",
+        showIf: (f) => f.googleIntegrationMode === "appsScript",
+      },
+      {
+        key: "appsScriptSharedSecret",
+        label: "Apps Script Shared Secret (optional, recommended)",
+        type: "password",
+        showIf: (f) => f.googleIntegrationMode === "appsScript",
+      },
+    ],
+  },
+  {
+    title: "Webhook",
+    description:
+      'Sends a weekly POST request with the JSON body defined below to any URL that accepts an incoming webhook - e.g. a Discord channel webhook, or a Home Assistant automation using a "Webhook" trigger (which accepts any JSON shape you send and lets you build the notification yourself from there). Use {{subject}}, {{summary}}, and {{count}} as placeholders - each is JSON-escaped automatically, so it\'s safe to drop inside a quoted string like "content": "{{summary}}". The result must be valid JSON once the placeholders are filled in. Note some services (e.g. Discord) cap message length around 2000 characters.',
+    fields: [
+      { key: "webhookUrl", label: "Webhook URL", type: "text" },
+      {
+        key: "webhookTemplate",
+        label: "Body template (JSON)",
+        type: "textarea",
+      },
     ],
   },
 ];
@@ -174,16 +219,13 @@ function SpotifyConnection({ redirectUri }) {
 
     const onMessage = (event) => {
       if (event.data?.source !== "spotify-oauth") return;
-      // The popup finishes on whatever host the Spotify redirect URI uses
-      // (e.g. 127.0.0.1), which may differ from the host this tab is on
-      // (e.g. localhost) even though it's the same machine/port - so we
-      // can't require an exact origin match here, just that it's loopback.
+      // The popup finishes on whatever host the Spotify redirect URI uses,
+      // which may differ from the host this tab is on (e.g. this tab is on
+      // a LAN hostname but the redirect URI is 127.0.0.1) even though it's
+      // the same app - so compare against the configured redirect URI's
+      // origin rather than assuming loopback.
       try {
-        const eventUrl = new URL(event.origin);
-        const isLoopback =
-          eventUrl.hostname === "localhost" ||
-          eventUrl.hostname === "127.0.0.1";
-        if (!isLoopback || eventUrl.port !== window.location.port) return;
+        if (event.origin !== new URL(redirectUri).origin) return;
       } catch {
         return;
       }
@@ -192,7 +234,7 @@ function SpotifyConnection({ redirectUri }) {
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, []);
+  }, [redirectUri]);
 
   const disconnect = async () => {
     await fetch("/api/spotify/status", { method: "DELETE" });
@@ -274,13 +316,10 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
 
     const onMessage = (event) => {
       if (event.data?.source !== "google-oauth") return;
-      // Same loopback-host caveat as the Spotify popup - see there for why.
+      // Same redirect-URI-origin caveat as the Spotify popup - see there for
+      // why.
       try {
-        const eventUrl = new URL(event.origin);
-        const isLoopback =
-          eventUrl.hostname === "localhost" ||
-          eventUrl.hostname === "127.0.0.1";
-        if (!isLoopback || eventUrl.port !== window.location.port) return;
+        if (event.origin !== new URL(redirectUri).origin) return;
       } catch {
         return;
       }
@@ -289,7 +328,7 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, []);
+  }, [redirectUri]);
 
   const disconnect = async () => {
     await fetch("/api/google/status", { method: "DELETE" });
@@ -355,6 +394,110 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
             Reconnect
           </button>
         </div>
+      )}
+    </div>
+  );
+}
+
+function WebhookTest() {
+  const [sending, setSending] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
+
+  const sendTest = async () => {
+    setSending(true);
+    setMessage("Sending...");
+    setError(false);
+    try {
+      const res = await fetch("/api/events/webhook", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send webhook");
+      setMessage(`Sent with ${data.count} upcoming events.`);
+      setError(false);
+    } catch (err) {
+      setMessage(err.message);
+      setError(true);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="mt-2 flex items-center gap-3">
+      <button
+        type="button"
+        onClick={sendTest}
+        disabled={sending}
+        className="text-sm px-2 py-0.5 rounded bg-neutral-700 text-white disabled:opacity-50"
+      >
+        {sending ? "Sending..." : "Send Test Webhook"}
+      </button>
+      {message && (
+        <span
+          className={`text-sm ${error ? "text-red-600" : "text-neutral-600"}`}
+        >
+          {message}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function GoogleActionsTest() {
+  const [busy, setBusy] = useState(""); // "" | "email" | "calendar"
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
+
+  const run = async (kind, path, successMessage) => {
+    setBusy(kind);
+    setMessage("Sending...");
+    setError(false);
+    try {
+      const res = await fetch(path, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
+      setMessage(successMessage);
+      setError(false);
+    } catch (err) {
+      setMessage(err.message);
+      setError(true);
+    } finally {
+      setBusy("");
+    }
+  };
+
+  return (
+    <div className="mt-2 flex items-center gap-3 flex-wrap">
+      <button
+        type="button"
+        onClick={() =>
+          run("email", "/api/google/email/test", "Test email sent.")
+        }
+        disabled={!!busy}
+        className="text-sm px-2 py-0.5 rounded bg-neutral-700 text-white disabled:opacity-50"
+      >
+        {busy === "email" ? "Sending..." : "Send Test Email"}
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          run(
+            "calendar",
+            "/api/google/calendar/test",
+            "Test event created (tomorrow, same time) - delete it from your calendar when done.",
+          )
+        }
+        disabled={!!busy}
+        className="text-sm px-2 py-0.5 rounded bg-neutral-700 text-white disabled:opacity-50"
+      >
+        {busy === "calendar" ? "Creating..." : "Create Test Calendar Event"}
+      </button>
+      {message && (
+        <span
+          className={`text-sm ${error ? "text-red-600" : "text-neutral-600"}`}
+        >
+          {message}
+        </span>
       )}
     </div>
   );
@@ -672,7 +815,9 @@ export default function SettingsTab() {
               </p>
             )}
             <div className="flex flex-col gap-2">
-              {section.fields.map((f) =>
+              {section.fields
+                .filter((f) => (f.showIf ? f.showIf(form) : true))
+                .map((f) =>
                 f.type === "regionPicker" ? (
                   <div key={f.key} className="flex flex-col gap-1 text-sm">
                     {f.label}
@@ -701,6 +846,16 @@ export default function SettingsTab() {
                       ))}
                     </div>
                   </div>
+                ) : f.type === "textarea" ? (
+                  <label key={f.key} className="flex flex-col gap-1 text-sm">
+                    {f.label}
+                    <textarea
+                      value={form[f.key] ?? ""}
+                      onChange={(e) => updateField(f.key, e.target.value)}
+                      rows={5}
+                      className="border border-neutral-400 rounded px-2 py-1 font-mono text-xs"
+                    />
+                  </label>
                 ) : (
                   <label key={f.key} className="flex flex-col gap-1 text-sm">
                     {f.label}
@@ -752,10 +907,14 @@ export default function SettingsTab() {
             )}
             {section.title === "Google (Email & Calendar)" && (
               <>
-                <GoogleConnection
-                  redirectUri={form.googleRedirectUri}
-                  calendarSyncEnabled={form.googleCalendarSyncEnabled}
-                />
+                {form.googleIntegrationMode === "appsScript" ? (
+                  <GoogleActionsTest />
+                ) : (
+                  <GoogleConnection
+                    redirectUri={form.googleRedirectUri}
+                    calendarSyncEnabled={form.googleCalendarSyncEnabled}
+                  />
+                )}
                 <label className="flex items-center gap-2 text-sm mt-3">
                   <input
                     type="checkbox"
@@ -776,6 +935,24 @@ export default function SettingsTab() {
                   />
                   Add newly found events to Google Calendar
                 </label>
+                {form.googleIntegrationMode !== "appsScript" && (
+                  <GoogleActionsTest />
+                )}
+              </>
+            )}
+            {section.title === "Webhook" && (
+              <>
+                <label className="flex items-center gap-2 text-sm mt-1">
+                  <input
+                    type="checkbox"
+                    checked={form.webhookEnabled}
+                    onChange={(e) =>
+                      updateField("webhookEnabled", e.target.checked)
+                    }
+                  />
+                  Send a weekly webhook digest of upcoming events
+                </label>
+                <WebhookTest />
               </>
             )}
           </div>
