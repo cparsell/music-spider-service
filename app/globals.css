@@ -108,3 +108,7 @@ h2 {
   font-size: 1.1rem !important;
   margin-top: 0.5rem !important;
 }
+
+.text-shadow-lg {
+  text-shadow: 0 2px 4px rgb(0 0 0 / 100%);
+}

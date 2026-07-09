@@ -129,113 +129,132 @@ export default function EventsTab() {
   );
 
   return (
-    <TabLayout
-      controls={
-        <div className="flex items-center gap-3 ">
-          <button
-            onClick={runSearch}
-            disabled={searching}
-            className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
-          >
-            {searching ? "Searching..." : "Run Search"}
-          </button>
-          {searching && (
+    <div className="w-full h-full flex flex-col gap-2">
+      <TabLayout
+        controls={
+          <div className="flex items-center gap-3 ">
             <button
-              onClick={cancelSearch}
-              className="px-3 py-1 rounded bg-red-300 text-white"
-            >
-              Cancel
-            </button>
-          )}
-          <div className="">
-            <button
-              onClick={sendEmail}
-              disabled={sendingEmail}
+              onClick={runSearch}
+              disabled={searching}
               className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
             >
-              {sendingEmail ? "Sending..." : "Send Email"}
+              {searching ? "Searching..." : "Run Search"}
             </button>
-          </div>
-        </div>
-      }
-      statusBar={
-        <StatusBar
-          message={statusMessage}
-          error={statusError}
-          progress={progress}
-        />
-      }
-    >
-      {!loading &&
-        (sortedEvents.length === 0 ? (
-          <p className="text-neutral-500">
-            No events yet. Run a search to find some.
-          </p>
-        ) : (
-          <ul className="flex flex-wrap gap-4 overflow-auto pr-2">
-            {sortedEvents.map((event) => (
-              <li
-                key={event.id}
-                className="flex gap-4 border border-neutral-700 rounded p-3 flex-1 min-w-[320px] max-w-md"
+            {searching && (
+              <button
+                onClick={cancelSearch}
+                className="px-3 py-1 rounded bg-red-300 text-white"
               >
-                <div className="flex flex-col justify-between shrink-0">
-                  {event.image && (
-                    <a href={event.image} target="_blank" rel="noreferrer">
+                Cancel
+              </button>
+            )}
+            <div className="">
+              <button
+                onClick={sendEmail}
+                disabled={sendingEmail}
+                className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
+              >
+                {sendingEmail ? "Sending..." : "Send Email"}
+              </button>
+            </div>
+          </div>
+        }
+        statusBar={
+          <StatusBar
+            message={statusMessage}
+            error={statusError}
+            progress={progress}
+          />
+        }
+      >
+        {!loading &&
+          (sortedEvents.length === 0 ? (
+            <p className="text-neutral-500">
+              No events yet. Run a search to find some.
+            </p>
+          ) : (
+            <ul className="flex flex-wrap gap-4 overflow-auto pr-2 ">
+              {sortedEvents.map((event) => (
+                <li
+                  key={event.id}
+                  className="relative w-80 aspect-6/8 rounded-xl overflow-hidden bg-neutral-800 text-shadow-lg hover:text-shadow-xlg shadow-black/50 "
+                >
+                  {event.image &&
+                    (event.dates?.[0]?.urls?.[0]?.url ? (
+                      <a
+                        href={event.dates[0].urls[0].url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="absolute inset-0"
+                      >
+                        <img
+                          src={event.image}
+                          alt={event.eName || ""}
+                          className="absolute inset-0 w-full h-full object-cover opacity-80 hover:opacity-100"
+                        />
+                      </a>
+                    ) : (
                       <img
                         src={event.image}
-                        alt={event.eName}
-                        className="w-24 h-24 object-cover rounded"
+                        alt={event.eName || ""}
+                        className="absolute inset-0 w-full h-full object-cover opacity-80 hover:opacity-100"
                       />
-                    </a>
-                  )}
-                  <button
-                    onClick={() => deleteEvent(event.id)}
-                    className="text-sm text-red-600 hover:underline"
-                  >
-                    delete
-                  </button>
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold">{event.eName}</p>
-                  <p className="text-sm text-neutral-500">
-                    {event.venue}
-                    {/* {event.city ? `, ${event.city}` : ""} */}
-                  </p>
-                  {event.address && (
-                    <p className="text-xs text-neutral-500">
-                      {event.address.trim()}
-                    </p>
-                  )}
-                  {event.actsDisplay && (
-                    <p className="text-sm mt-1">Acts: {event.actsDisplay}</p>
-                  )}
-                  <div className="flex flex-col gap-1 mt-1">
-                    {event.dates?.map((d) => (
-                      <div key={d.date} className="flex gap-2 text-sm">
-                        <span className="text-neutral-600 shrink-0">
-                          {formatDate(d.date)}
-                        </span>
-                        <div className="flex flex-col">
-                          {d.urls?.map((u) => (
-                            <a
-                              key={u.name}
-                              href={u.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              {u.name}
-                            </a>
-                          ))}
-                        </div>
-                      </div>
                     ))}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/100 to-transparent to-70% pointer-events-none" />
+                  <div className="absolute inset-x-0 bottom-0 p-3 text-white">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold leading-tight">
+                        {event.eName}
+                      </p>
+                      <button
+                        onClick={() => deleteEvent(event.id)}
+                        className="text-xs text-red-300 hover:underline shrink-0"
+                      >
+                        delete
+                      </button>
+                    </div>
+                    <p className="text-sm text-neutral-300">
+                      {event.venue}
+                      {/* {event.city ? `, ${event.city}` : ""} */}
+                    </p>
+                    {event.address && (
+                      <p className="text-xs text-neutral-300">
+                        {event.address.trim()}
+                      </p>
+                    )}
+                    {event.actsDisplay && (
+                      <p className="text-sm mt-1 text-white">
+                        Acts: {event.actsDisplay}
+                      </p>
+                    )}
+                    <div className="flex flex-col gap-1 mt-1">
+                      {event.dates?.map((d) => (
+                        <div key={d.date} className="flex gap-2 text-sm">
+                          <span className="text-neutral-300 shrink-0">
+                            {formatDate(d.date)}
+                          </span>
+                          <div className="flex flex-col">
+                            {d.urls?.map((u) => (
+                              <a
+                                key={u.name}
+                                href={u.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-blue-300 hover:underline"
+                              >
+                                {u.name}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ))}
-    </TabLayout>
+                </li>
+              ))}
+            </ul>
+          ))}
+      </TabLayout>
+    </div>
   );
 }
