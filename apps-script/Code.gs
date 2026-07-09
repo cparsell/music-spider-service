@@ -8,14 +8,18 @@
  * Spider's own end is required - Google hosts this endpoint for you.
  *
  * Setup:
+ *
  *   1. Go to https://script.google.com, create a new project, and replace
  *      the default Code.gs contents with this file.
+ *
  *   2. Deploy > New deployment > select type "Web app".
  *        - Execute as: Me
  *        - Who has access: Anyone
+ *
  *   3. Copy the resulting web app URL (ends in /exec) into Music Spider's
  *      Settings tab, under Google (Email & Calendar) > Apps Script Webhook
  *      URL, with "Apps Script Webhook" selected as the integration mode.
+ *
  *   4. (Optional but recommended) In this project's Project Settings >
  *      Script Properties, add a property named SHARED_SECRET with a value
  *      of your choosing, and enter the same value into Music Spider's
@@ -42,13 +46,17 @@ function doPost(e) {
       throw new Error("Unknown type: " + payload.type);
     }
   } catch (err) {
-    return jsonResponse_({ ok: false, error: String((err && err.message) || err) });
+    return jsonResponse_({
+      ok: false,
+      error: String((err && err.message) || err),
+    });
   }
   return jsonResponse_(Object.assign({ ok: true }, result));
 }
 
 function assertSecret_(provided) {
-  var expected = PropertiesService.getScriptProperties().getProperty("SHARED_SECRET");
+  var expected =
+    PropertiesService.getScriptProperties().getProperty("SHARED_SECRET");
   if (expected && provided !== expected) {
     throw new Error("Invalid or missing secret");
   }
