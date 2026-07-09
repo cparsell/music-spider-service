@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b0b0b;
+  /* Not pure/near-black on purpose: values below ~16 (limited-range HDMI
+     black level) sit in a zone where GPU compositor tiles can round
+     inconsistently to true 0 vs the 16 floor, producing a visible seam
+     between tiles on an otherwise flat fill. #121212 (Material's standard
+     dark surface) stays safely above that threshold. */
+  --background: #121212;
   --foreground: #ededed;
   --color-red-600: color-mix(
     in srgb,
