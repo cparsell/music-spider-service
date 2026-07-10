@@ -21,13 +21,9 @@ export default function HomeClient({ defaultTab, isConfigured }) {
   });
 
   return (
-    // Below lg (1024px, same as max-w-5xl below): logo/tabs stacked above
-    // content, both capped at max-w-5xl, matching the layout this always
-    // had. At lg+, there's enough room to move logo/tabs into a left
-    // sidebar instead and let content use the freed-up width - fully, for
-    // Events (so cards can fill the screen), capped at max-w-5xl (same as
-    // before) for everything else so those tabs don't just end up with a
-    // lot of empty space stretched across a wide screen.
+    // Below lg: logo/tabs stacked above content. At lg+, there's enough room
+    // to move logo/tabs into a left sidebar instead and let content use the
+    // full remaining width, so each tab's scrollbar hugs the browser edge.
     <main className="h-screen overflow-hidden flex flex-col items-center lg:flex-row lg:items-stretch">
       <div className="w-full max-w-5xl shrink-0  pt-8 lg:w-56 lg:max-w-none lg:shrink-0 lg:flex lg:flex-col lg:border-r lg:border-neutral-800 lg:pl-4">
         <div className="flex items-center gap-2 mb-4">
@@ -51,8 +47,8 @@ export default function HomeClient({ defaultTab, isConfigured }) {
         </div>
       </div>
 
-      <div className="w-full max-w-5xl flex-1 min-h-0 px-3 pb-2 lg:max-w-none lg:px-6 lg:pt-8">
-        <div className={`h-full ${tab === "events" ? "" : "lg:max-w-5xl"}`}>
+      <div className="w-full flex-1 min-h-0 px-3 pb-2 lg:max-w-none lg:px-6 lg:pt-8">
+        <div className="h-full">
           {tab === "top" && (
             <TopArtistsTab
               description={

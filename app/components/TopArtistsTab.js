@@ -165,7 +165,7 @@ export default function TopArtistsTab({ description }) {
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="px-3 py-1 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50 "
+              className="px-3 py-1 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50 cursor-pointer"
             >
               {refreshing ? "Refreshing..." : "Force Refresh"}
             </button>

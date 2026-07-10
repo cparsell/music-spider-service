@@ -3,7 +3,8 @@ import { useEffect, useRef } from "react";
 
 // Shared shell for the list-style tabs: keeps `controls` (term/action
 // buttons) pinned at the top and `statusBar` pinned at the bottom, while
-// `children` (the table/list) scrolls independently between them.
+// `children` (the table/list) scrolls independently between them and spans
+// the full available width, so its scrollbar hugs the browser's edge.
 export default function TabLayout({
   controls,
   statusBar,

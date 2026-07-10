@@ -1,7 +1,8 @@
 // Runs once when the Next.js server starts. Used to set up periodic
-// background checks (weekly events-digest email, top-artists auto-refresh)
-// - this app has no external cron/queue infra, so a simple in-process
-// interval is enough for a single-instance, personal-use deployment.
+// background checks (weekly events-digest email/webhook, top-artists
+// auto-refresh, events auto-search) - this app has no external cron/queue
+// infra, so a simple in-process interval is enough for a single-instance,
+// personal-use deployment.
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
@@ -11,6 +12,9 @@ export async function register() {
   );
   const { checkAndRefreshTopArtists } = await import(
     "./lib/topArtistsRefreshScheduler.js"
+  );
+  const { checkAndRunEventSearch } = await import(
+    "./lib/eventsSearchScheduler.js"
   );
   const CHECK_INTERVAL_MS = 60 * 60 * 1000; // hourly
 
@@ -23,6 +27,9 @@ export async function register() {
     );
     checkAndRefreshTopArtists().catch((err) =>
       console.error("Top artists refresh scheduler error:", err),
+    );
+    checkAndRunEventSearch().catch((err) =>
+      console.error("Events auto-search scheduler error:", err),
     );
   };
 

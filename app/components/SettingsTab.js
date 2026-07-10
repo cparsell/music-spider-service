@@ -50,6 +50,16 @@ const EVENT_SEARCH_SOURCE_OPTIONS = [
   { value: "resadvisor", label: "Resident Advisor" },
 ];
 
+const DAYS_OF_WEEK = [
+  { value: 0, label: "Sunday" },
+  { value: 1, label: "Monday" },
+  { value: 2, label: "Tuesday" },
+  { value: 3, label: "Wednesday" },
+  { value: 4, label: "Thursday" },
+  { value: 5, label: "Friday" },
+  { value: 6, label: "Saturday" },
+];
+
 const COMBINED_MODES = [
   {
     value: "weighted",
@@ -716,8 +726,8 @@ export default function SettingsTab() {
         <StatusBar message={statusText} error={saveState === "error"} />
       }
     >
-      <div className="flex flex-col gap-6 w-full pr-3">
-        <div>
+      <div className="columns-1 xl:columns-2 pl-2 pr-8 gap-12 w-full max-w-[1800px]">
+        <div className="break-inside-avoid mb-8">
           <h2 className="font-semibold mb-2 text-neutral-200">Appearance</h2>
           <div className="flex flex-col gap-3">
             {THEMES.map((t) => (
@@ -741,7 +751,7 @@ export default function SettingsTab() {
           </div>
         </div>
 
-        <div>
+        <div className="break-inside-avoid mb-8">
           <h2 className="font-semibold mb-2 text-neutral-200">Artist Source</h2>
           <div className="flex flex-col gap-3">
             {ARTIST_SOURCES.map((s) => (
@@ -765,7 +775,7 @@ export default function SettingsTab() {
           </div>
         </div>
 
-        <div>
+        <div className="break-inside-avoid mb-8">
           <h2 className="font-semibold mb-2 text-neutral-200">
             Event Search Sources
           </h2>
@@ -788,9 +798,35 @@ export default function SettingsTab() {
               </label>
             ))}
           </div>
+          <div className="flex items-center gap-2 mt-3 text-sm">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.eventSearchAutoRefreshEnabled}
+                onChange={(e) =>
+                  updateField("eventSearchAutoRefreshEnabled", e.target.checked)
+                }
+              />
+              Automatically search every
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={form.eventSearchAutoRefreshDays ?? 7}
+              onChange={(e) =>
+                updateField(
+                  "eventSearchAutoRefreshDays",
+                  e.target.value,
+                  "number",
+                )
+              }
+              className="border rounded px-2 py-1 w-16"
+            />
+            <span>day(s)</span>
+          </div>
         </div>
 
-        <div>
+        <div className="break-inside-avoid mb-8">
           <h2 className="font-semibold mb-2 text-neutral-200">
             Event Search Artist Terms
           </h2>
@@ -815,7 +851,7 @@ export default function SettingsTab() {
           </div>
         </div>
 
-        <div>
+        <div className="break-inside-avoid mb-8">
           <h2 className="font-semibold mb-2 text-neutral-200">
             Combined Top Artists Mode
           </h2>
@@ -844,7 +880,7 @@ export default function SettingsTab() {
         </div>
 
         {SECTIONS.map((section) => (
-          <div key={section.title}>
+          <div key={section.title} className="break-inside-avoid mb-8">
             <h2 className="font-semibold mb-2 text-neutral-200">
               {section.title}
             </h2>
@@ -873,15 +909,15 @@ export default function SettingsTab() {
                   ) : f.type === "switch" ? (
                     <div key={f.key} className="flex flex-col gap-1 text-sm">
                       {f.label}
-                      <div className="flex gap-2">
+                      <div className="flex rounded-2xl overflow-hidden border border-neutral-500 w-fit">
                         {f.options.map((o) => (
                           <button
                             key={o.value}
                             type="button"
                             onClick={() => updateField(f.key, o.value)}
-                            className={`px-3 py-1 rounded text-sm ${
+                            className={`px-3 py-1 ${
                               form[f.key] === o.value
-                                ? "bg-neutral-900 text-neutral-300 border border-neutral-500"
+                                ? "bg-neutral-700 text-white"
                                 : "bg-neutral-200 text-neutral-900 cursor-pointer"
                             }`}
                           >
@@ -969,6 +1005,37 @@ export default function SettingsTab() {
                   />
                   Send a weekly email digest of upcoming events
                 </label>
+                {form.weeklyEmailEnabled && (
+                  <div className="flex items-center gap-2 mt-2 ml-6 text-sm">
+                    <span>Every</span>
+                    <select
+                      value={form.weeklyEmailDayOfWeek ?? 1}
+                      onChange={(e) =>
+                        updateField(
+                          "weeklyEmailDayOfWeek",
+                          e.target.value,
+                          "number",
+                        )
+                      }
+                      className="border border-neutral-400 rounded px-2 py-1"
+                    >
+                      {DAYS_OF_WEEK.map((d) => (
+                        <option key={d.value} value={d.value}>
+                          {d.label}
+                        </option>
+                      ))}
+                    </select>
+                    <span>at</span>
+                    <input
+                      type="time"
+                      value={form.weeklyEmailTimeOfDay ?? "09:00"}
+                      onChange={(e) =>
+                        updateField("weeklyEmailTimeOfDay", e.target.value)
+                      }
+                      className="border border-neutral-400 rounded px-2 py-1"
+                    />
+                  </div>
+                )}
                 <label className="flex items-center gap-2 text-sm mt-1">
                   <input
                     type="checkbox"
