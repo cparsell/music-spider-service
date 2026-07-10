@@ -26,7 +26,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
     // full remaining width, so each tab's scrollbar hugs the browser edge.
     <main className="h-screen overflow-hidden flex flex-col items-center lg:flex-row lg:items-stretch">
       <div className="w-full max-w-5xl shrink-0  pt-8 lg:w-56 lg:max-w-none lg:shrink-0 lg:flex lg:flex-col lg:border-r lg:border-neutral-800 lg:pl-4">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-2">
           <span className="imglogo"></span>
           <h1 className="text-2xl font-bold text-neutral-200">Music Spider</h1>
         </div>

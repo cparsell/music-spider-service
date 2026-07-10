@@ -65,13 +65,13 @@ const COMBINED_MODES = [
     value: "weighted",
     label: "Weighted score",
     description:
-      "Combines whichever selected 'terms lists' into one list, weighting recent plays more heavily than older ones while still including old favorites.",
+      "Combines selected top artists lists (short term, long term, etc.) into one list, weighting recent plays more heavily than older ones while still including old favorites.",
   },
   {
     value: "union",
     label: "Union of top lists",
     description:
-      "Takes the top artists from each individual window (seletected terms) and merges them into one deduplicated list.",
+      "Takes the top artists from each individual window (selected terms) and merges them into one deduplicated list.",
   },
 ];
 
@@ -219,7 +219,7 @@ function SettingsSection({ title, defaultOpen = false, children }) {
         aria-expanded={open}
         className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left cursor-pointer"
       >
-        <h2 className="font-semibold text-neutral-200">{title}</h2>
+        <h2 className="font-bold text-neutral-200">{title}</h2>
         <svg
           viewBox="0 0 20 20"
           fill="none"
@@ -237,6 +237,55 @@ function SettingsSection({ title, defaultOpen = false, children }) {
         </svg>
       </button>
       {open && <div className="px-4 pb-4">{children}</div>}
+    </div>
+  );
+}
+
+// Nested inside a SettingsSection - same idea (title + chevron, collapses to
+// just the header) but lighter weight: no border box of its own, just a
+// divider between subsections within the parent's body.
+function SettingsSubsection({
+  title,
+  defaultOpen = true,
+  children,
+  disabled = false,
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border-t border-neutral-800 first:border-t-0 pt-3 mt-3 first:mt-0 first:pt-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-2 text-left cursor-pointer"
+      >
+        <h3
+          className={
+            disabled
+              ? "font-bold text-gray-600"
+              : "font-bold text-base text-neutral-200"
+          }
+        >
+          {title}
+        </h3>
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          className={`w-3.5 h-3.5 shrink-0 text-neutral-500 transition-transform duration-150 ${
+            open ? "" : "-rotate-90"
+          }`}
+        >
+          <path
+            d="M5 8l5 5 5-5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {open && <div className="pt-3">{children}</div>}
     </div>
   );
 }
@@ -635,7 +684,7 @@ function RegionPicker({ value, onChange }) {
   );
 }
 
-const SAVE_DEBOUNCE_MS = 1000;
+const SAVE_DEBOUNCE_MS = 600;
 
 export default function SettingsTab() {
   const [form, setForm] = useState(null);
@@ -747,6 +796,188 @@ export default function SettingsTab() {
 
   if (!form) return <p>Loading...</p>;
 
+  const sectionByTitle = Object.fromEntries(
+    SECTIONS.map((section) => [section.title, section]),
+  );
+
+  // Renders a SECTIONS entry's description/warning/fields, plus whatever
+  // extra section-specific controls (connection status, test buttons,
+  // schedule pickers) follow it - shared by every field-driven subsection
+  // below so that logic only lives in one place. `disabled` grays the whole
+  // thing out and blocks interaction (e.g. the Tautulli section when
+  // Spotify is the exclusively-selected artist source) without having to
+  // thread a `disabled` prop through every distinct field/control type.
+  const renderSectionFields = (section, disabled = false) => (
+    <div
+      className={disabled ? "opacity-40 pointer-events-none" : undefined}
+      aria-disabled={disabled}
+    >
+      {section.description && (
+        <p className="text-sm text-neutral-500 mb-2">{section.description}</p>
+      )}
+      {section.warning && (
+        <p className="text-sm text-amber-200   border border-amber-200 rounded p-2 mb-3">
+          ⚠️ {section.warning}
+        </p>
+      )}
+      <div className="flex flex-col gap-2">
+        {section.fields
+          .filter((f) => (f.showIf ? f.showIf(form) : true))
+          .map((f) =>
+            f.type === "regionPicker" ? (
+              <div key={f.key} className="flex flex-col gap-1 text-sm">
+                {f.label}
+                <RegionPicker
+                  value={form[f.key]}
+                  onChange={(v) => updateField(f.key, v)}
+                />
+              </div>
+            ) : f.type === "switch" ? (
+              <div key={f.key} className="flex flex-col gap-1 text-sm">
+                {f.label}
+                <div className="flex rounded-2xl overflow-hidden border border-neutral-500 w-fit">
+                  {f.options.map((o) => (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => updateField(f.key, o.value)}
+                      className={`px-3 py-1 ${
+                        form[f.key] === o.value
+                          ? "bg-neutral-700 text-white"
+                          : "bg-neutral-200 text-neutral-900 cursor-pointer"
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : f.type === "textarea" ? (
+              <label key={f.key} className="flex flex-col gap-1 text-sm">
+                {f.label}
+                <textarea
+                  value={form[f.key] ?? ""}
+                  onChange={(e) => updateField(f.key, e.target.value)}
+                  rows={5}
+                  className="border border-neutral-400 rounded px-2 py-1 font-mono text-xs"
+                />
+              </label>
+            ) : (
+              <label key={f.key} className="flex flex-col gap-1 text-sm">
+                {f.label}
+                <input
+                  type={f.type}
+                  value={form[f.key] ?? ""}
+                  onChange={(e) => updateField(f.key, e.target.value, f.type)}
+                  className="border border-neutral-400 rounded px-2 py-1"
+                />
+              </label>
+            ),
+          )}
+      </div>
+      {section.title === "Top Artists" && (
+        <div className="flex items-center gap-2 mt-3 text-sm">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.topArtistsAutoRefreshEnabled}
+              onChange={(e) =>
+                updateField("topArtistsAutoRefreshEnabled", e.target.checked)
+              }
+            />
+            Automatically refresh every
+          </label>
+          <input
+            type="number"
+            min="1"
+            value={form.topArtistsAutoRefreshDays ?? 1}
+            onChange={(e) =>
+              updateField("topArtistsAutoRefreshDays", e.target.value, "number")
+            }
+            className="border rounded px-2 py-1 w-16"
+          />
+          <span>day(s)</span>
+        </div>
+      )}
+      {section.title === "Spotify" && (
+        <SpotifyConnection redirectUri={form.spotifyRedirectUri} />
+      )}
+      {section.title === "Google (Email & Calendar)" && (
+        <>
+          {form.googleIntegrationMode === "appsScript" ? (
+            <GoogleActionsTest />
+          ) : (
+            <GoogleConnection
+              redirectUri={form.googleRedirectUri}
+              calendarSyncEnabled={form.googleCalendarSyncEnabled}
+            />
+          )}
+          <label className="flex items-center gap-2 text-sm mt-3">
+            <input
+              type="checkbox"
+              checked={form.weeklyEmailEnabled}
+              onChange={(e) =>
+                updateField("weeklyEmailEnabled", e.target.checked)
+              }
+            />
+            Send a weekly email digest of upcoming events
+          </label>
+          {form.weeklyEmailEnabled && (
+            <div className="flex items-center gap-2 mt-2 ml-6 text-sm">
+              <span>Every</span>
+              <select
+                value={form.weeklyEmailDayOfWeek ?? 1}
+                onChange={(e) =>
+                  updateField("weeklyEmailDayOfWeek", e.target.value, "number")
+                }
+                className="border border-neutral-400 rounded px-2 py-1"
+              >
+                {DAYS_OF_WEEK.map((d) => (
+                  <option key={d.value} value={d.value}>
+                    {d.label}
+                  </option>
+                ))}
+              </select>
+              <span>at</span>
+              <input
+                type="time"
+                value={form.weeklyEmailTimeOfDay ?? "09:00"}
+                onChange={(e) =>
+                  updateField("weeklyEmailTimeOfDay", e.target.value)
+                }
+                className="border border-neutral-400 rounded px-2 py-1"
+              />
+            </div>
+          )}
+          <label className="flex items-center gap-2 text-sm mt-1">
+            <input
+              type="checkbox"
+              checked={form.googleCalendarSyncEnabled}
+              onChange={(e) =>
+                updateField("googleCalendarSyncEnabled", e.target.checked)
+              }
+            />
+            Add newly found events to Google Calendar
+          </label>
+          {form.googleIntegrationMode !== "appsScript" && <GoogleActionsTest />}
+        </>
+      )}
+      {section.title === "Webhook" && (
+        <>
+          <label className="flex items-center gap-2 text-sm mt-1">
+            <input
+              type="checkbox"
+              checked={form.webhookEnabled}
+              onChange={(e) => updateField("webhookEnabled", e.target.checked)}
+            />
+            Send a weekly webhook digest of upcoming events
+          </label>
+          <WebhookTest />
+        </>
+      )}
+    </div>
+  );
+
   const statusText =
     saveState === "pending" || saveState === "saving"
       ? "Saving..."
@@ -786,310 +1017,192 @@ export default function SettingsTab() {
           </div>
         </SettingsSection>
 
-        <SettingsSection title="Artist Sources">
-          <div className="flex flex-col gap-3">
-            {ARTIST_SOURCES.map((s) => (
-              <label
-                key={s.value}
-                className="flex items-start gap-3 border border-neutral-800 rounded p-3 cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  name="artistSource"
-                  checked={form.artistSource === s.value}
-                  onChange={() => updateField("artistSource", s.value)}
-                  className="mt-1"
-                />
-                <div>
-                  <p className="font-medium">{s.label}</p>
-                  <p className="text-sm text-neutral-600">{s.description}</p>
-                </div>
-              </label>
-            ))}
-          </div>
-        </SettingsSection>
-
-        <SettingsSection title="Event Search Sources">
-          <p className="text-sm text-neutral-600 mb-2">
-            Which APIs to query when running an event search. Disabling one
-            skips it entirely (no API calls made) rather than just hiding its
-            results.
-          </p>
-          <div className="flex flex-col gap-2">
-            {EVENT_SEARCH_SOURCE_OPTIONS.map((s) => (
-              <label key={s.value} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={form.eventSearchSources?.includes(s.value) ?? false}
-                  onChange={(e) =>
-                    toggleEventSearchSource(s.value, e.target.checked)
-                  }
-                />
-                {s.label}
-              </label>
-            ))}
-          </div>
-          <div className="flex items-center gap-2 mt-3 text-sm">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.eventSearchAutoRefreshEnabled}
-                onChange={(e) =>
-                  updateField("eventSearchAutoRefreshEnabled", e.target.checked)
-                }
-              />
-              Automatically search every
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={form.eventSearchAutoRefreshDays ?? 7}
-              onChange={(e) =>
-                updateField(
-                  "eventSearchAutoRefreshDays",
-                  e.target.value,
-                  "number",
-                )
-              }
-              className="border rounded px-2 py-1 w-16"
-            />
-            <span>day(s)</span>
-          </div>
-        </SettingsSection>
-
-        <SettingsSection title="Event Search Artist Terms">
-          <p className="text-sm text-neutral-600 mb-2">
-            Which top-artists window(s) to pull from when building the artist
-            list used for event searches. Selecting more than one combines them
-            using the Combined Top Artists Mode below.
-          </p>
-          <div className="flex flex-col gap-2">
-            {EVENT_SEARCH_TERM_OPTIONS.map((t) => (
-              <label key={t.value} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={form.eventSearchTerms?.includes(t.value) ?? false}
-                  onChange={(e) =>
-                    toggleEventSearchTerm(t.value, e.target.checked)
-                  }
-                />
-                {t.label}
-              </label>
-            ))}
-          </div>
-        </SettingsSection>
-
-        <SettingsSection title="Combined Top Artists Mode">
-          <div className="flex flex-col gap-3">
-            {COMBINED_MODES.map((m) => (
-              <label
-                key={m.value}
-                className="flex items-start gap-3 border border-neutral-800 rounded p-3 cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  name="combinedTopArtistsMode"
-                  checked={form.combinedTopArtistsMode === m.value}
-                  onChange={() =>
-                    updateField("combinedTopArtistsMode", m.value)
-                  }
-                  className="mt-1"
-                />
-                <div>
-                  <p className="font-medium">{m.label}</p>
-                  <p className="text-sm text-neutral-600">{m.description}</p>
-                </div>
-              </label>
-            ))}
-          </div>
-        </SettingsSection>
-
-        {SECTIONS.map((section) => (
-          <SettingsSection key={section.title} title={section.title}>
-            {section.description && (
-              <p className="text-sm text-neutral-500 mb-2">
-                {section.description}
-              </p>
-            )}
-            {section.warning && (
-              <p className="text-sm text-amber-200   border border-amber-200 rounded p-2 mb-3">
-                ⚠️ {section.warning}
-              </p>
-            )}
-            <div className="flex flex-col gap-2">
-              {section.fields
-                .filter((f) => (f.showIf ? f.showIf(form) : true))
-                .map((f) =>
-                  f.type === "regionPicker" ? (
-                    <div key={f.key} className="flex flex-col gap-1 text-sm">
-                      {f.label}
-                      <RegionPicker
-                        value={form[f.key]}
-                        onChange={(v) => updateField(f.key, v)}
-                      />
-                    </div>
-                  ) : f.type === "switch" ? (
-                    <div key={f.key} className="flex flex-col gap-1 text-sm">
-                      {f.label}
-                      <div className="flex rounded-2xl overflow-hidden border border-neutral-500 w-fit">
-                        {f.options.map((o) => (
-                          <button
-                            key={o.value}
-                            type="button"
-                            onClick={() => updateField(f.key, o.value)}
-                            className={`px-3 py-1 ${
-                              form[f.key] === o.value
-                                ? "bg-neutral-700 text-white"
-                                : "bg-neutral-200 text-neutral-900 cursor-pointer"
-                            }`}
-                          >
-                            {o.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : f.type === "textarea" ? (
-                    <label key={f.key} className="flex flex-col gap-1 text-sm">
-                      {f.label}
-                      <textarea
-                        value={form[f.key] ?? ""}
-                        onChange={(e) => updateField(f.key, e.target.value)}
-                        rows={5}
-                        className="border border-neutral-400 rounded px-2 py-1 font-mono text-xs"
-                      />
-                    </label>
-                  ) : (
-                    <label key={f.key} className="flex flex-col gap-1 text-sm">
-                      {f.label}
-                      <input
-                        type={f.type}
-                        value={form[f.key] ?? ""}
-                        onChange={(e) =>
-                          updateField(f.key, e.target.value, f.type)
-                        }
-                        className="border border-neutral-400 rounded px-2 py-1"
-                      />
-                    </label>
-                  ),
-                )}
+        <SettingsSection title="Artists">
+          <SettingsSubsection title="Artist Sources">
+            <div className="flex flex-col gap-3">
+              {ARTIST_SOURCES.map((s) => (
+                <label
+                  key={s.value}
+                  className="flex items-start gap-3 border border-neutral-800 rounded p-3 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    name="artistSource"
+                    checked={form.artistSource === s.value}
+                    onChange={() => updateField("artistSource", s.value)}
+                    className="mt-1"
+                  />
+                  <div>
+                    <p className="font-medium">{s.label}</p>
+                    <p className="text-sm text-neutral-600">{s.description}</p>
+                  </div>
+                </label>
+              ))}
             </div>
-            {section.title === "Top Artists" && (
-              <div className="flex items-center gap-2 mt-3 text-sm">
-                <label className="flex items-center gap-2">
+          </SettingsSubsection>
+
+          <SettingsSubsection title="Top Artists">
+            {renderSectionFields(sectionByTitle["Top Artists"])}
+          </SettingsSubsection>
+
+          <SettingsSubsection title="Event Search Artist Terms">
+            <p className="text-sm text-neutral-600 mb-2">
+              Which top-artists window(s) to pull from when building the artist
+              list used for event searches. Selecting more than one combines
+              them using the Top Artist Combination Mode below.
+            </p>
+            <div className="flex flex-col gap-2">
+              {EVENT_SEARCH_TERM_OPTIONS.map((t) => (
+                <label
+                  key={t.value}
+                  className="flex items-center gap-2 text-sm"
+                >
                   <input
                     type="checkbox"
-                    checked={form.topArtistsAutoRefreshEnabled}
+                    checked={form.eventSearchTerms?.includes(t.value) ?? false}
                     onChange={(e) =>
-                      updateField(
-                        "topArtistsAutoRefreshEnabled",
-                        e.target.checked,
-                      )
+                      toggleEventSearchTerm(t.value, e.target.checked)
                     }
                   />
-                  Automatically refresh every
+                  {t.label}
                 </label>
+              ))}
+            </div>
+          </SettingsSubsection>
+
+          <SettingsSubsection title="Top Artist Combination Mode">
+            <div className="flex flex-col gap-3">
+              {COMBINED_MODES.map((m) => (
+                <label
+                  key={m.value}
+                  className="flex items-start gap-3 border border-neutral-800 rounded p-3 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    name="combinedTopArtistsMode"
+                    checked={form.combinedTopArtistsMode === m.value}
+                    onChange={() =>
+                      updateField("combinedTopArtistsMode", m.value)
+                    }
+                    className="mt-1"
+                  />
+                  <div>
+                    <p className="font-medium">{m.label}</p>
+                    <p className="text-sm text-neutral-600">{m.description}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </SettingsSubsection>
+
+          <SettingsSubsection
+            title="Tautulli"
+            disabled={form.artistSource === "spotify"}
+          >
+            {renderSectionFields(
+              sectionByTitle["Tautulli"],
+              form.artistSource === "spotify",
+            )}
+          </SettingsSubsection>
+
+          <SettingsSubsection
+            title="Spotify"
+            disabled={form.artistSource === "tautulli"}
+          >
+            {renderSectionFields(
+              sectionByTitle["Spotify"],
+              form.artistSource === "tautulli",
+            )}
+          </SettingsSubsection>
+        </SettingsSection>
+
+        <SettingsSection title="Event Search">
+          <SettingsSubsection title="Event Search Sources">
+            <p className="text-sm text-neutral-600 mb-2">
+              Which APIs to query when running an event search. Disabling one
+              skips it entirely (no API calls made) rather than just hiding its
+              results.
+            </p>
+            <div className="flex flex-col gap-2">
+              {EVENT_SEARCH_SOURCE_OPTIONS.map((s) => (
+                <label
+                  key={s.value}
+                  className="flex items-center gap-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    checked={
+                      form.eventSearchSources?.includes(s.value) ?? false
+                    }
+                    onChange={(e) =>
+                      toggleEventSearchSource(s.value, e.target.checked)
+                    }
+                  />
+                  {s.label}
+                </label>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 mt-3 text-sm">
+              <label className="flex items-center gap-2">
                 <input
-                  type="number"
-                  min="1"
-                  value={form.topArtistsAutoRefreshDays ?? 1}
+                  type="checkbox"
+                  checked={form.eventSearchAutoRefreshEnabled}
                   onChange={(e) =>
                     updateField(
-                      "topArtistsAutoRefreshDays",
-                      e.target.value,
-                      "number",
+                      "eventSearchAutoRefreshEnabled",
+                      e.target.checked,
                     )
                   }
-                  className="border rounded px-2 py-1 w-16"
                 />
-                <span>day(s)</span>
-              </div>
+                Automatically search every
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={form.eventSearchAutoRefreshDays ?? 7}
+                onChange={(e) =>
+                  updateField(
+                    "eventSearchAutoRefreshDays",
+                    e.target.value,
+                    "number",
+                  )
+                }
+                className="border rounded px-2 py-1 w-16"
+              />
+              <span>day(s)</span>
+            </div>
+          </SettingsSubsection>
+
+          <SettingsSubsection
+            title="Ticketmaster"
+            disabled={!(form.eventSearchSources || []).includes("ticketmaster")}
+          >
+            {renderSectionFields(
+              sectionByTitle["Ticketmaster"],
+              !(form.eventSearchSources || []).includes("ticketmaster"),
             )}
-            {section.title === "Spotify" && (
-              <SpotifyConnection redirectUri={form.spotifyRedirectUri} />
+          </SettingsSubsection>
+
+          <SettingsSubsection
+            title="Resident Advisor"
+            disabled={!(form.eventSearchSources || []).includes("resadvisor")}
+          >
+            {renderSectionFields(
+              sectionByTitle["Resident Advisor"],
+              !(form.eventSearchSources || []).includes("resadvisor"),
             )}
-            {section.title === "Google (Email & Calendar)" && (
-              <>
-                {form.googleIntegrationMode === "appsScript" ? (
-                  <GoogleActionsTest />
-                ) : (
-                  <GoogleConnection
-                    redirectUri={form.googleRedirectUri}
-                    calendarSyncEnabled={form.googleCalendarSyncEnabled}
-                  />
-                )}
-                <label className="flex items-center gap-2 text-sm mt-3">
-                  <input
-                    type="checkbox"
-                    checked={form.weeklyEmailEnabled}
-                    onChange={(e) =>
-                      updateField("weeklyEmailEnabled", e.target.checked)
-                    }
-                  />
-                  Send a weekly email digest of upcoming events
-                </label>
-                {form.weeklyEmailEnabled && (
-                  <div className="flex items-center gap-2 mt-2 ml-6 text-sm">
-                    <span>Every</span>
-                    <select
-                      value={form.weeklyEmailDayOfWeek ?? 1}
-                      onChange={(e) =>
-                        updateField(
-                          "weeklyEmailDayOfWeek",
-                          e.target.value,
-                          "number",
-                        )
-                      }
-                      className="border border-neutral-400 rounded px-2 py-1"
-                    >
-                      {DAYS_OF_WEEK.map((d) => (
-                        <option key={d.value} value={d.value}>
-                          {d.label}
-                        </option>
-                      ))}
-                    </select>
-                    <span>at</span>
-                    <input
-                      type="time"
-                      value={form.weeklyEmailTimeOfDay ?? "09:00"}
-                      onChange={(e) =>
-                        updateField("weeklyEmailTimeOfDay", e.target.value)
-                      }
-                      className="border border-neutral-400 rounded px-2 py-1"
-                    />
-                  </div>
-                )}
-                <label className="flex items-center gap-2 text-sm mt-1">
-                  <input
-                    type="checkbox"
-                    checked={form.googleCalendarSyncEnabled}
-                    onChange={(e) =>
-                      updateField("googleCalendarSyncEnabled", e.target.checked)
-                    }
-                  />
-                  Add newly found events to Google Calendar
-                </label>
-                {form.googleIntegrationMode !== "appsScript" && (
-                  <GoogleActionsTest />
-                )}
-              </>
-            )}
-            {section.title === "Webhook" && (
-              <>
-                <label className="flex items-center gap-2 text-sm mt-1">
-                  <input
-                    type="checkbox"
-                    checked={form.webhookEnabled}
-                    onChange={(e) =>
-                      updateField("webhookEnabled", e.target.checked)
-                    }
-                  />
-                  Send a weekly webhook digest of upcoming events
-                </label>
-                <WebhookTest />
-              </>
-            )}
-          </SettingsSection>
-        ))}
+          </SettingsSubsection>
+        </SettingsSection>
+
+        <SettingsSection title="Notification">
+          <SettingsSubsection title="Google (Email & Calendar)">
+            {renderSectionFields(sectionByTitle["Google (Email & Calendar)"])}
+          </SettingsSubsection>
+
+          <SettingsSubsection title="Webhook">
+            {renderSectionFields(sectionByTitle["Webhook"])}
+          </SettingsSubsection>
+        </SettingsSection>
       </div>
     </TabLayout>
   );
