@@ -53,7 +53,7 @@ export default function HomeClient({ defaultTab }) {
         </div>
       </div>
 
-      <div className="w-full max-w-5xl flex-1 min-h-0 px-3 pb-8 lg:max-w-none lg:px-6 lg:pt-8">
+      <div className="w-full max-w-5xl flex-1 min-h-0 px-3 pb-2 lg:max-w-none lg:px-6 lg:pt-8">
         <div className={`h-full ${tab === "events" ? "" : "lg:max-w-5xl"}`}>
           {tab === "top" && <TopArtistsTab />}
           {tab === "custom" && (
