@@ -47,7 +47,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
         </div>
       </div>
 
-      <div className="w-full flex-1 min-h-0 px-3 pb-2 lg:max-w-none lg:px-6 lg:pt-8">
+      <div className="w-full flex-1 min-h-0 px-3 pb-2 lg:max-w-none lg:px-6 lg:pt-8 bg-neutral-900">
         <div className="h-full">
           {tab === "top" && (
             <TopArtistsTab

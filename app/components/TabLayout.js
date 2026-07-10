@@ -33,10 +33,12 @@ export default function TabLayout({
   }, []);
 
   return (
-    <div className="h-full flex flex-col ">
-      <div className="shrink-0 mb-3 text-sm text-neutral-500">
-        {description}
-      </div>
+    <div className="h-full flex flex-col">
+      {description && (
+        <div className="shrink-0 mb-3 text-sm text-neutral-500">
+          {description}
+        </div>
+      )}
       <div className="shrink-0 mb-3">{controls}</div>
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-2">
         {children}

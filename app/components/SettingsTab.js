@@ -205,6 +205,42 @@ const SECTIONS = [
   },
 ];
 
+// Wraps a settings section in a bordered box with a clickable header.
+// Collapsed, only the header (title + chevron) remains visible - the box
+// shrinks to a thin bar since the body isn't rendered at all.
+function SettingsSection({ title, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="break-inside-avoid mb-6 border border-neutral-800 rounded-lg bg-black">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left cursor-pointer"
+      >
+        <h2 className="font-semibold text-neutral-200">{title}</h2>
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          className={`w-4 h-4 shrink-0 text-neutral-500 transition-transform duration-150 ${
+            open ? "" : "-rotate-90"
+          }`}
+        >
+          <path
+            d="M5 8l5 5 5-5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {open && <div className="px-4 pb-4">{children}</div>}
+    </div>
+  );
+}
+
 function SpotifyConnection({ redirectUri }) {
   const [connected, setConnected] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
@@ -727,8 +763,7 @@ export default function SettingsTab() {
       }
     >
       <div className="columns-1 xl:columns-2 pl-2 pr-8 gap-12 w-full max-w-[1800px]">
-        <div className="break-inside-avoid mb-8">
-          <h2 className="font-semibold mb-2 text-neutral-200">Appearance</h2>
+        <SettingsSection title="Appearance">
           <div className="flex flex-col gap-3">
             {THEMES.map((t) => (
               <label
@@ -749,10 +784,9 @@ export default function SettingsTab() {
               </label>
             ))}
           </div>
-        </div>
+        </SettingsSection>
 
-        <div className="break-inside-avoid mb-8">
-          <h2 className="font-semibold mb-2 text-neutral-200">Artist Source</h2>
+        <SettingsSection title="Artist Sources">
           <div className="flex flex-col gap-3">
             {ARTIST_SOURCES.map((s) => (
               <label
@@ -773,12 +807,9 @@ export default function SettingsTab() {
               </label>
             ))}
           </div>
-        </div>
+        </SettingsSection>
 
-        <div className="break-inside-avoid mb-8">
-          <h2 className="font-semibold mb-2 text-neutral-200">
-            Event Search Sources
-          </h2>
+        <SettingsSection title="Event Search Sources">
           <p className="text-sm text-neutral-600 mb-2">
             Which APIs to query when running an event search. Disabling one
             skips it entirely (no API calls made) rather than just hiding its
@@ -824,12 +855,9 @@ export default function SettingsTab() {
             />
             <span>day(s)</span>
           </div>
-        </div>
+        </SettingsSection>
 
-        <div className="break-inside-avoid mb-8">
-          <h2 className="font-semibold mb-2 text-neutral-200">
-            Event Search Artist Terms
-          </h2>
+        <SettingsSection title="Event Search Artist Terms">
           <p className="text-sm text-neutral-600 mb-2">
             Which top-artists window(s) to pull from when building the artist
             list used for event searches. Selecting more than one combines them
@@ -849,12 +877,9 @@ export default function SettingsTab() {
               </label>
             ))}
           </div>
-        </div>
+        </SettingsSection>
 
-        <div className="break-inside-avoid mb-8">
-          <h2 className="font-semibold mb-2 text-neutral-200">
-            Combined Top Artists Mode
-          </h2>
+        <SettingsSection title="Combined Top Artists Mode">
           <div className="flex flex-col gap-3">
             {COMBINED_MODES.map((m) => (
               <label
@@ -877,13 +902,10 @@ export default function SettingsTab() {
               </label>
             ))}
           </div>
-        </div>
+        </SettingsSection>
 
         {SECTIONS.map((section) => (
-          <div key={section.title} className="break-inside-avoid mb-8">
-            <h2 className="font-semibold mb-2 text-neutral-200">
-              {section.title}
-            </h2>
+          <SettingsSection key={section.title} title={section.title}>
             {section.description && (
               <p className="text-sm text-neutral-500 mb-2">
                 {section.description}
@@ -1066,7 +1088,7 @@ export default function SettingsTab() {
                 <WebhookTest />
               </>
             )}
-          </div>
+          </SettingsSection>
         ))}
       </div>
     </TabLayout>
