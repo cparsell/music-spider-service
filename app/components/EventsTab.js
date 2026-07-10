@@ -1,11 +1,24 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import StatusBar from "./StatusBar";
 import TabLayout from "./TabLayout";
 
 function formatDate(dateValue) {
   const d = new Date(dateValue);
   return isNaN(d) ? String(dateValue) : d.toLocaleString();
+}
+
+function buildSearchResultMessage(result) {
+  let message = result.canceled
+    ? `Search canceled. Searched ${result.artistsSearched} artists, found ${result.found} matching events before stopping.`
+    : `Searched ${result.artistsSearched} artists, found ${result.found} matching events.`;
+  if (result.calendarSynced > 0) {
+    message += ` Added ${result.calendarSynced} to Google Calendar.`;
+  }
+  if (result.calendarError) {
+    message += ` Calendar sync issue: ${result.calendarError}`;
+  }
+  return message;
 }
 
 export default function EventsTab() {
@@ -16,6 +29,12 @@ export default function EventsTab() {
   const [statusError, setStatusError] = useState(false);
   const [progress, setProgress] = useState(null);
   const [sendingEmail, setSendingEmail] = useState(false);
+  // A search runs server-side independent of this component's lifecycle -
+  // switching tabs unmounts it, but the search keeps going. These track the
+  // poll loop and whether we've actually observed it running (vs. stale
+  // leftover state from a previous search) across that remount.
+  const pollRef = useRef(null);
+  const sawRunningRef = useRef(false);
 
   const loadEvents = () => {
     setLoading(true);
@@ -35,53 +54,107 @@ export default function EventsTab() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(loadEvents, []);
+  const applyRunningState = (data) => {
+    if (data.phase) setStatusMessage(data.phase);
+    setProgress(
+      data.total > 0 ? { completed: data.completed, total: data.total } : null,
+    );
+  };
 
-  const runSearch = async () => {
+  // Refreshes just the events list, without loadEvents()'s own "Loading
+  // events..."/"Loaded N events" status messages - those would otherwise
+  // land asynchronously after (and clobber) the search-completion message
+  // set alongside this call.
+  const refreshEventsSilently = () => {
+    fetch("/api/events")
+      .then((res) => res.json())
+      .then((data) => setEvents(data.events || []))
+      .catch(() => {});
+  };
+
+  // Polls the server's shared search-progress state (rather than relying on
+  // one request's own response) so a search that was started, then this tab
+  // was switched away and back to, still shows up correctly here.
+  const watchProgress = () => {
+    clearInterval(pollRef.current);
     setSearching(true);
-    setStatusMessage("Starting search...");
     setStatusError(false);
-    setProgress(null);
 
-    const pollProgress = setInterval(async () => {
+    pollRef.current = setInterval(async () => {
       try {
         const res = await fetch("/api/events/search/progress");
         const data = await res.json();
-        if (data.phase) setStatusMessage(data.phase);
-        setProgress(
-          data.total > 0
-            ? { completed: data.completed, total: data.total }
-            : null,
-        );
+
+        if (data.running) {
+          sawRunningRef.current = true;
+          applyRunningState(data);
+          return;
+        }
+
+        // Not running - but if we've never actually seen it running (e.g.
+        // the request that was supposed to start it hasn't landed on the
+        // server yet), keep waiting rather than mistaking leftover state
+        // from a previous search for this one having finished instantly.
+        if (!sawRunningRef.current) return;
+
+        clearInterval(pollRef.current);
+        sawRunningRef.current = false;
+        setSearching(false);
+        setProgress(null);
+        refreshEventsSilently();
+        if (data.result) {
+          setStatusMessage(buildSearchResultMessage(data.result));
+          setStatusError(!!data.result.calendarError);
+        }
       } catch {
         // ignore transient poll errors, next tick will retry
       }
     }, 1000);
+  };
 
-    try {
-      const res = await fetch("/api/events/search", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Search failed");
-      setEvents(data.events || []);
-      let message = data.canceled
-        ? `Search canceled. Searched ${data.artistsSearched} artists, found ${data.found} matching events before stopping.`
-        : `Searched ${data.artistsSearched} artists, found ${data.found} matching events.`;
-      if (data.calendarSynced > 0) {
-        message += ` Added ${data.calendarSynced} to Google Calendar.`;
-      }
-      if (data.calendarError) {
-        message += ` Calendar sync issue: ${data.calendarError}`;
-      }
-      setStatusMessage(message);
-      setStatusError(!!data.calendarError);
-    } catch (err) {
-      setStatusMessage(err.message);
-      setStatusError(true);
-    } finally {
-      clearInterval(pollProgress);
-      setProgress(null);
-      setSearching(false);
-    }
+  useEffect(() => {
+    loadEvents();
+
+    // Pick up a search already in progress (e.g. started before this tab
+    // was switched away and back) instead of showing a blank idle state
+    // while it keeps running unseen server-side.
+    fetch("/api/events/search/progress")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.running) return;
+        sawRunningRef.current = true;
+        applyRunningState(data);
+        watchProgress();
+      })
+      .catch(() => {});
+
+    return () => clearInterval(pollRef.current);
+  }, []);
+
+  const runSearch = () => {
+    setStatusMessage("Starting search...");
+    setStatusError(false);
+    setProgress(null);
+    watchProgress();
+
+    fetch("/api/events/search", { method: "POST" })
+      .then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || "Search failed");
+        }
+      })
+      .catch((err) => {
+        // Only reachable if the request never made it to/through the
+        // server at all - once it's genuinely running, completion is
+        // reported via watchProgress's poll instead.
+        clearInterval(pollRef.current);
+        sawRunningRef.current = false;
+        setSearching(false);
+        setProgress(null);
+        setStatusMessage(err.message);
+        setStatusError(true);
+      });
   };
 
   const cancelSearch = async () => {

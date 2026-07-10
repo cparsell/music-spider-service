@@ -110,13 +110,20 @@ export async function POST() {
       }
     }
 
-    return Response.json({
-      events: await attachActsDisplay(await getEvents()),
+    const result = {
       artistsSearched: artistList.length,
       found: raEvents.length + tmEvents.length,
       canceled: isCancelRequested(),
       calendarSynced,
       calendarError,
+    };
+    // Stored on the shared progress state (not just returned here) so a
+    // client that reconnects after switching away mid-search - rather than
+    // the one that made this request - can still learn how it turned out.
+    setProgress({ result });
+    return Response.json({
+      events: await attachActsDisplay(await getEvents()),
+      ...result,
     });
   } finally {
     setProgress({ running: false });
