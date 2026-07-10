@@ -208,14 +208,14 @@ export default function EventsTab() {
           <button
             onClick={runSearch}
             disabled={searching}
-            className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
+            className="px-3 py-1 rounded-2xl bg-neutral-700 text-white disabled:opacity-50"
           >
             {searching ? "Searching..." : "Run Search"}
           </button>
           {searching && (
             <button
               onClick={cancelSearch}
-              className="px-3 py-1 rounded bg-red-300 text-white"
+              className="px-3 py-1 rounded-2xl bg-red-300 text-white"
             >
               Cancel
             </button>
@@ -224,7 +224,7 @@ export default function EventsTab() {
             <button
               onClick={sendEmail}
               disabled={sendingEmail}
-              className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
+              className="px-3 py-1 rounded-2xl bg-neutral-700 text-white disabled:opacity-50"
             >
               {sendingEmail ? "Sending..." : "Send Event Summary Email"}
             </button>

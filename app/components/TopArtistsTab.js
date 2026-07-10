@@ -25,7 +25,7 @@ function formatCacheAge(cachedAt) {
   return ` (cached ${Math.round(hours / 24)}d ago)`;
 }
 
-export default function TopArtistsTab() {
+export default function TopArtistsTab({ description }) {
   const [term, setTerm] = useState("medium_term");
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -144,13 +144,14 @@ export default function TopArtistsTab() {
 
   return (
     <TabLayout
+      description={description}
       controls={
         <div className="flex gap-2">
           {["short_term", "medium_term", "long_term", "combined"].map((t) => (
             <button
               key={t}
               onClick={() => setTerm(t)}
-              className={`px-3 py-1 rounded ${
+              className={`px-3 py-1 rounded-2xl ${
                 term === t
                   ? "bg-neutral-800 text-neutral-300 border border-neutral-500"
                   : "bg-neutral-200 text-neutral-900 cursor-pointer "
@@ -164,7 +165,7 @@ export default function TopArtistsTab() {
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="px-3 py-1 rounded bg-neutral-200 text-neutral-800 disabled:opacity-50 "
+              className="px-3 py-1 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50 "
             >
               {refreshing ? "Refreshing..." : "Force Refresh"}
             </button>

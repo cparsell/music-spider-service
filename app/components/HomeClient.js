@@ -13,7 +13,7 @@ const TABS = [
   { id: "settings", label: "Settings" },
 ];
 
-export default function HomeClient({ defaultTab }) {
+export default function HomeClient({ defaultTab, isConfigured }) {
   const [tab, setTab] = useState(() => {
     if (typeof window === "undefined") return defaultTab;
     const params = new URLSearchParams(window.location.search);
@@ -53,17 +53,27 @@ export default function HomeClient({ defaultTab }) {
 
       <div className="w-full max-w-5xl flex-1 min-h-0 px-3 pb-2 lg:max-w-none lg:px-6 lg:pt-8">
         <div className={`h-full ${tab === "events" ? "" : "lg:max-w-5xl"}`}>
-          {tab === "top" && <TopArtistsTab />}
+          {tab === "top" && (
+            <TopArtistsTab
+              description={
+                isConfigured
+                  ? "Top artists based on your listening history."
+                  : "Top artists based on your listening history. Configure sources in settings."
+              }
+            />
+          )}
           {tab === "custom" && (
             <ArtistListManager
               apiPath="/api/artists/manual"
-              addLabel="Add artist"
+              addLabel="Add"
+              description="Manually add artists that should always be included in event search."
             />
           )}
           {tab === "ignored" && (
             <ArtistListManager
               apiPath="/api/artists/ignored"
-              addLabel="Ignore artist"
+              addLabel="Ignore"
+              description="Artists in this list will be ignored when fetching events and top artist lists."
             />
           )}
           {tab === "events" && <EventsTab />}

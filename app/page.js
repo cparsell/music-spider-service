@@ -17,6 +17,9 @@ function isConfigured(config) {
 export default async function Home() {
   const config = await getResolvedConfig();
   return (
-    <HomeClient defaultTab={isConfigured(config) ? "events" : "settings"} />
+    <HomeClient
+      defaultTab={isConfigured(config) ? "events" : "settings"}
+      isConfigured={isConfigured(config)}
+    />
   );
 }

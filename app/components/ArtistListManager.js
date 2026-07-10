@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import StatusBar from "./StatusBar";
 import TabLayout from "./TabLayout";
 
-export default function ArtistListManager({ apiPath, addLabel }) {
+export default function ArtistListManager({ apiPath, addLabel, description }) {
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
@@ -103,7 +103,7 @@ export default function ArtistListManager({ apiPath, addLabel }) {
           <div className="flex flex-col items-center gap-2">
             <button
               type="submit"
-              className="flex-1 px-3 py-1 rounded bg-neutral-900 text-neutral-200 hover:underline"
+              className="px-3 py-1 rounded-2xl bg-neutral-200 text-neutral-800 cursor-pointer"
             >
               {addLabel}
             </button>
@@ -113,6 +113,7 @@ export default function ArtistListManager({ apiPath, addLabel }) {
           </div>
         </form>
       }
+      description={description}
       statusBar={<StatusBar message={statusMessage} error={statusError} />}
     >
       {!loading &&
