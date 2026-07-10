@@ -226,7 +226,7 @@ export default function EventsTab() {
               disabled={sendingEmail}
               className="px-3 py-1 rounded bg-neutral-700 text-white disabled:opacity-50"
             >
-              {sendingEmail ? "Sending..." : "Send Email"}
+              {sendingEmail ? "Sending..." : "Send Event Summary Email"}
             </button>
           </div>
         </div>
