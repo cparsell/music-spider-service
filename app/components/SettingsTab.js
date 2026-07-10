@@ -881,8 +881,8 @@ export default function SettingsTab() {
                             onClick={() => updateField(f.key, o.value)}
                             className={`px-3 py-1 rounded text-sm ${
                               form[f.key] === o.value
-                                ? "bg-gray-800 text-neutral-400 border border-neutral-400"
-                                : "bg-neutral-300 text-neutral-700"
+                                ? "bg-neutral-900 text-neutral-300 border border-neutral-500"
+                                : "bg-neutral-200 text-neutral-900 cursor-pointer"
                             }`}
                           >
                             {o.label}
