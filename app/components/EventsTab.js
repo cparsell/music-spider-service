@@ -258,7 +258,7 @@ export default function EventsTab() {
           <button
             onClick={runSearch}
             disabled={searching}
-            className="px-3 py-1 rounded-2xl bg-neutral-700 text-white disabled:opacity-50"
+            className="px-3 py-1 rounded-2xl bg-neutral-200 text-gray-800 disabled:opacity-50"
           >
             {searching ? "Searching..." : "Run Search"}
           </button>
@@ -274,7 +274,7 @@ export default function EventsTab() {
             <button
               onClick={sendEmail}
               disabled={sendingEmail}
-              className="px-3 py-1 rounded-2xl bg-neutral-700 text-white disabled:opacity-50"
+              className="px-3 py-1 rounded-2xl bg-neutral-200 text-gray-800 disabled:opacity-50"
             >
               {sendingEmail ? "Sending..." : "Send Event Summary Email"}
             </button>
@@ -423,7 +423,7 @@ export default function EventsTab() {
                       className="absolute inset-0 w-full h-full object-cover opacity-80 hover:opacity-100"
                     />
                   ))}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/100 to-transparent to-70% pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-t from-black to-transparent to-70% pointer-events-none" />
                 <div className="absolute inset-x-0 bottom-0 p-3 text-white">
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-semibold leading-tight">{event.eName}</p>
