@@ -245,11 +245,11 @@ export default function EventsTab() {
             No events yet. Run a search to find some.
           </p>
         ) : (
-          <ul className="flex flex-wrap gap-4 overflow-auto pr-2 ">
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 overflow-auto pr-2 ">
             {sortedEvents.map((event) => (
               <li
                 key={event.id}
-                className="relative w-80 aspect-6/8 rounded-xl overflow-hidden bg-neutral-800 text-shadow-lg hover:text-shadow-xlg shadow-black/50 "
+                className="relative aspect-6/8 rounded-xl overflow-hidden bg-neutral-800 text-shadow-lg hover:text-shadow-xlg shadow-black/50 "
               >
                 {event.image &&
                   (event.dates?.[0]?.urls?.[0]?.url ? (
