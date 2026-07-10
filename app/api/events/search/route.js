@@ -46,23 +46,38 @@ export async function POST() {
   });
 
   try {
+    const config = await getResolvedConfig();
+    const sources = config.eventSearchSources?.length
+      ? config.eventSearchSources
+      : ["ticketmaster", "resadvisor"];
+    const searchTicketmaster = sources.includes("ticketmaster");
+    const searchResidentAdvisor = sources.includes("resadvisor");
+
     const artistList = await getCombinedArtistList({ fresh: true });
 
+    const sourceLabel = [
+      searchTicketmaster && "Ticketmaster",
+      searchResidentAdvisor && "Resident Advisor",
+    ]
+      .filter(Boolean)
+      .join(" and ");
     setProgress({
-      phase: `Searching Ticketmaster and Resident Advisor (0/${artistList.length} artists)...`,
+      phase: `Searching ${sourceLabel} (0/${artistList.length} artists)...`,
       completed: 0,
       total: artistList.length,
     });
 
     const [raEvents, tmEvents] = await Promise.all([
-      searchRA(artistList),
-      searchTMLoop(artistList, (completed, total) => {
-        setProgress({
-          completed,
-          total,
-          phase: `Searching Ticketmaster (${completed}/${total} artists)...`,
-        });
-      }),
+      searchResidentAdvisor ? searchRA(artistList) : Promise.resolve([]),
+      searchTicketmaster
+        ? searchTMLoop(artistList, (completed, total) => {
+            setProgress({
+              completed,
+              total,
+              phase: `Searching Ticketmaster (${completed}/${total} artists)...`,
+            });
+          })
+        : Promise.resolve([]),
     ]);
 
     // Save whatever was found even if the search was canceled partway
@@ -78,7 +93,6 @@ export async function POST() {
 
     let calendarSynced = 0;
     let calendarError = null;
-    const config = await getResolvedConfig();
     if (config.googleCalendarSyncEnabled && newDates.length > 0) {
       // hasCalendarScope() checks the OAuth token's granted scope, which
       // has no equivalent in Apps Script mode - there's no token to check,

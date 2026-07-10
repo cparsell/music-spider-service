@@ -45,6 +45,11 @@ const EVENT_SEARCH_TERM_OPTIONS = [
   { value: "long_term", label: "Long term (all time)" },
 ];
 
+const EVENT_SEARCH_SOURCE_OPTIONS = [
+  { value: "ticketmaster", label: "Ticketmaster" },
+  { value: "resadvisor", label: "Resident Advisor" },
+];
+
 const COMBINED_MODES = [
   {
     value: "weighted",
@@ -680,6 +685,20 @@ export default function SettingsTab() {
     });
   };
 
+  const toggleEventSearchSource = (source, checked) => {
+    setForm((f) => {
+      const current = f.eventSearchSources || [];
+      if (checked) {
+        return current.includes(source)
+          ? f
+          : { ...f, eventSearchSources: [...current, source] };
+      }
+      const next = current.filter((s) => s !== source);
+      if (next.length === 0) return f; // always keep at least one selected
+      return { ...f, eventSearchSources: next };
+    });
+  };
+
   if (!form) return <p>Loading...</p>;
 
   const statusText =
@@ -741,6 +760,31 @@ export default function SettingsTab() {
                   <p className="font-medium">{s.label}</p>
                   <p className="text-sm text-neutral-600">{s.description}</p>
                 </div>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="font-semibold mb-2 text-neutral-200">
+            Event Search Sources
+          </h2>
+          <p className="text-sm text-neutral-600 mb-2">
+            Which APIs to query when running an event search. Disabling one
+            skips it entirely (no API calls made) rather than just hiding its
+            results.
+          </p>
+          <div className="flex flex-col gap-2">
+            {EVENT_SEARCH_SOURCE_OPTIONS.map((s) => (
+              <label key={s.value} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.eventSearchSources?.includes(s.value) ?? false}
+                  onChange={(e) =>
+                    toggleEventSearchSource(s.value, e.target.checked)
+                  }
+                />
+                {s.label}
               </label>
             ))}
           </div>

@@ -2,6 +2,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getSettings } from "@/lib/settings.js";
 
+// Same reasoning as app/page.js: getSettings() reads a file that can change
+// at runtime, so this layout must not be statically prerendered either,
+// otherwise a theme change in Settings would never show up on a fresh load.
+export const dynamic = "force-dynamic";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
