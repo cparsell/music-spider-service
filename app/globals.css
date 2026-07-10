@@ -86,10 +86,10 @@ body {
   --color-neutral-300: #a6adc8 !important; /* Subtext0 */
   --color-neutral-400: #9399b2 !important; /* Overlay2 */
   --color-neutral-500: #7f849c !important; /* Overlay1 */
-  --color-neutral-600: #6c7086 !important; /* Overlay0 */
-  --color-neutral-700: #585b70 !important; /* Surface2 */
-  --color-neutral-800: #45475a !important; /* Surface1 */
-  --color-neutral-900: #313244 !important; /* Surface0 */
+  --color-neutral-600: #585b70 !important; /* Overlay2 */
+  --color-neutral-700: #45475a !important; /* Surface1 */
+  --color-neutral-800: #313244 !important; /* Surface0 */
+  --color-neutral-900: #1e1e2e !important; /* Base */
 
   --color-black: #11111b !important; /* Crust */
 

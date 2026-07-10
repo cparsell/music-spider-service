@@ -29,7 +29,7 @@ export default function HomeClient({ defaultTab }) {
     // before) for everything else so those tabs don't just end up with a
     // lot of empty space stretched across a wide screen.
     <main className="h-screen overflow-hidden flex flex-col items-center lg:flex-row lg:items-stretch">
-      <div className="w-full max-w-5xl shrink-0 px-3 pt-8 lg:w-56 lg:max-w-none lg:shrink-0 lg:flex lg:flex-col lg:border-r lg:border-neutral-800 lg:px-4">
+      <div className="w-full max-w-5xl shrink-0  pt-8 lg:w-56 lg:max-w-none lg:shrink-0 lg:flex lg:flex-col lg:border-r lg:border-neutral-800 lg:pl-4">
         <div className="flex items-center gap-2 mb-4">
           <span className="imglogo"></span>
           <h1 className="text-2xl font-bold text-neutral-200">Music Spider</h1>
