@@ -13,7 +13,7 @@ export default function StatusBar({ message, error, progress }) {
         />
       )}
       <div
-        className={`relative flex items-center gap-2 px-3 py-1 text-sm ${
+        className={`relative flex items-center gap-2 px-3 py-1 min-h-5 text-sm ${
           error ? "text-red-300" : "text-neutral-200"
         }`}
       >

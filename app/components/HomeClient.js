@@ -32,11 +32,9 @@ export default function HomeClient({ defaultTab }) {
       <div className="w-full max-w-5xl shrink-0 px-3 pt-8 lg:w-56 lg:max-w-none lg:shrink-0 lg:flex lg:flex-col lg:border-r lg:border-neutral-800 lg:px-4">
         <div className="flex items-center gap-2 mb-4">
           <span className="imglogo"></span>
-          <h1 className="text-2xl font-bold text-neutral-200">
-            Music Spider
-          </h1>
+          <h1 className="text-2xl font-bold text-neutral-200">Music Spider</h1>
         </div>
-        <div className="flex gap-1 mb-3 border-b-2 lg:flex-col lg:gap-0.5 lg:border-b-0 lg:mb-0">
+        <div className="flex gap-1 mb-3 border-b-2 lg:flex-col lg:gap-0.5 lg:border-b-0  lg:mb-0">
           {TABS.map((t) => (
             <button
               key={t.id}
