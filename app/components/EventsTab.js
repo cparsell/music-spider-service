@@ -8,6 +8,34 @@ function formatDate(dateValue) {
   return isNaN(d) ? String(dateValue) : d.toLocaleString();
 }
 
+const COLUMNS = [
+  { key: "eName", label: "Event" },
+  { key: "venue", label: "Venue" },
+  { key: "acts", label: "Acts" },
+  { key: "date", label: "Date" },
+];
+
+function getSortValue(event, key) {
+  switch (key) {
+    case "eName":
+      return (event.eName || "").toLowerCase();
+    case "venue":
+      return (event.venue || "").toLowerCase();
+    case "acts":
+      return (
+        event.actsDisplay ||
+        (event.acts || []).join(", ") ||
+        ""
+      ).toLowerCase();
+    case "date": {
+      const t = new Date(event.dates?.[0]?.date).getTime();
+      return isNaN(t) ? Infinity : t;
+    }
+    default:
+      return "";
+  }
+}
+
 function buildSearchResultMessage(result) {
   let message = result.canceled
     ? `Search canceled. Searched ${result.artistsSearched} artists, found ${result.found} matching events before stopping.`
@@ -29,6 +57,11 @@ export default function EventsTab() {
   const [statusError, setStatusError] = useState(false);
   const [progress, setProgress] = useState(null);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [viewMode, setViewMode] = useState("card");
+  const [sortConfig, setSortConfig] = useState({
+    key: "date",
+    direction: "asc",
+  });
   // A search runs server-side independent of this component's lifecycle -
   // switching tabs unmounts it, but the search keeps going. These track the
   // poll loop and whether we've actually observed it running (vs. stale
@@ -201,6 +234,23 @@ export default function EventsTab() {
     (a, b) => new Date(a.dates?.[0]?.date) - new Date(b.dates?.[0]?.date),
   );
 
+  const direction = sortConfig.direction === "asc" ? 1 : -1;
+  const listEvents = [...events].sort((a, b) => {
+    const av = getSortValue(a, sortConfig.key);
+    const bv = getSortValue(b, sortConfig.key);
+    if (av < bv) return -1 * direction;
+    if (av > bv) return 1 * direction;
+    return 0;
+  });
+
+  const handleSort = (key) => {
+    setSortConfig((prev) =>
+      prev.key === key
+        ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
+        : { key, direction: "asc" },
+    );
+  };
+
   return (
     <TabLayout
       controls={
@@ -229,6 +279,23 @@ export default function EventsTab() {
               {sendingEmail ? "Sending..." : "Send Event Summary Email"}
             </button>
           </div>
+          <div className="flex-1 flex justify-end">
+            <div className="flex rounded-2xl overflow-hidden border border-neutral-500">
+              {["card", "list"].map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`px-3 py-1 capitalize ${
+                    viewMode === mode
+                      ? "bg-neutral-700 text-white"
+                      : "bg-neutral-200 text-neutral-900 cursor-pointer"
+                  }`}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       }
       statusBar={
@@ -244,6 +311,90 @@ export default function EventsTab() {
           <p className="text-neutral-500">
             No events yet. Run a search to find some.
           </p>
+        ) : viewMode === "list" ? (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="text-left text-sm text-neutral-500 border-b">
+                <th className="py-1 pr-4 font-normal"></th>
+                {COLUMNS.map((col) => (
+                  <th key={col.key} className="py-1 pr-4 font-normal">
+                    <button
+                      onClick={() => handleSort(col.key)}
+                      className="flex items-center gap-1 hover:text-neutral-300"
+                    >
+                      {col.label}
+                      {sortConfig.key === col.key && (
+                        <span>
+                          {sortConfig.direction === "asc" ? "▲" : "▼"}
+                        </span>
+                      )}
+                    </button>
+                  </th>
+                ))}
+                <th className="py-1 pr-4 font-normal">Links</th>
+                <th className="py-1 font-normal">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {listEvents.map((event) => (
+                <tr key={event.id} className="border-b last:border-0 align-top">
+                  <td className="py-2 pr-4">
+                    {event.image && (
+                      <img
+                        src={event.image}
+                        alt=""
+                        className="w-33 rounded object-contain"
+                      />
+                    )}
+                  </td>
+                  <td className="py-2 pr-4">{event.eName}</td>
+                  <td className="py-2 pr-4">
+                    {event.venue}
+                    {event.address && (
+                      <div className="text-xs text-neutral-500">
+                        {event.address.trim()}
+                      </div>
+                    )}
+                  </td>
+                  <td className="py-2 pr-4">
+                    {event.actsDisplay || event.acts?.join(", ") || ""}
+                  </td>
+                  <td className="py-2 pr-4">
+                    <div className="flex flex-col gap-1">
+                      {event.dates?.map((d) => (
+                        <span key={d.date}>{formatDate(d.date)}</span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="py-2 pr-4">
+                    <div className="flex flex-col gap-1">
+                      {event.dates?.map((d) =>
+                        d.urls?.map((u) => (
+                          <a
+                            key={u.name + d.date}
+                            href={u.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            {u.name}
+                          </a>
+                        )),
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-2">
+                    <button
+                      onClick={() => deleteEvent(event.id)}
+                      className="text-sm px-2 py-0.5 rounded text-red-600 hover:underline"
+                    >
+                      delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         ) : (
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 overflow-auto pr-2 ">
             {sortedEvents.map((event) => (
