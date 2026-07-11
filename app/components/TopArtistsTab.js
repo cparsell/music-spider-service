@@ -188,7 +188,7 @@ export default function TopArtistsTab({ description }) {
             {rankedArtists.map((a) => (
               <tr
                 key={a.artist}
-                className={`border-b last:border-0 ${a.ignored ? "text-neutral-500" : ""}`}
+                className={`border-b last:border-0 ${a.ignored ? "text-neutral-500" : "text-neutral-200"}`}
               >
                 <td className="py-1 pr-4 text-neutral-400">{a.rank ?? "–"}</td>
                 <td className="py-1 pr-4">{a.artist}</td>

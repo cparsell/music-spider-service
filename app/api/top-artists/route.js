@@ -1,6 +1,7 @@
 import { TERM_WINDOWS } from "@/lib/tautulli.js";
 import { getConfiguredTopArtists } from "@/lib/artistSources.js";
 import { getResolvedConfig } from "@/lib/settings.js";
+import { ignoredArtists } from "@/lib/artistLists.js";
 import {
   getCachedTermResult,
   setCachedTermResult,
@@ -31,10 +32,14 @@ export async function GET(req) {
   if (useCache) {
     const cached = await getCachedTermResult(term);
     if (cached) {
+      const ignoredSet = new Set(await ignoredArtists.getAll());
+      const artists = cached.artists
+        .slice(0, count)
+        .map((a) => ({ ...a, ignored: ignoredSet.has(a.artist) }));
       return Response.json({
         term,
         mode: term === "combined" ? mode : undefined,
-        artists: cached.artists.slice(0, count),
+        artists,
         spotifyError: cached.spotifyError,
         cachedAt: cached.cachedAt,
       });

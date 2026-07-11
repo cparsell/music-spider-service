@@ -123,7 +123,10 @@ export default function ArtistListManager({ apiPath, addLabel, description }) {
           <table className="w-full border-collapse">
             <tbody>
               {artists.map((name) => (
-                <tr key={name} className="border-b last:border-0">
+                <tr
+                  key={name}
+                  className="border-b last:border-0 text-neutral-200"
+                >
                   <td className="py-1 pr-4">{name}</td>
                   <td className="py-1">
                     <button
