@@ -6,5 +6,5 @@ services:
     env_file:
       - .env.local
     volumes:
-      - /mnt/user/appdata/music-spider-service:/app/data
+      - ./data:/app/data # For an Unraid user, this might look like /mnt/user/appdata/music-spider
     restart: unless-stopped
