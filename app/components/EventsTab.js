@@ -337,7 +337,10 @@ export default function EventsTab() {
             </thead>
             <tbody>
               {listEvents.map((event) => (
-                <tr key={event.id} className="border-b last:border-0 align-top">
+                <tr
+                  key={event.id}
+                  className="border-b border-neutral-700 last:border-0 align-top"
+                >
                   <td className="py-2 pr-4">
                     {event.image && (
                       <img
@@ -359,15 +362,15 @@ export default function EventsTab() {
                   <td className="py-2 pr-4">
                     {event.actsDisplay || event.acts?.join(", ") || ""}
                   </td>
-                  <td className="py-2 pr-4">
-                    <div className="flex flex-col gap-1">
+                  <td className="py-2 pr-4 text-sm">
+                    <div className="flex flex-col gap-1 whitespace-nowrap">
                       {event.dates?.map((d) => (
                         <span key={d.date}>{formatDate(d.date)}</span>
                       ))}
                     </div>
                   </td>
-                  <td className="py-2 pr-4">
-                    <div className="flex flex-col gap-1">
+                  <td className="py-2 pr-4 text-sm whitespace-nowrap">
+                    <div className="flex flex-col gap-1 ">
                       {event.dates?.map((d) =>
                         d.urls?.map((u) => (
                           <a
@@ -383,7 +386,7 @@ export default function EventsTab() {
                       )}
                     </div>
                   </td>
-                  <td className="py-2">
+                  <td className="py-2 ">
                     <button
                       onClick={() => deleteEvent(event.id)}
                       className="text-sm px-2 py-0.5 rounded text-red-600 hover:underline"
