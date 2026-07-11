@@ -33,7 +33,9 @@ export default function HomeClient({ defaultTab, isConfigured }) {
             className="flex flex-row gap-0.5"
           >
             <h1 className="text-logo font-bold text-neutral-200">Music</h1>
-            <span className="imglogo"></span>
+            <span className="imglogo-slot">
+              <span className="imglogo"></span>
+            </span>
             <h1 className="text-logo font-bold text-neutral-200">Spider</h1>
           </a>
         </div>

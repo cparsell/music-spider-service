@@ -55,15 +55,25 @@ body {
   fill: #ff0000 !important;
 } */
 
-.imglogo {
-  /* display: inline-block; */
+.imglogo-slot {
+  position: relative;
+  display: inline-block;
   width: 34px;
-  /* height: 24px; */
+  vertical-align: top;
+}
+
+.imglogo {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: -1.5rem; /* pulls the string up past the pt-6 above it, to the viewport top */
+  transform: translateX(-50%);
+  width: 35px;
+  height: 80px;
 
   background-color: var(--color-white) !important;
-  /* color: #ff0000 !important; */
-  mask: url("ms-logo-string.svg") no-repeat center / contain;
-  -webkit-mask: url("ms-logo-string.svg") no-repeat center / contain;
+  mask: url("ms-logo-string.svg") no-repeat top center / contain;
+  -webkit-mask: url("ms-logo-string.svg") no-repeat top center / contain;
 }
 
 /* Theme: "Grayscale" is the default and needs no override block here since
