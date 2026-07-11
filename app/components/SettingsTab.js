@@ -207,15 +207,15 @@ const SECTIONS = [
 
 // Wraps a settings section in a bordered box with a clickable header.
 // Collapsed, only the header (title + chevron) remains visible - the box
-// shrinks to a thin bar since the body isn't rendered at all.
-function SettingsSection({ title, defaultOpen = false, children }) {
-  const [open, setOpen] = useState(defaultOpen);
-
+// shrinks to a thin bar since the body isn't rendered at all. Controlled by
+// the parent (rather than managing its own open state) so only one of these
+// top-level sections can be open at a time - see `openSection` below.
+function SettingsSection({ title, open, onToggle, children }) {
   return (
     <div className="break-inside-avoid mb-6 border border-neutral-800 rounded-lg bg-black">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={onToggle}
         aria-expanded={open}
         className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left cursor-pointer"
       >
@@ -689,6 +689,11 @@ const SAVE_DEBOUNCE_MS = 600;
 export default function SettingsTab() {
   const [form, setForm] = useState(null);
   const [saveState, setSaveState] = useState("idle"); // idle | pending | saving | saved | error
+  // Which top-level SettingsSection (by title) is currently open - null when
+  // all are collapsed. Only one at a time, accordion-style.
+  const [openSection, setOpenSection] = useState(null);
+  const toggleSection = (title) =>
+    setOpenSection((current) => (current === title ? null : title));
   const skipNextSave = useRef(true);
   const debounceRef = useRef(null);
   const pendingSaveRef = useRef(false);
@@ -994,7 +999,11 @@ export default function SettingsTab() {
       }
     >
       <div className="columns-1 pl-2 pr-8 gap-12 w-full lg:w-3xl max-w-[1800px]">
-        <SettingsSection title="Appearance">
+        <SettingsSection
+          title="Appearance"
+          open={openSection === "Appearance"}
+          onToggle={() => toggleSection("Appearance")}
+        >
           <div className="flex flex-col gap-3">
             {THEMES.map((t) => (
               <label
@@ -1017,7 +1026,11 @@ export default function SettingsTab() {
           </div>
         </SettingsSection>
 
-        <SettingsSection title="Artists">
+        <SettingsSection
+          title="Artists"
+          open={openSection === "Artists"}
+          onToggle={() => toggleSection("Artists")}
+        >
           <SettingsSubsection title="Artist Sources">
             <div className="flex flex-col gap-3">
               {ARTIST_SOURCES.map((s) => (
@@ -1116,7 +1129,11 @@ export default function SettingsTab() {
           </SettingsSubsection>
         </SettingsSection>
 
-        <SettingsSection title="Event Search">
+        <SettingsSection
+          title="Event Search"
+          open={openSection === "Event Search"}
+          onToggle={() => toggleSection("Event Search")}
+        >
           <SettingsSubsection title="Event Search Sources">
             <p className="text-sm text-neutral-600 mb-2">
               Which APIs to query when running an event search. Disabling one
@@ -1194,7 +1211,11 @@ export default function SettingsTab() {
           </SettingsSubsection>
         </SettingsSection>
 
-        <SettingsSection title="Notification">
+        <SettingsSection
+          title="Notification"
+          open={openSection === "Notification"}
+          onToggle={() => toggleSection("Notification")}
+        >
           <SettingsSubsection title="Google (Email & Calendar)">
             {renderSectionFields(sectionByTitle["Google (Email & Calendar)"])}
           </SettingsSubsection>
