@@ -59,11 +59,15 @@ Unraid's Docker UI doesn't run `docker compose` directly, so pick one of these:
 ### Option 1: Add Container with the published image (easiest)
 
 1. In Unraid's **Docker** tab, click **Add Container**.
-2. Set **Repository** to `139139/music-spider:latest`.
-3. Add a port mapping: container port `6100` to whatever host port you want (`6100` is fine unless it's taken).
-4. Add a path mapping: container path `/app/data` to an appdata path, e.g. `/mnt/user/appdata/music-spider-service`.
-5. Set **WebUI** to `http://[IP]:[PORT]` (requires being in **Advanced View**, not **Basic View**)
-6. Apply. The app will be reachable at `http://<unraid-ip>:<host-port>`.
+2. Use the following settings:
+
+- **Repository**: `139139/music-spider:latest`.
+- **Icon URL**: `https://raw.githubusercontent.com/cparsell/music-spider-service/refs/heads/main/app/ms-logo-string-ico2-01.png`
+- Add a port mapping: container port `6100` to whatever host port you want (`6100` is fine unless it's taken).
+- Add a path mapping: container path `/app/data` to an appdata path, e.g. `/mnt/user/appdata/music-spider-service`.
+- Set **WebUI** to `http://[IP]:[PORT]` (requires being in **Advanced View**, not **Basic View**)
+
+3. _Apply!_. The app will be reachable at `http://<unraid-ip>:<host-port>`.
 
 ### Option 2: Compose Manager plugin
 
