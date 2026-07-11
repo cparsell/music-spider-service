@@ -6,7 +6,37 @@ Everything is configured after the container is running, from the **Settings** t
 
 ## Running it with Docker Compose
 
-Requires [Docker](https://docs.docker.com/get-docker/) and Docker Compose.
+Requires [Docker](https://docs.docker.com/get-docker/) and Docker Compose. The published image is [`139139/music-spider`](https://hub.docker.com/r/139139/music-spider) on Docker Hub.
+
+### Option 1: Pull the published image (recommended)
+
+No need to clone the repo — just save this as `docker-compose.yml` in an empty folder:
+
+```yaml
+services:
+  music-spider:
+    image: 139139/music-spider:latest
+    ports:
+      - "6100:6100"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+```
+
+Then start it:
+
+```bash
+docker compose up -d
+```
+
+To update to the latest published version later:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+### Option 2: Build from source
 
 ```bash
 git clone <this-repo>
@@ -14,37 +44,36 @@ cd music-spider-service
 docker compose up -d --build
 ```
 
-By default this builds the image and starts the app on port `6100`. Open `http://<your-host>:6100` (e.g. `http://localhost:6100`, or the LAN IP of the machine running it) and head to the **Settings** tab to start configuring.
+This uses the `docker-compose.yml` already in the repo (`build: .`), so it builds the image locally instead of pulling it. Useful if you want to modify the code. To update after pulling new changes: `git pull && docker compose up -d --build`.
 
-Settings and cached data are persisted to a `data/` directory so they survive container restarts/rebuilds. The included `docker-compose.yml` mounts this as `./data:/app/data` — adjust the left-hand side of that volume mapping if you'd rather point it somewhere else (e.g. an appdata share on a NAS).
+### After starting it
 
-To update after pulling new changes:
+Open `http://<your-host>:6100` (e.g. `http://localhost:6100`, or the LAN IP of the machine running it) and head to the **Settings** tab to start configuring.
 
-```bash
-git pull
-docker compose up -d --build
-```
+Settings and cached data are persisted to a `data/` directory so they survive container restarts/rebuilds/updates. Both options above mount this as `./data:/app/data` — adjust the left-hand side of that volume mapping if you'd rather point it somewhere else (e.g. an appdata share on a NAS).
 
 ## Running it on Unraid
 
 Unraid's Docker UI doesn't run `docker compose` directly, so pick one of these:
 
-### Option 1: Compose Manager plugin (easiest)
+### Option 1: Add Container with the published image (easiest)
+
+1. In Unraid's **Docker** tab, click **Add Container**.
+2. Set **Repository** to `139139/music-spider:latest`.
+3. Add a port mapping: container port `6100` to whatever host port you want (`6100` is fine unless it's taken).
+4. Add a path mapping: container path `/app/data` to an appdata path, e.g. `/mnt/user/appdata/music-spider-service`.
+5. Apply. The app will be reachable at `http://<unraid-ip>:<host-port>`.
+
+### Option 2: Compose Manager plugin
 
 1. Install **Compose Manager** from the Community Applications store (Apps tab), if you don't already have it.
-2. Add a new stack pointed at a clone of this repo (or paste in the contents of `docker-compose.yml`).
+2. Add a new stack using the `docker-compose.yml` from [Option 1 of the Docker Compose instructions above](#option-1-pull-the-published-image-recommended).
 3. Change the volume line to use an Unraid appdata path, e.g. `/mnt/user/appdata/music-spider-service:/app/data`.
 4. Bring the stack up. The app will be reachable at `http://<unraid-ip>:6100`.
 
-### Option 2: Build the image and add it manually
-
-1. SSH into Unraid (or use its built-in terminal), clone this repo somewhere (e.g. `/mnt/user/appdata/music-spider-service-src`), and run `docker build -t music-spider .` from inside it.
-2. In Unraid's **Docker** tab, **Add Container**, and point the image field at the `music-spider` image you just built (not a registry image).
-3. Map port `6100`, add a volume from `/mnt/user/appdata/music-spider-service` to `/app/data`, and apply.
-
 ### Unraid-specific gotchas
 
-- **WebUI button**: if the container was added manually (Option 2) rather than through Unraid's own template flow, the `[IP]:[PORT]` placeholder in the WebUI URL field doesn't get substituted — clicking the button opens a blank/blocked popup. Use the literal reachable address instead, e.g. `http://192.168.1.50:6100/`.
+- **WebUI button**: if the container was added via **Add Container** (Option 1) or raw `docker run` rather than through an Unraid Community Applications template, the `[IP]:[PORT]` placeholder in the WebUI URL field doesn't get substituted — clicking the button opens a blank/blocked popup. Use the literal reachable address instead, e.g. `http://192.168.1.50:6100/`.
 - **OAuth redirect URIs**: since Unraid is reached over your LAN rather than `127.0.0.1`, set the `Spotify Redirect URI` / `Google Redirect URI` fields in Music Spider (and the matching values registered in the Spotify/Google developer consoles) to Unraid's actual reachable address. Google's OAuth also requires HTTPS at that address once it's anything other than `127.0.0.1`/`localhost` — see [Google OAuth and HTTPS](#google-oauth-and-https) below.
 - Give the Unraid box a reserved/static LAN IP in your router so the URLs above don't silently break if its address changes later.
 
