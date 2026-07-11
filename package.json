@@ -6,7 +6,8 @@
     "dev": "next dev -p 3100",
     "build": "next build",
     "start": "next start -p 3100",
-    "lint": "eslint"
+    "lint": "eslint",
+    "dock": "next build && docker build -t 139139/music-spider:latest . && docker push 139139/music-spider:latest"
   },
   "dependencies": {
     "next": "16.2.10",
