@@ -35,7 +35,7 @@ export default function TabLayout({
   return (
     <div className="h-full flex flex-col">
       {description && (
-        <div className="shrink-0 mb-3 text-sm text-neutral-500">
+        <div className="shrink-0 mb-3 text-sm text-neutral-500 ">
           {description}
         </div>
       )}

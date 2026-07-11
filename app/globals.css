@@ -117,3 +117,11 @@ h2 {
 .text-shadow-lg {
   text-shadow: 0 2px 4px rgb(0 0 0 / 100%);
 }
+
+.text-logo {
+  font-size: 1.4rem !important;
+  line-height: var(
+    --tw-leading,
+    var(--text-xl--line-height) /* calc(1.75 / 1.25) ≈ 1.4 */
+  );
+}
