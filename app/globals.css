@@ -56,14 +56,14 @@ body {
 } */
 
 .imglogo {
-  display: inline-block;
-  width: 24px;
-  height: 24px;
+  /* display: inline-block; */
+  width: 34px;
+  /* height: 24px; */
 
   background-color: var(--color-white) !important;
   /* color: #ff0000 !important; */
-  mask: url("ms-logo.svg") no-repeat center / contain;
-  -webkit-mask: url("ms-logo.svg") no-repeat center / contain;
+  mask: url("ms-logo-string.svg") no-repeat center / contain;
+  -webkit-mask: url("ms-logo-string.svg") no-repeat center / contain;
 }
 
 /* Theme: "Grayscale" is the default and needs no override block here since
