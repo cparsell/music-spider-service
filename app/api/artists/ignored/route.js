@@ -17,7 +17,11 @@ export async function POST(req) {
 }
 
 export async function DELETE(req) {
-  const { name } = await req.json();
-  const artists = await ignoredArtists.remove(name);
-  return Response.json({ artists });
+  try {
+    const { name } = await req.json();
+    const artists = await ignoredArtists.remove(name);
+    return Response.json({ artists });
+  } catch (err) {
+    return Response.json({ error: err.message }, { status: 400 });
+  }
 }

@@ -51,7 +51,7 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
     return results;
   } catch (e) {
     console.error(`searchTMLoop() error - ${e}`);
-    return [];
+    return results;
   }
 };
 
@@ -202,7 +202,7 @@ const tmSearch = async (keyword, config) => {
     }
   } catch (err) {
     console.error(`tmSearch() error: ${err}`);
-    return [];
+    return results;
   }
   console.debug(`tmSearch('${keyword}') parsed ${results.length} results`);
   return results;

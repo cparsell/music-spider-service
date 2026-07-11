@@ -6,7 +6,11 @@ export async function GET() {
 }
 
 export async function DELETE(req) {
-  const { id } = await req.json();
-  const events = await removeEvent(id);
-  return Response.json({ events: await attachActsDisplay(events) });
+  try {
+    const { id } = await req.json();
+    const events = await removeEvent(id);
+    return Response.json({ events: await attachActsDisplay(events) });
+  } catch (err) {
+    return Response.json({ error: err.message }, { status: 400 });
+  }
 }
