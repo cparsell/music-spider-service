@@ -26,7 +26,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
     // full remaining width, so each tab's scrollbar hugs the browser edge.
     <main className="h-screen bg-neutral-900 overflow-hidden flex flex-col items-center lg:flex-row lg:items-stretch">
       <div className="w-full max-w-5xl shrink-0 pt-6 lg:w-56 lg:max-w-none lg:shrink-0 lg:flex lg:flex-col lg:border-r lg:border-neutral-800 lg:pl-2">
-        <div className="gap-2 mb-2 lg:pl-6 pb-3">
+        <div className="gap-2 pb-3 mb-2 ml-2 mt-1 lg:pl-6 lg:mt-0 lg:ml-0">
           <a
             href="https://github.com/cparsell/music-spider-service"
             target="_blank"
