@@ -48,7 +48,13 @@ export default function TabLayout({
           {controls}
         </div>
       )}
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto p-2">
+      <div
+        ref={scrollRef}
+        // No top padding - a sticky (top-0) header inside would otherwise
+        // sit a few pixels below the scrollport's real top edge, leaving a
+        // gap scrolled rows could peek through above it.
+        className="flex-1 min-h-0 overflow-y-auto px-2 pb-2"
+      >
         {children}
       </div>
       <div className="shrink-0">{statusBar}</div>

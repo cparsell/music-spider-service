@@ -177,11 +177,19 @@ export default function TopArtistsTab({ description }) {
       {!loading && (
         <table className="w-full border-collapse">
           <thead>
-            <tr className="text-left text-sm text-neutral-500 border-b">
-              <th className="py-1 pr-4 font-normal">#</th>
-              <th className="py-1 pr-4 font-normal">Artist</th>
-              <th className="py-1 pr-4 font-normal">Plays</th>
-              <th className="py-1 font-normal">Actions</th>
+            <tr className="text-left text-sm text-neutral-500">
+              <th className="sticky top-0 z-10 bg-black py-1 pr-4 font-normal border-b border-neutral-700">
+                #
+              </th>
+              <th className="sticky top-0 z-10 bg-black py-1 pr-4 font-normal border-b border-neutral-700">
+                Artist
+              </th>
+              <th className="sticky top-0 z-10 bg-black py-1 pr-4 font-normal border-b border-neutral-700">
+                Plays
+              </th>
+              <th className="sticky top-0 z-10 bg-black py-1 font-normal border-b border-neutral-700">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>

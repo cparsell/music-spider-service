@@ -66,6 +66,10 @@ export default function ArtistListManager({ apiPath, addLabel, description }) {
     setStatusError(false);
   };
 
+  const sortedArtists = [...artists].sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" }),
+  );
+
   const removeArtist = async (name) => {
     const res = await fetch(apiPath, {
       method: "DELETE",
@@ -117,12 +121,22 @@ export default function ArtistListManager({ apiPath, addLabel, description }) {
       statusBar={<StatusBar message={statusMessage} error={statusError} />}
     >
       {!loading &&
-        (artists.length === 0 ? (
+        (sortedArtists.length === 0 ? (
           <p className="text-neutral-500">No artists yet.</p>
         ) : (
           <table className="w-full border-collapse">
+            <thead>
+              <tr className="text-left text-sm text-neutral-500">
+                <th className="sticky top-0 z-10 bg-black py-1 pr-4 font-normal border-b border-neutral-700">
+                  Artist
+                </th>
+                <th className="sticky top-0 z-10 bg-black py-1 font-normal border-b border-neutral-700">
+                  Actions
+                </th>
+              </tr>
+            </thead>
             <tbody>
-              {artists.map((name) => (
+              {sortedArtists.map((name) => (
                 <tr
                   key={name}
                   className="border-b last:border-0 text-neutral-200"
