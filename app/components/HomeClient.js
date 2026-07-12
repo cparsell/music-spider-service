@@ -25,7 +25,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
     // to move logo/tabs into a left sidebar instead and let content use the
     // full remaining width, so each tab's scrollbar hugs the browser edge.
     <main className="h-screen bg-neutral-900 overflow-hidden flex flex-col items-center lg:flex-row lg:items-stretch">
-      <div className="w-full max-w-5xl shrink-0  pt-6 lg:w-56 lg:max-w-none lg:shrink-0 lg:flex lg:flex-col lg:border-r lg:border-neutral-800 lg:pl-2">
+      <div className="w-full max-w-5xl shrink-0 pt-6 lg:w-56 lg:max-w-none lg:shrink-0 lg:flex lg:flex-col lg:border-r lg:border-neutral-800 lg:pl-2">
         <div className="gap-2 mb-2 lg:pl-6 pb-3">
           <a
             href="https://github.com/cparsell/music-spider-service"
@@ -39,7 +39,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
             <h1 className="text-logo font-bold text-neutral-200">Spider</h1>
           </a>
         </div>
-        <div className="flex gap-1 mb-3 border-b-2 lg:flex-col lg:gap-0.5 lg:border-b-0  lg:mb-0">
+        <div className="flex gap-1 mb-0 border-b-2  lg:flex-col lg:gap-0.5 lg:border-b-0  lg:mb-0">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -57,7 +57,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
       </div>
 
       <div className="w-full flex-1 min-h-0 px-3 pb-2 lg:max-w-none lg:px-6 lg:pt-8 bg-black">
-        <div className="h-full">
+        <div className="h-full mt-3 lg:mt-0">
           {tab === "top" && (
             <TopArtistsTab
               description={
