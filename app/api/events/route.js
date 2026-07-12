@@ -1,4 +1,5 @@
 import { getEvents, removeEvent } from "@/lib/eventsStore.js";
+import { ignoredEvents } from "@/lib/ignoredEvents.js";
 import { attachActsDisplay } from "@/lib/formatActs.js";
 
 export async function GET() {
@@ -7,7 +8,16 @@ export async function GET() {
 
 export async function DELETE(req) {
   try {
-    const { id } = await req.json();
+    const { id, ignore } = await req.json();
+    if (ignore) {
+      const event = (await getEvents()).find((e) => e.id === id);
+      if (event) {
+        await ignoredEvents.addDates(
+          event,
+          (event.dates || []).map((d) => d.date),
+        );
+      }
+    }
     const events = await removeEvent(id);
     return Response.json({ events: await attachActsDisplay(events) });
   } catch (err) {

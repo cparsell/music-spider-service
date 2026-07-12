@@ -5,7 +5,16 @@ import TabLayout from "./TabLayout";
 
 function formatDate(dateValue) {
   const d = new Date(dateValue);
-  return isNaN(d) ? String(dateValue) : d.toLocaleString();
+  if (isNaN(d)) return String(dateValue);
+  const datePart = d.toLocaleDateString();
+  // toLocaleTimeString gives e.g. "7:00 PM" / "7:30 PM" - drop the :00 for
+  // on-the-hour times and the space before AM/PM for a compact "7PM" /
+  // "7:30PM" on cards.
+  const timePart = d
+    .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    .replace(":00", "")
+    .replace(" ", "");
+  return `${datePart}, ${timePart}`;
 }
 
 const COLUMNS = [
@@ -194,11 +203,11 @@ export default function EventsTab() {
     await fetch("/api/events/search/cancel", { method: "POST" });
   };
 
-  const deleteEvent = async (id) => {
+  const deleteEvent = async (id, { ignore = false } = {}) => {
     const res = await fetch("/api/events", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id, ignore }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -207,7 +216,7 @@ export default function EventsTab() {
       return;
     }
     setEvents(data.events || []);
-    setStatusMessage("Event deleted");
+    setStatusMessage(ignore ? "Event deleted and ignored" : "Event deleted");
     setStatusError(false);
   };
 
@@ -362,7 +371,7 @@ export default function EventsTab() {
                   <td className="py-2 ">
                     <button
                       onClick={() => deleteEvent(event.id)}
-                      className="text-sm px-2 py-0.5 rounded text-red-600 hover:underline"
+                      className="text-sm px-2 py-0.5  text-red-600 hover:underline"
                     >
                       delete
                     </button>
@@ -400,16 +409,23 @@ export default function EventsTab() {
                     />
                   ))}
                 <div className="absolute inset-0 bg-linear-to-t from-black to-transparent to-70% pointer-events-none" />
+                <div className="absolute bottom-2 right-2 flex flex-col items-end gap-1 text-shadow-lg">
+                  <button
+                    onClick={() => deleteEvent(event.id)}
+                    className="text-xs text-red-200 hover:underline rounded-xl px-1.5 py-0.5"
+                  >
+                    delete
+                  </button>
+                  <button
+                    onClick={() => deleteEvent(event.id, { ignore: true })}
+                    title="Delete and exclude from future searches"
+                    className="text-xs text-red-200 hover:underline rounded-xl px-1.5 py-0.5"
+                  >
+                    delete/ignore
+                  </button>
+                </div>
                 <div className="absolute inset-x-0 bottom-0 p-3 text-white">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold leading-tight">{event.eName}</p>
-                    <button
-                      onClick={() => deleteEvent(event.id)}
-                      className="text-xs text-red-300 hover:underline shrink-0"
-                    >
-                      delete
-                    </button>
-                  </div>
+                  <p className="font-semibold leading-tight">{event.eName}</p>
                   <p className="text-sm text-neutral-300">
                     {event.venue}
                     {/* {event.city ? `, ${event.city}` : ""} */}
