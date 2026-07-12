@@ -375,6 +375,13 @@ export default function EventsTab() {
                     >
                       delete
                     </button>
+                    <button
+                      onClick={() => deleteEvent(event.id, { ignore: true })}
+                      title="Delete and exclude from future searches"
+                      className="text-sm px-2 py-0.5  text-red-600 hover:underline"
+                    >
+                      ignore
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -412,16 +419,16 @@ export default function EventsTab() {
                 <div className="absolute bottom-2 right-2 flex flex-col items-end gap-1 text-shadow-lg">
                   <button
                     onClick={() => deleteEvent(event.id)}
-                    className="text-xs text-red-200 hover:underline rounded-xl px-1.5 py-0.5"
+                    className="text-xs text-red-200 hover:underline rounded-xl px-1.5 py-0.5 text-shadow-lg"
                   >
                     delete
                   </button>
                   <button
                     onClick={() => deleteEvent(event.id, { ignore: true })}
                     title="Delete and exclude from future searches"
-                    className="text-xs text-red-200 hover:underline rounded-xl px-1.5 py-0.5"
+                    className="text-xs text-red-200 hover:underline rounded-xl px-1.5 py-0.5 text-shadow-lg"
                   >
-                    delete/ignore
+                    ignore
                   </button>
                 </div>
                 <div className="absolute inset-x-0 bottom-0 p-3 text-white">
