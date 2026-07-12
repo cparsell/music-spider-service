@@ -212,7 +212,7 @@ const SECTIONS = [
 // top-level sections can be open at a time - see `openSection` below.
 function SettingsSection({ title, open, onToggle, children }) {
   return (
-    <div className="break-inside-avoid mb-6 border border-neutral-800 rounded-lg bg-black">
+    <div className="break-inside-avoid mb-6 border border-neutral-800 rounded-lg bg-neutral-900">
       <button
         type="button"
         onClick={onToggle}
