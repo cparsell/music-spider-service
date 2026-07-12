@@ -56,7 +56,6 @@ export default function EventsTab() {
   const [statusMessage, setStatusMessage] = useState("");
   const [statusError, setStatusError] = useState(false);
   const [progress, setProgress] = useState(null);
-  const [sendingEmail, setSendingEmail] = useState(false);
   const [viewMode, setViewMode] = useState("card");
   const [sortConfig, setSortConfig] = useState({
     key: "date",
@@ -195,24 +194,6 @@ export default function EventsTab() {
     await fetch("/api/events/search/cancel", { method: "POST" });
   };
 
-  const sendEmail = async () => {
-    setSendingEmail(true);
-    setStatusMessage("Sending email...");
-    setStatusError(false);
-    try {
-      const res = await fetch("/api/events/email", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send email");
-      setStatusMessage(`Email sent with ${data.count} upcoming events.`);
-      setStatusError(false);
-    } catch (err) {
-      setStatusMessage(err.message);
-      setStatusError(true);
-    } finally {
-      setSendingEmail(false);
-    }
-  };
-
   const deleteEvent = async (id) => {
     const res = await fetch("/api/events", {
       method: "DELETE",
@@ -258,7 +239,7 @@ export default function EventsTab() {
           <button
             onClick={runSearch}
             disabled={searching}
-            className="px-3 py-1 rounded-2xl bg-neutral-200 text-gray-800 disabled:opacity-50 cursor-pointer"
+            className="px-3 py-0.5 rounded-2xl bg-neutral-200 text-gray-800 disabled:opacity-50 cursor-pointer"
           >
             {searching ? "Searching..." : "Run Search"}
           </button>
@@ -270,22 +251,14 @@ export default function EventsTab() {
               Cancel
             </button>
           )}
-          <div className="">
-            <button
-              onClick={sendEmail}
-              disabled={sendingEmail}
-              className="px-3 py-1 rounded-2xl bg-neutral-200 text-gray-800 disabled:opacity-50 cursor-pointer"
-            >
-              {sendingEmail ? "Sending..." : "Send Event Summary Email"}
-            </button>
-          </div>
+
           <div className="flex-1 flex justify-end">
             <div className="flex rounded-2xl overflow-hidden border border-neutral-500">
               {["card", "list"].map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
-                  className={`px-3 py-1 capitalize ${
+                  className={`px-3 py-0.5 capitalize ${
                     viewMode === mode
                       ? "bg-neutral-700 text-white"
                       : "bg-neutral-200 text-neutral-900 cursor-pointer"

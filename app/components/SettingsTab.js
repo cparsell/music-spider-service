@@ -528,7 +528,7 @@ function WebhookTest() {
         type="button"
         onClick={sendTest}
         disabled={sending}
-        className="text-sm px-2 py-0.5 rounded bg-neutral-700 text-white disabled:opacity-50"
+        className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50"
       >
         {sending ? "Sending..." : "Send Test Webhook"}
       </button>
@@ -547,6 +547,7 @@ function GoogleActionsTest() {
   const [busy, setBusy] = useState(""); // "" | "email" | "calendar"
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const run = async (kind, path, successMessage) => {
     setBusy(kind);
@@ -566,39 +567,71 @@ function GoogleActionsTest() {
     }
   };
 
+  const sendEmail = async () => {
+    setSendingEmail(true);
+    setStatusMessage("Sending email...");
+    setStatusError(false);
+    try {
+      const res = await fetch("/api/events/email", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send email");
+      setStatusMessage(`Email sent with ${data.count} upcoming events.`);
+      setStatusError(false);
+    } catch (err) {
+      setStatusMessage(err.message);
+      setStatusError(true);
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   return (
-    <div className="mt-2 flex items-center gap-3 flex-wrap">
-      <button
-        type="button"
-        onClick={() =>
-          run("email", "/api/google/email/test", "Test email sent.")
-        }
-        disabled={!!busy}
-        className="text-sm px-2 py-0.5 rounded bg-neutral-700 text-white disabled:opacity-50"
-      >
-        {busy === "email" ? "Sending..." : "Send Test Email"}
-      </button>
-      <button
-        type="button"
-        onClick={() =>
-          run(
-            "calendar",
-            "/api/google/calendar/test",
-            "Test event created (tomorrow, same time) - delete it from your calendar when done.",
-          )
-        }
-        disabled={!!busy}
-        className="text-sm px-2 py-0.5 rounded bg-neutral-700 text-white disabled:opacity-50"
-      >
-        {busy === "calendar" ? "Creating..." : "Create Test Calendar Event"}
-      </button>
-      {message && (
-        <span
-          className={`text-sm ${error ? "text-red-600" : "text-neutral-600"}`}
+    <div>
+      <div className="mt-2 flex items-center gap-3 flex-wrap">
+        <button
+          type="button"
+          onClick={() =>
+            run("email", "/api/google/email/test", "Test email sent.")
+          }
+          disabled={!!busy}
+          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50 cursor-pointer"
         >
-          {message}
-        </span>
-      )}
+          {busy === "email" ? "Sending..." : "Send Test Email"}
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            run(
+              "calendar",
+              "/api/google/calendar/test",
+              "Test event created (tomorrow, same time) - delete it from your calendar when done.",
+            )
+          }
+          disabled={!!busy}
+          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50 cursor-pointer"
+        >
+          {busy === "calendar" ? "Creating..." : "Create Test Calendar Event"}
+        </button>
+
+        <div className="">
+          <button
+            onClick={sendEmail}
+            disabled={sendingEmail}
+            className="px-2 py-0.5 text-sm rounded-2xl bg-neutral-200 text-gray-800 disabled:opacity-50 cursor-pointer"
+          >
+            {sendingEmail ? "Sending..." : "Send Event Summary Email"}
+          </button>
+        </div>
+      </div>
+      {
+        <div className="mt-2 mb-0">
+          <span
+            className={`text-sm ${error ? "text-red-600" : "text-neutral-500"}`}
+          >
+            {message}
+          </span>
+        </div>
+      }
     </div>
   );
 }
@@ -825,7 +858,7 @@ export default function SettingsTab() {
           ⚠️ {section.warning}
         </p>
       )}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3 ">
         {section.fields
           .filter((f) => (f.showIf ? f.showIf(form) : true))
           .map((f) =>
@@ -846,7 +879,7 @@ export default function SettingsTab() {
                       key={o.value}
                       type="button"
                       onClick={() => updateField(f.key, o.value)}
-                      className={`px-3 py-1 ${
+                      className={`px-3 py-0.5 ${
                         form[f.key] === o.value
                           ? "bg-neutral-700 text-white"
                           : "bg-neutral-200 text-neutral-900 cursor-pointer"

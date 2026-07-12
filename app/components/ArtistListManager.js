@@ -103,7 +103,7 @@ export default function ArtistListManager({ apiPath, addLabel, description }) {
           <div className="flex flex-col items-center gap-2">
             <button
               type="submit"
-              className="px-3 py-1 rounded-2xl bg-neutral-200 text-neutral-800 cursor-pointer"
+              className="px-3 py-0.5 rounded-2xl bg-neutral-200 text-neutral-800 cursor-pointer"
             >
               {addLabel}
             </button>

@@ -151,7 +151,7 @@ export default function TopArtistsTab({ description }) {
             <button
               key={t}
               onClick={() => setTerm(t)}
-              className={`px-3 py-1 rounded-2xl ${
+              className={`px-3 py-0.5 rounded-2xl ${
                 term === t
                   ? "bg-neutral-800 text-neutral-300 border border-neutral-500"
                   : "bg-neutral-200 text-neutral-900 cursor-pointer "
@@ -165,7 +165,7 @@ export default function TopArtistsTab({ description }) {
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="px-3 py-1 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50 cursor-pointer"
+              className="px-3 py-0.5 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50 cursor-pointer"
             >
               {refreshing ? "Refreshing..." : "Force Refresh"}
             </button>
