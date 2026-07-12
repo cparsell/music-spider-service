@@ -388,7 +388,7 @@ export default function EventsTab() {
             </tbody>
           </table>
         ) : (
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 overflow-auto pr-2 ">
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 overflow-auto pr-2 mt-2">
             {sortedEvents.map((event) => (
               <li
                 key={event.id}
