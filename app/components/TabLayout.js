@@ -35,7 +35,7 @@ export default function TabLayout({
   return (
     <div className="h-full flex flex-col ">
       {description && (
-        <div className="shrink-0 pt-5 pb-3 -mx-6 px-6 py-2 text-sm text-neutral-300 bg-neutral-800 ">
+        <div className="shrink-0 pt-5 pb-3 -mx-6 px-6 py-2 text-sm text-neutral-300 bg-neutral-900 ">
           {description}
         </div>
       )}
@@ -44,7 +44,7 @@ export default function TabLayout({
         // HomeClient.js) so the background reaches the browser edge and the
         // sidebar border, then re-adds that same amount as padding so the
         // controls themselves still line up with the content below.
-        <div className="shrink-0  -mx-3 px-3 py-2 bg-neutral-800 lg:-mx-6 lg:px-6 border-b border-neutral-700 lg:pt-3">
+        <div className="shrink-0  -mx-3 px-3 py-2 bg-neutral-900 lg:-mx-6 lg:px-6 border-b border-neutral-700 lg:pt-3">
           {controls}
         </div>
       )}

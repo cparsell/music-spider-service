@@ -206,13 +206,15 @@ const SECTIONS = [
 ];
 
 // Wraps a settings section in a bordered box with a clickable header.
-// Collapsed, only the header (title + chevron) remains visible - the box
-// shrinks to a thin bar since the body isn't rendered at all. Controlled by
-// the parent (rather than managing its own open state) so only one of these
-// top-level sections can be open at a time - see `openSection` below.
+// Collapsed, only the header (title + chevron) remains visible - the body
+// stays mounted but is animated to zero height via a grid-rows transition
+// (the standard trick for animating to/from an intrinsic height in CSS).
+// Controlled by the parent (rather than managing its own open state) so
+// only one of these top-level sections can be open at a time - see
+// `openSection` below.
 function SettingsSection({ title, open, onToggle, children }) {
   return (
-    <div className="break-inside-avoid mb-6 border border-neutral-800 rounded-lg bg-neutral-900">
+    <div className="break-inside-avoid mb-6 border border-neutral-700 rounded-lg bg-neutral-800">
       <button
         type="button"
         onClick={onToggle}
@@ -236,7 +238,15 @@ function SettingsSection({ title, open, onToggle, children }) {
           />
         </svg>
       </button>
-      {open && <div className="px-4 pb-4">{children}</div>}
+      <div
+        className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden min-h-0">
+          <div className="px-4 pb-4">{children}</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -253,7 +263,7 @@ function SettingsSubsection({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-t border-neutral-800 first:border-t-0 pt-3 mt-3 first:mt-0 first:pt-0">
+    <div className="border-t border-neutral-700 first:border-t-0 pt-3 mt-3 first:mt-0 first:pt-0">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -285,7 +295,15 @@ function SettingsSubsection({
           />
         </svg>
       </button>
-      {open && <div className="pt-3">{children}</div>}
+      <div
+        className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden min-h-0">
+          <div className="pt-3">{children}</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -528,7 +546,7 @@ function WebhookTest() {
         type="button"
         onClick={sendTest}
         disabled={sending}
-        className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50"
+        className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50"
       >
         {sending ? "Sending..." : "Send Test Webhook"}
       </button>
@@ -594,7 +612,7 @@ function GoogleActionsTest() {
             run("email", "/api/google/email/test", "Test email sent.")
           }
           disabled={!!busy}
-          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50 cursor-pointer"
+          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
         >
           {busy === "email" ? "Sending..." : "Send Test Email"}
         </button>
@@ -608,7 +626,7 @@ function GoogleActionsTest() {
             )
           }
           disabled={!!busy}
-          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50 cursor-pointer"
+          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
         >
           {busy === "calendar" ? "Creating..." : "Create Test Calendar Event"}
         </button>
@@ -617,7 +635,7 @@ function GoogleActionsTest() {
           <button
             onClick={sendEmail}
             disabled={sendingEmail}
-            className="px-2 py-0.5 text-sm rounded-2xl bg-neutral-200 text-gray-800 disabled:opacity-50 cursor-pointer"
+            className="px-2 py-0.5 text-sm rounded-2xl bg-neutral-300 text-gray-800 disabled:opacity-50 cursor-pointer"
           >
             {sendingEmail ? "Sending..." : "Send Event Summary Email"}
           </button>
@@ -695,7 +713,7 @@ function RegionPicker({ value, onChange }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search for a city or country to add..."
-          className="border border-neutral-600 rounded px-2 py-1 text-sm w-full"
+          className="border border-neutral-400 rounded px-2 py-1 text-sm w-full"
         />
         {matches.length > 0 && (
           <ul className="absolute z-10 mt-1 w-full max-h-56 overflow-auto border border-neutral-600 rounded bg-white shadow">
@@ -704,7 +722,7 @@ function RegionPicker({ value, onChange }) {
                 <button
                   type="button"
                   onClick={() => addRegion(r.id)}
-                  className="w-full text-left px-2 py-1 text-sm bg-neutral-700 text-neutral-200 hover:bg-neutral-200 hover:text-neutral-800"
+                  className="w-full text-left px-2 py-1 text-sm bg-neutral-700 text-neutral-200 hover:bg-neutral-300 hover:text-neutral-800"
                 >
                   {r.label}
                 </button>
@@ -873,7 +891,7 @@ export default function SettingsTab() {
             ) : f.type === "switch" ? (
               <div key={f.key} className="flex flex-col gap-1 text-sm">
                 {f.label}
-                <div className="flex rounded-2xl overflow-hidden border border-neutral-500 w-fit">
+                <div className="flex rounded-2xl overflow-hidden border border-neutral-300 w-fit">
                   {f.options.map((o) => (
                     <button
                       key={o.value}
@@ -882,7 +900,7 @@ export default function SettingsTab() {
                       className={`px-3 py-0.5 ${
                         form[f.key] === o.value
                           ? "bg-neutral-700 text-white"
-                          : "bg-neutral-200 text-neutral-900 cursor-pointer"
+                          : "bg-neutral-300 text-neutral-900 cursor-pointer"
                       }`}
                     >
                       {o.label}
@@ -961,14 +979,14 @@ export default function SettingsTab() {
             Send a weekly email digest of upcoming events
           </label>
           {form.weeklyEmailEnabled && (
-            <div className="flex items-center gap-2 mt-2 ml-6 text-sm">
+            <div className="flex items-center gap-2 mt-2 ml-6 text-sm text-neutral-200">
               <span>Every</span>
               <select
                 value={form.weeklyEmailDayOfWeek ?? 1}
                 onChange={(e) =>
                   updateField("weeklyEmailDayOfWeek", e.target.value, "number")
                 }
-                className="border border-neutral-400 rounded px-2 py-1"
+                className="border border-neutral-600 rounded px-2 py-1 text-neutral-100"
               >
                 {DAYS_OF_WEEK.map((d) => (
                   <option key={d.value} value={d.value}>
@@ -983,7 +1001,7 @@ export default function SettingsTab() {
                 onChange={(e) =>
                   updateField("weeklyEmailTimeOfDay", e.target.value)
                 }
-                className="border border-neutral-400 rounded px-2 py-1"
+                className="border border-neutral-600 rounded px-2 py-1 text-neutral-100"
               />
             </div>
           )}
@@ -1041,7 +1059,7 @@ export default function SettingsTab() {
             {THEMES.map((t) => (
               <label
                 key={t.value}
-                className="flex items-start gap-3 border border-neutral-800 rounded p-3 cursor-pointer"
+                className="flex items-start gap-3 border border-neutral-700 rounded p-3 cursor-pointer"
               >
                 <input
                   type="radio"
@@ -1069,7 +1087,7 @@ export default function SettingsTab() {
               {ARTIST_SOURCES.map((s) => (
                 <label
                   key={s.value}
-                  className="flex items-start gap-3 border border-neutral-800 rounded p-3 cursor-pointer"
+                  className="flex items-start gap-3 border border-neutral-700 rounded p-3 cursor-pointer"
                 >
                   <input
                     type="radio"
@@ -1121,7 +1139,7 @@ export default function SettingsTab() {
               {COMBINED_MODES.map((m) => (
                 <label
                   key={m.value}
-                  className="flex items-start gap-3 border border-neutral-800 rounded p-3 cursor-pointer"
+                  className="flex items-start gap-3 border border-neutral-700 rounded p-3 cursor-pointer"
                 >
                   <input
                     type="radio"
