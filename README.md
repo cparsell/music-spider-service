@@ -67,7 +67,7 @@ Unraid's Docker UI doesn't run `docker compose` directly, so pick one of these:
 - Add a path mapping: container path `/app/data` to an appdata path, e.g. `/mnt/user/appdata/music-spider-service`.
 - Set **WebUI** to `http://[IP]:[PORT]` (requires being in **Advanced View**, not **Basic View**)
 
-3. _Apply!_. The app will be reachable at `http://<unraid-ip>:<host-port>`.
+3. _Apply_. The app will be reachable at `http://<unraid-ip>:<host-port>`.
 
 ### Option 2: Compose Manager plugin
 
@@ -131,4 +131,4 @@ Use the **Send Test Email** / **Create Test Calendar Event** buttons in Music Sp
 
 ### Google OAuth and HTTPS
 
-If you choose the OAuth integration method (for Spotify or Google) and access Music Spider from anywhere other than `127.0.0.1`/`localhost` — e.g. a LAN IP, a hostname, or over the internet — the redirect URI must be reachable at that same address, and Google in particular requires it to be HTTPS. Put Music Spider behind a reverse proxy with TLS (e.g. Caddy, Traefik, or your NAS's built-in reverse proxy) if you want OAuth working from anything other than the same machine. The Apps Script webhook option sidesteps this entirely for Google.
+If you choose the OAuth integration method (for Spotify or Google) and access Music Spider from anywhere other than `127.0.0.1`/`localhost` — e.g. a LAN IP, a hostname, or over the internet — **the redirect URI must be reachable at that same address, and Google in particular requires it to be HTTPS**. Put Music Spider behind a reverse proxy with TLS (e.g. Caddy, Traefik, or your NAS's built-in reverse proxy) if you want OAuth working from anything other than the same machine. The Apps Script webhook option sidesteps this entirely for Google.
