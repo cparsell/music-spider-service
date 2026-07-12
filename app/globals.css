@@ -37,22 +37,14 @@ body {
    leaving the thumb ("pill") at its default appearance.
    Note: var() is unreliable inside ::-webkit-scrollbar* pseudo-elements in
    most browsers, so these use literal colors instead of a CSS variable. */
-::-webkit-scrollbar-track {
-  background: #e3e3e3;
+/* ::-webkit-scrollbar-track {
+  background: var(--color-black);
 }
 
 @media (prefers-color-scheme: dark) {
   ::-webkit-scrollbar-track {
-    background: #252525;
+    background: var(--color-black);
   }
-}
-
-/* .imglogo {
-  filter: invert(100%) !important;
-} */
-
-/* .imglogo path {
-  fill: #ff0000 !important;
 } */
 
 .imglogo-slot {
