@@ -2,10 +2,8 @@ import { TERM_WINDOWS } from "@/lib/tautulli.js";
 import { getConfiguredTopArtists } from "@/lib/artistSources.js";
 import { getResolvedConfig } from "@/lib/settings.js";
 import { ignoredArtists } from "@/lib/artistLists.js";
-import {
-  getCachedTermResult,
-  setCachedTermResult,
-} from "@/lib/topArtistsCache.js";
+import { getCachedTermResult } from "@/lib/topArtistsCache.js";
+import { refreshAllTopArtistLists } from "@/lib/topArtistsRefresh.js";
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
@@ -44,6 +42,29 @@ export async function GET(req) {
         cachedAt: cached.cachedAt,
       });
     }
+
+    // No usable cache for this term - refresh every term together (same
+    // as the "Force Refresh" button) so switching tabs never leaves the
+    // others stale from this point on.
+    const { errors } = await refreshAllTopArtistLists();
+    const refreshed = await getCachedTermResult(term);
+    if (refreshed) {
+      const ignoredSet = new Set(await ignoredArtists.getAll());
+      const artists = refreshed.artists
+        .slice(0, count)
+        .map((a) => ({ ...a, ignored: ignoredSet.has(a.artist) }));
+      return Response.json({
+        term,
+        mode: term === "combined" ? mode : undefined,
+        artists,
+        spotifyError: refreshed.spotifyError,
+        cachedAt: refreshed.cachedAt,
+      });
+    }
+    return Response.json(
+      { error: errors?.[term] || "Failed to load top artists" },
+      { status: 500 },
+    );
   }
 
   try {
@@ -52,19 +73,11 @@ export async function GET(req) {
       count,
       mode,
     );
-    let cachedAt;
-    if (useCache) {
-      ({ cachedAt } = await setCachedTermResult(term, {
-        artists,
-        spotifyError,
-      }));
-    }
     return Response.json({
       term,
       mode: term === "combined" ? mode : undefined,
       artists,
       spotifyError,
-      cachedAt,
     });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
