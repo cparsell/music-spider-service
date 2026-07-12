@@ -46,9 +46,12 @@ function getSortValue(event, key) {
 }
 
 function buildSearchResultMessage(result) {
+  const foundPhrase = `found ${result.found} matching events${
+    result.newFound != null ? ` (${result.newFound} new)` : ""
+  }`;
   let message = result.canceled
-    ? `Search canceled. Searched ${result.artistsSearched} artists, found ${result.found} matching events before stopping.`
-    : `Searched ${result.artistsSearched} artists, found ${result.found} matching events.`;
+    ? `Search canceled. Searched ${result.artistsSearched} artists, ${foundPhrase} before stopping.`
+    : `Searched ${result.artistsSearched} artists, ${foundPhrase}.`;
   if (result.calendarSynced > 0) {
     message += ` Added ${result.calendarSynced} to Google Calendar.`;
   }
