@@ -1052,7 +1052,7 @@ export default function SettingsTab() {
                 />
                 <div>
                   <p className="font-medium">{t.label}</p>
-                  <p className="text-sm text-neutral-600">{t.description}</p>
+                  <p className="text-sm text-neutral-500">{t.description}</p>
                 </div>
               </label>
             ))}
@@ -1080,7 +1080,7 @@ export default function SettingsTab() {
                   />
                   <div>
                     <p className="font-medium">{s.label}</p>
-                    <p className="text-sm text-neutral-600">{s.description}</p>
+                    <p className="text-sm text-neutral-500">{s.description}</p>
                   </div>
                 </label>
               ))}
@@ -1092,7 +1092,7 @@ export default function SettingsTab() {
           </SettingsSubsection>
 
           <SettingsSubsection title="Event Search Artist Terms">
-            <p className="text-sm text-neutral-600 mb-2">
+            <p className="text-sm text-neutral-500 mb-2">
               Which top-artists window(s) to pull from when building the artist
               list used for event searches. Selecting more than one combines
               them using the Top Artist Combination Mode below.
@@ -1134,7 +1134,7 @@ export default function SettingsTab() {
                   />
                   <div>
                     <p className="font-medium">{m.label}</p>
-                    <p className="text-sm text-neutral-600">{m.description}</p>
+                    <p className="text-sm text-neutral-500">{m.description}</p>
                   </div>
                 </label>
               ))}
@@ -1168,7 +1168,7 @@ export default function SettingsTab() {
           onToggle={() => toggleSection("Event Search")}
         >
           <SettingsSubsection title="Event Search Sources">
-            <p className="text-sm text-neutral-600 mb-2">
+            <p className="text-sm text-neutral-500 mb-2">
               Which APIs to query when running an event search. Disabling one
               skips it entirely (no API calls made) rather than just hiding its
               results.
