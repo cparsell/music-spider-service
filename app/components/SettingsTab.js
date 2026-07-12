@@ -1049,7 +1049,7 @@ export default function SettingsTab() {
         <StatusBar message={statusText} error={saveState === "error"} />
       }
     >
-      <div className="columns-1 pl-2 pr-8 gap-12 w-full lg:w-3xl max-w-[1800px]">
+      <div className="columns-1 mt-6 pl-2 pr-6 gap-12 w-full lg:w-3xl max-w-[1800px]">
         <SettingsSection
           title="Appearance"
           open={openSection === "Appearance"}
