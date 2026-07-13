@@ -50,7 +50,7 @@ Only the source(s) you pick need credentials — the other section grays out and
 Pick one or both sources under **Event Search > Event Search Sources**:
 
 - **Ticketmaster** —
-  - `API Key ` from [Ticketmaster Developer Dashboard](https://developer.ticketmaster.com/). Create an account then create an "app". **NOTE: the `Redirect URI` is unnecessary. You can set it to `http://127.0.0.1/` if required to get the API key**
+  - `API Key ` from [Ticketmaster Developer Dashboard](https://developer.ticketmaster.com/). Create an account then create an "app". **NOTE: Ticketmaster asks you to set a `Redirect URI` but it is unnecessary. You can set it to `http://127.0.0.1/` if required to get the API key**
   - `Lat/Long` of your area can be found at [latlong.net](https://www.latlong.net/)
   - `Radius` (in miles or km).
 - **Resident Advisor** — no API key needed. Just open the **Resident Advisor** subsection and use the region search box to find and add your city/country — matching events near those regions are pulled automatically.
