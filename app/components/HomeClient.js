@@ -8,9 +8,22 @@ import SettingsTab from "./SettingsTab";
 function CalendarIcon({ className }) {
   return (
     <svg viewBox="0 0 20 20" fill="none" className={className}>
-      <rect x="3" y="4" width="14" height="13" rx="1.5" stroke="currentColor" strokeWidth="2" />
+      <rect
+        x="3"
+        y="4"
+        width="14"
+        height="13"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
       <path d="M3 8h14" stroke="currentColor" strokeWidth="2" />
-      <path d="M6.5 2.5v3M13.5 2.5v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M6.5 2.5v3M13.5 2.5v3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -45,7 +58,12 @@ function NoSymbolIcon({ className }) {
   return (
     <svg viewBox="0 0 20 20" fill="none" className={className}>
       <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2" />
-      <path d="M5.5 5.5l9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M5.5 5.5l9 9"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -115,8 +133,8 @@ export default function HomeClient({ defaultTab, isConfigured }) {
                     : "border-transparent text-neutral-400 cursor-pointer "
                 }`}
               >
-                <Icon className="w-5 h-5 shrink-0" />
-                <span className="hidden lg:inline">{t.label}</span>
+                <Icon className="w-6 h-6 md:w-5 sm:h-5 shrink-0" />
+                <span className="hidden md:inline">{t.label}</span>
               </button>
             );
           })}
