@@ -22,12 +22,12 @@ const THEMES = [
 const ARTIST_SOURCES = [
   {
     value: "tautulli",
-    label: "Tautulli only",
+    label: "Tautulli",
     description: "Your Plex play history, as tracked by Tautulli.",
   },
   {
     value: "spotify",
-    label: "Spotify only",
+    label: "Spotify",
     description:
       "Your Spotify top artists (requires connecting your account below).",
   },
@@ -36,6 +36,12 @@ const ARTIST_SOURCES = [
     label: "Both",
     description:
       "Merges the two: Tautulli's real play counts win for any artist it knows about, and Spotify contributes any additional artists it surfaced that Tautulli didn't.",
+  },
+  {
+    value: "none",
+    label: "None",
+    description:
+      'Don\'t fetch listening history from any APIs. Only rely on artists added manually to the "Custom List".',
   },
 ];
 
@@ -1083,25 +1089,29 @@ export default function SettingsTab() {
           onToggle={() => toggleSection("Artists")}
         >
           <SettingsSubsection title="Artist Sources">
-            <div className="flex flex-col gap-3">
-              {ARTIST_SOURCES.map((s) => (
-                <label
-                  key={s.value}
-                  className="flex items-start gap-3 border border-neutral-700 rounded p-3 cursor-pointer"
-                >
-                  <input
-                    type="radio"
-                    name="artistSource"
-                    checked={form.artistSource === s.value}
-                    onChange={() => updateField("artistSource", s.value)}
-                    className="mt-1"
-                  />
-                  <div>
-                    <p className="font-medium">{s.label}</p>
-                    <p className="text-sm text-neutral-500">{s.description}</p>
-                  </div>
-                </label>
-              ))}
+            <div className="flex flex-col gap-2">
+              <div className="flex rounded-2xl overflow-hidden border-2 border-neutral-300 w-fit">
+                {ARTIST_SOURCES.map((s) => (
+                  <button
+                    key={s.value}
+                    type="button"
+                    onClick={() => updateField("artistSource", s.value)}
+                    className={`px-3 py-0.5 ${
+                      form.artistSource === s.value
+                        ? "bg-neutral-700 text-white "
+                        : "bg-neutral-300 text-neutral-900 cursor-pointer"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-sm text-neutral-500">
+                {
+                  ARTIST_SOURCES.find((s) => s.value === form.artistSource)
+                    ?.description
+                }
+              </p>
             </div>
           </SettingsSubsection>
 
@@ -1161,21 +1171,21 @@ export default function SettingsTab() {
 
           <SettingsSubsection
             title="Tautulli"
-            disabled={form.artistSource === "spotify"}
+            disabled={["spotify", "none"].includes(form.artistSource)}
           >
             {renderSectionFields(
               sectionByTitle["Tautulli"],
-              form.artistSource === "spotify",
+              ["spotify", "none"].includes(form.artistSource),
             )}
           </SettingsSubsection>
 
           <SettingsSubsection
             title="Spotify"
-            disabled={form.artistSource === "tautulli"}
+            disabled={["tautulli", "none"].includes(form.artistSource)}
           >
             {renderSectionFields(
               sectionByTitle["Spotify"],
-              form.artistSource === "tautulli",
+              ["tautulli", "none"].includes(form.artistSource),
             )}
           </SettingsSubsection>
         </SettingsSection>

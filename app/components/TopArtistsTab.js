@@ -216,7 +216,7 @@ export default function TopArtistsTab({ description }) {
       description={description}
       controls={
         <div className="flex items-center gap-2">
-          <div className="flex rounded-2xl border border-neutral-500">
+          <div className="flex rounded-2xl border-2 border-neutral-200">
             {TERM_OPTIONS.map((t, i) => (
               <div key={t.value} className="relative">
                 {selectedTerms.includes(t.value) && (
@@ -234,11 +234,11 @@ export default function TopArtistsTab({ description }) {
                       ? `${[...selectedTerms.map((t) => t.replace("_", " "))]} are combined into one ranking`
                       : `${[...selectedTerms.map((t) => t.replace("_", " "))]} will only be used`
                   }
-                  className={`px-3 py-0.5 cursor-pointer ${i > 0 ? "border-l border-neutral-500" : ""} ${
+                  className={`px-3 py-0.5 cursor-pointer ${i > 0 ? "border-l border-neutral-400" : ""} ${
                     i === 0 ? "rounded-l-2xl" : ""
                   } ${i === TERM_OPTIONS.length - 1 ? "rounded-r-2xl" : ""} ${
                     selectedTerms.includes(t.value)
-                      ? "bg-neutral-800 text-neutral-300"
+                      ? "bg-neutral-800 text-white  "
                       : "bg-neutral-200 text-neutral-900"
                   }`}
                 >
