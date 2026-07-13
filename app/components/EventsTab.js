@@ -442,7 +442,7 @@ export default function EventsTab() {
                     />
                   ))}
                 <div className="absolute inset-0 bg-linear-to-t from-black to-transparent to-70% pointer-events-none" />
-                <div className="absolute bottom-2 right-2 flex flex-col items-end gap-1 text-shadow-lg">
+                <div className="absolute z-10 bottom-2 right-2 flex flex-col items-end gap-1 text-shadow-lg">
                   <button
                     onClick={() => deleteEvent(event.id)}
                     className="text-xs text-red-200 hover:underline rounded-xl px-1.5 py-0.5 text-shadow-lg"
