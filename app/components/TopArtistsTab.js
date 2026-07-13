@@ -297,18 +297,20 @@ export default function TopArtistsTab({ description }) {
                     </button>
                   ) : (
                     <div className="flex gap-2">
-                      {a.saved ? (
-                        <span className="text-sm px-2 py-0.5 text-neutral-500">
-                          Saved
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => handleSave(a.artist)}
-                          className="text-sm px-2 py-0.5 rounded text-blue-600 hover:underline"
-                        >
-                          Save
-                        </button>
-                      )}
+                      <div className="w-14">
+                        {a.saved ? (
+                          <span className="text-sm px-2 py-0.5 text-neutral-500">
+                            Saved
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleSave(a.artist)}
+                            className="text-sm px-2 py-0.5 rounded text-blue-600 hover:underline"
+                          >
+                            Save
+                          </button>
+                        )}
+                      </div>
                       <button
                         onClick={() => handleIgnore(a.artist)}
                         className="text-sm px-2 py-0.5 rounded text-red-600 hover:underline"
