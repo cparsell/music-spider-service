@@ -109,7 +109,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 aria-label={t.label}
-                className={`flex items-center gap-2 px-3 py-2 -mb-0.5 border-b-2 lg:mb-0 lg:border-b-0 lg:border-l-2 lg:pl-6 lg:text-left  ${
+                className={`flex flex-1 items-center justify-center gap-2 px-3 py-2 -mb-0.5 border-b-2 lg:flex-none lg:justify-start lg:mb-0 lg:border-b-0 lg:border-l-2 lg:pl-6 lg:text-left  ${
                   tab === t.id
                     ? "border-neutral-900 bg-neutral-200 text-neutral-900"
                     : "border-transparent text-neutral-400 cursor-pointer "
