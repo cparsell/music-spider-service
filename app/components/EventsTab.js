@@ -442,58 +442,66 @@ export default function EventsTab() {
                     />
                   ))}
                 <div className="absolute inset-0 bg-linear-to-t from-black to-transparent to-70% pointer-events-none" />
-                <div className="absolute z-10 bottom-2 right-2 flex flex-col items-end gap-1 text-shadow-lg">
-                  <button
-                    onClick={() => deleteEvent(event.id)}
-                    className="text-xs text-red-200 hover:underline rounded-xl px-1.5 py-0.5 text-shadow-lg"
-                  >
-                    delete
-                  </button>
-                  <button
-                    onClick={() => deleteEvent(event.id, { ignore: true })}
-                    title="Delete and exclude from future searches"
-                    className="text-xs text-red-200 hover:underline rounded-xl px-1.5 py-0.5 text-shadow-lg"
-                  >
-                    ignore
-                  </button>
-                </div>
-                <div className="absolute inset-x-0 bottom-0 p-3 text-white">
-                  <p className="font-semibold leading-tight">{event.eName}</p>
-                  <p className="text-sm text-neutral-300">
-                    {event.venue}
-                    {/* {event.city ? `, ${event.city}` : ""} */}
-                  </p>
-                  {event.address && (
-                    <p className="text-xs text-neutral-300">
-                      {event.address.trim()}
+                {/* Two-column flex row rather than two overlapping absolute
+                    divs, so the button column reserves its own space and the
+                    info column wraps around it instead of running full-width
+                    underneath. */}
+                <div className="absolute inset-x-0 bottom-0 p-3 flex items-end justify-between gap-2 text-white">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold leading-tight">
+                      {event.eName}
                     </p>
-                  )}
-                  {event.actsDisplay && (
-                    <p className="text-sm mt-1 text-white">
-                      Acts: {event.actsDisplay}
+                    <p className="text-sm text-neutral-300">
+                      {event.venue}
+                      {/* {event.city ? `, ${event.city}` : ""} */}
                     </p>
-                  )}
-                  <div className="flex flex-col gap-1 mt-1">
-                    {event.dates?.map((d) => (
-                      <div key={d.date} className="flex gap-2 text-sm">
-                        <span className="text-neutral-300 shrink-0">
-                          {formatDate(d.date)}
-                        </span>
-                        <div className="flex flex-col">
-                          {d.urls?.map((u) => (
-                            <a
-                              key={u.name}
-                              href={u.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-blue-300 hover:underline"
-                            >
-                              {u.name}
-                            </a>
-                          ))}
+                    {event.address && (
+                      <p className="text-xs text-neutral-300">
+                        {event.address.trim()}
+                      </p>
+                    )}
+                    {event.actsDisplay && (
+                      <p className="text-sm mt-1 text-white">
+                        Acts: {event.actsDisplay}
+                      </p>
+                    )}
+                    <div className="flex flex-col gap-1 mt-1">
+                      {event.dates?.map((d) => (
+                        <div key={d.date} className="flex gap-2 text-sm">
+                          <span className="text-neutral-300 shrink-0">
+                            {formatDate(d.date)}
+                          </span>
+                          <div className="flex flex-col">
+                            {d.urls?.map((u) => (
+                              <a
+                                key={u.name}
+                                href={u.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-blue-300 hover:underline"
+                              >
+                                {u.name}
+                              </a>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </div>
+                  <div className="shrink-0 flex flex-col items-end gap-1 text-shadow-lg">
+                    <button
+                      onClick={() => deleteEvent(event.id)}
+                      className="text-xs text-red-200 hover:underline rounded-xl px-1.5 py-0.5 text-shadow-lg"
+                    >
+                      delete
+                    </button>
+                    <button
+                      onClick={() => deleteEvent(event.id, { ignore: true })}
+                      title="Delete and exclude from future searches"
+                      className="text-xs text-red-200 hover:underline rounded-xl px-1.5 py-0.5 text-shadow-lg"
+                    >
+                      ignore
+                    </button>
                   </div>
                 </div>
               </li>
