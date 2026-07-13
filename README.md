@@ -24,7 +24,9 @@ Music Spider is a self-hosted app that turns your listening history into a perso
 - **Settings UI** — every integration configured and auto-saved from one in-app tab, with per-section enable/disable and live connection status
 - **Theming** — Grayscale and Catppuccin Mocha themes
 
-## Requirements
+## Running it
+
+### Requirements
 
 **To install:**
 
@@ -46,7 +48,7 @@ Music Spider is a self-hosted app that turns your listening history into a perso
 - Email (requires OAuth or a [webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md))
 - Calendar (requires OAuth or a [webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md))
 
-## Running it
+### Setup Guides
 
 - [Set up using Docker Compose](https://github.com/cparsell/music-spider-service/blob/main/Setup-DockerCompose.md)
 - [Set on Unraid](https://github.com/cparsell/music-spider-service/blob/main/Setup-Unraid.md)
