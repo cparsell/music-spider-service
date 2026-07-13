@@ -68,6 +68,14 @@ export default function EventsTab() {
   const [statusMessage, setStatusMessage] = useState("");
   const [statusError, setStatusError] = useState(false);
   const [progress, setProgress] = useState(null);
+  // Remembered across reloads/tab switches (localStorage, not server state -
+  // purely a per-browser display preference) so returning to this tab shows
+  // whichever view was last used instead of always resetting to card view.
+  // Starts as "card" (matching what the server renders with no access to
+  // localStorage) and is corrected in an effect right after mount - reading
+  // localStorage directly in the initializer would make the client's first
+  // render disagree with the server-rendered HTML and produce a hydration
+  // mismatch.
   const [viewMode, setViewMode] = useState("card");
   const [sortConfig, setSortConfig] = useState({
     key: "date",
@@ -157,6 +165,9 @@ export default function EventsTab() {
   };
 
   useEffect(() => {
+    const storedViewMode = localStorage.getItem("eventsViewMode");
+    if (storedViewMode) setViewMode(storedViewMode);
+
     loadEvents();
 
     // Pick up a search already in progress (e.g. started before this tab
@@ -236,6 +247,11 @@ export default function EventsTab() {
     return 0;
   });
 
+  const handleSetViewMode = (mode) => {
+    setViewMode(mode);
+    localStorage.setItem("eventsViewMode", mode);
+  };
+
   const handleSort = (key) => {
     setSortConfig((prev) =>
       prev.key === key
@@ -269,7 +285,7 @@ export default function EventsTab() {
               {["card", "list"].map((mode) => (
                 <button
                   key={mode}
-                  onClick={() => setViewMode(mode)}
+                  onClick={() => handleSetViewMode(mode)}
                   className={`px-3 py-0.5 capitalize ${
                     viewMode === mode
                       ? "bg-neutral-700 text-white"
