@@ -25,8 +25,21 @@ function formatCacheAge(cachedAt) {
   return ` (cached ${Math.round(hours / 24)}d ago)`;
 }
 
+const TERM_OPTIONS = [
+  { value: "short_term", label: "Short" },
+  { value: "medium_term", label: "Medium" },
+  { value: "long_term", label: "Long" },
+];
+
 export default function TopArtistsTab({ description }) {
-  const [term, setTerm] = useState("medium_term");
+  // Which term window(s) to show, in TERM_OPTIONS order regardless of click
+  // order - selecting just one shows that window's plain ranking, selecting
+  // more than one combines them (see getConfiguredTopArtists/
+  // getCombinedTopArtists), so there's no separate "combined" mode to pick.
+  // This is the same setting Settings > Event Search Artist Terms edits
+  // (eventSearchTerms) - synced from there on mount, and written back on
+  // every toggle here, so either surface reflects the other.
+  const [selectedTerms, setSelectedTerms] = useState(["medium_term"]);
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,11 +47,38 @@ export default function TopArtistsTab({ description }) {
   const [statusMessage, setStatusMessage] = useState("");
   const [statusError, setStatusError] = useState(false);
 
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((config) => {
+        const saved = TERM_OPTIONS.map((t) => t.value).filter((t) =>
+          config.eventSearchTerms?.includes(t),
+        );
+        if (saved.length > 0) setSelectedTerms(saved);
+      })
+      .catch(() => {});
+  }, []);
+
+  const toggleTerm = (value) => {
+    if (selectedTerms.length === 1 && selectedTerms.includes(value)) return;
+    const next = selectedTerms.includes(value)
+      ? selectedTerms.filter((t) => t !== value)
+      : TERM_OPTIONS.map((t) => t.value).filter(
+          (t) => selectedTerms.includes(t) || t === value,
+        );
+    setSelectedTerms(next);
+    fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventSearchTerms: next }),
+    }).catch(() => {});
+  };
+
   const loadArtists = () => {
     setLoading(true);
     setStatusMessage("Loading top artists...");
     setStatusError(false);
-    return fetch(`/api/top-artists?term=${term}`)
+    return fetch(`/api/top-artists?terms=${selectedTerms.join(",")}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.error) {
@@ -49,11 +89,18 @@ export default function TopArtistsTab({ description }) {
         }
         setArtists(data.artists || []);
         const age = formatCacheAge(data.cachedAt);
+        const termsLabel = TERM_OPTIONS.filter((t) =>
+          selectedTerms.includes(t.value),
+        )
+          .map((t) => t.label)
+          .join(" + ");
         if (data.spotifyError) {
           setStatusMessage(`Spotify: ${data.spotifyError}`);
           setStatusError(true);
         } else {
-          setStatusMessage(`Loaded ${data.artists?.length || 0} artists${age}`);
+          setStatusMessage(
+            `Loaded ${data.artists?.length || 0} artists (${termsLabel})${age}`,
+          );
           setStatusError(false);
         }
       })
@@ -67,7 +114,7 @@ export default function TopArtistsTab({ description }) {
 
   useEffect(() => {
     loadArtists();
-  }, [term]);
+  }, [selectedTerms]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -146,21 +193,38 @@ export default function TopArtistsTab({ description }) {
     <TabLayout
       description={description}
       controls={
-        <div className="flex gap-2">
-          {["short_term", "medium_term", "long_term", "combined"].map((t) => (
-            <button
-              key={t}
-              onClick={() => setTerm(t)}
-              className={`px-3 py-0.5 rounded-2xl ${
-                term === t
-                  ? "bg-neutral-800 text-neutral-300 border border-neutral-500"
-                  : "bg-neutral-200 text-neutral-900 cursor-pointer "
-              }`}
-            >
-              {t.replace("_", " ").charAt(0).toUpperCase() +
-                t.replace("_", " ").slice(1)}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-2xl border border-neutral-500">
+            {TERM_OPTIONS.map((t, i) => (
+              <div key={t.value} className="relative">
+                {selectedTerms.includes(t.value) && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] leading-none text-neutral-200"
+                  >
+                    ✓
+                  </span>
+                )}
+                <button
+                  onClick={() => toggleTerm(t.value)}
+                  title={
+                    selectedTerms.length > 1
+                      ? `${[...selectedTerms.map((t) => t.replace("_", " "))]} are combined into one ranking`
+                      : `${[...selectedTerms.map((t) => t.replace("_", " "))]} will only be used`
+                  }
+                  className={`px-3 py-0.5 cursor-pointer ${i > 0 ? "border-l border-neutral-500" : ""} ${
+                    i === 0 ? "rounded-l-2xl" : ""
+                  } ${i === TERM_OPTIONS.length - 1 ? "rounded-r-2xl" : ""} ${
+                    selectedTerms.includes(t.value)
+                      ? "bg-neutral-800 text-neutral-300"
+                      : "bg-neutral-200 text-neutral-900"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              </div>
+            ))}
+          </div>
           <div className="flex-1 flex justify-end">
             <button
               onClick={handleRefresh}
