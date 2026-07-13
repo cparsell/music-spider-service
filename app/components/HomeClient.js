@@ -119,7 +119,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
             <h1 className="text-logo font-bold text-neutral-200">Spider</h1>
           </a>
         </div>
-        <div className="flex gap-1 mb-0 border-b-2  lg:flex-col lg:gap-0.5 lg:border-b-0  lg:mb-0">
+        <div className="flex gap-1 mb-0 border-b-2 bg-neutral-700 md:bg-neutral-800 lg:flex-col lg:gap-0.5 lg:border-b-0 lg:mb-0">
           {TABS.map((t) => {
             const Icon = t.icon;
             return (
@@ -130,7 +130,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
                 className={`flex flex-1 items-center justify-center gap-2 px-3 py-2 -mb-0.5 border-b-2 lg:flex-none lg:justify-start lg:mb-0 lg:border-b-0 lg:border-l-2 lg:pl-6 lg:text-left  ${
                   tab === t.id
                     ? "border-neutral-900 bg-neutral-200 text-neutral-900"
-                    : "border-transparent text-neutral-400 cursor-pointer "
+                    : "border-b-transparent border-r-neutral-800 border-r text-neutral-400 cursor-pointer "
                 }`}
               >
                 <Icon className="w-6 h-6 md:w-5 sm:h-5 shrink-0" />

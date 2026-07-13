@@ -52,8 +52,12 @@ export default function TabLayout({
         ref={scrollRef}
         // No top padding - a sticky (top-0) header inside would otherwise
         // sit a few pixels below the scrollport's real top edge, leaving a
-        // gap scrolled rows could peek through above it.
-        className="flex-1 min-h-0 overflow-y-auto px-2 pb-2"
+        // gap scrolled rows could peek through above it. Bleeds past this
+        // tab's horizontal inset (like `controls` above) so this container's
+        // right edge - and thus its scrollbar - reaches the browser edge
+        // instead of sitting inset from it, then re-adds the same amount as
+        // padding so the content itself still lines up with controls/description.
+        className="flex-1 min-h-0 overflow-y-auto -mx-3 px-3 pb-2 lg:-mx-6 lg:px-6"
       >
         {children}
       </div>

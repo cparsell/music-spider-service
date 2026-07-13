@@ -40,7 +40,7 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
       await sleep(180);
     }
 
-    console.debug("searchTMLoop() - New Events", results);
+    console.debug("Ticketmaster Search complete - Results:", results);
 
     // Ticketmaster provides a bunch of different images of different sizes.
     // This picks the highest-resolution one for each event.
@@ -97,7 +97,9 @@ const ticketSearch = async (keyword, artistsArr, config) => {
   try {
     const data = await tmSearch(keyword, config);
     if (data.length == 0) {
-      console.debug(`ticketSearch('${keyword}') - No results`);
+      console.debug(
+        `ticketSearch() Searching Ticketmaster '${keyword}' - No results`,
+      );
       return eventsArr;
     }
     data.forEach((item) => {
@@ -120,11 +122,15 @@ const ticketSearch = async (keyword, artistsArr, config) => {
 
       let date;
       const start = item.dates.start;
-      if (start.localTime) date = new Date(`${start.localDate} ${start.localTime}`);
+      if (start.localTime)
+        date = new Date(`${start.localDate} ${start.localTime}`);
       else if (start.dateTime) date = new Date(start.dateTime);
-      else if (start.timeTBA || start.noSpecificTime) date = new Date(start.localDate);
+      else if (start.timeTBA || start.noSpecificTime)
+        date = new Date(start.localDate);
 
-      console.debug(`ticketSearch('${keyword}') - Found event: ${item.name}`);
+      // console.debug(
+      //   `ticketSearch() Searching Ticketmaster '${keyword}' - Found event: ${item.name}`,
+      // );
       eventsArr.push({
         eName: item.name,
         acts,
@@ -136,10 +142,12 @@ const ticketSearch = async (keyword, artistsArr, config) => {
         address: `${venueAddress}, ${venueCity}, ${venueState}`,
       });
     });
-    console.debug(`ticketSearch() - ${eventsArr.length} events found`);
+    console.debug(
+      `ticketSearch() Ticketmaster - ${eventsArr.length} events found`,
+    );
     return eventsArr;
   } catch (err) {
-    console.error(`ticketSearch failed - ${err}`);
+    console.error(`ticketSearch() Ticketmaster search failed - ${err}`);
     return eventsArr;
   }
 };
@@ -170,13 +178,14 @@ const tmSearch = async (keyword, config) => {
     let response = await fetch(TICKETMASTER_URL + params);
     let body = await response.json();
     if (!response.ok) {
-      throw new Error(body?.errors?.[0]?.detail || "Ticketmaster request failed");
+      throw new Error(
+        body?.errors?.[0]?.detail || "Ticketmaster request failed",
+      );
     }
 
     const totalResults = body?.page?.totalElements;
     const totalPages = body?.page?.totalPages;
     if (totalResults === 0) {
-      console.debug(`tmSearch('${keyword}') - No Ticketmaster Results`);
       return [];
     }
     if (body?._embedded) results.push(...body._embedded.events);
@@ -184,7 +193,7 @@ const tmSearch = async (keyword, config) => {
     page++;
     while (page < totalPages) {
       await sleep(180);
-      console.debug("getting page " + page);
+      // console.debug("getting page " + page);
 
       params = returnTMParams(
         keyword,
@@ -197,7 +206,8 @@ const tmSearch = async (keyword, config) => {
       );
       const nextPage = await fetch(TICKETMASTER_URL + params);
       const nextPageParsed = await nextPage.json();
-      if (nextPageParsed._embedded) results.push(...nextPageParsed._embedded.events);
+      if (nextPageParsed._embedded)
+        results.push(...nextPageParsed._embedded.events);
       page++;
     }
   } catch (err) {
@@ -216,7 +226,15 @@ const tmSearch = async (keyword, config) => {
  * @param {number} pageSize number of results returned in each response
  * @returns {string} params encoded parameters for Ticketmaster API query
  */
-const returnTMParams = (keyword, page, pageSize, latlong, radius, units, apiKey) => {
+const returnTMParams = (
+  keyword,
+  page,
+  pageSize,
+  latlong,
+  radius,
+  units,
+  apiKey,
+) => {
   let params = `?apikey=${apiKey}`;
   params += `&latlong=${latlong}`;
   params += `&radius=${radius}`;
