@@ -46,6 +46,16 @@ export default function TopArtistsTab({ description }) {
   const [status, setStatus] = useState({});
   const [statusMessage, setStatusMessage] = useState("");
   const [statusError, setStatusError] = useState(false);
+  // Artists already on the Custom List, so they show as "Saved" up front
+  // instead of only after clicking Save this session.
+  const [customListArtists, setCustomListArtists] = useState(new Set());
+
+  useEffect(() => {
+    fetch("/api/artists/manual")
+      .then((res) => res.json())
+      .then((data) => setCustomListArtists(new Set(data.artists || [])))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -142,7 +152,7 @@ export default function TopArtistsTab({ description }) {
   const handleSave = async (name) => {
     try {
       await addArtist("/api/artists/manual", name);
-      setStatus((s) => ({ ...s, [name]: "saved" }));
+      setCustomListArtists((s) => new Set(s).add(name));
       setStatusMessage(`Saved ${name} to custom artists`);
       setStatusError(false);
     } catch (err) {
@@ -186,7 +196,8 @@ export default function TopArtistsTab({ description }) {
       status[a.artist] === "unignored"
         ? false
         : a.ignored || status[a.artist] === "ignored";
-    return { ...a, ignored, rank: ignored ? null : ++rank };
+    const saved = customListArtists.has(a.artist);
+    return { ...a, ignored, saved, rank: ignored ? null : ++rank };
   });
 
   return (
@@ -200,7 +211,7 @@ export default function TopArtistsTab({ description }) {
                 {selectedTerms.includes(t.value) && (
                   <span
                     aria-hidden="true"
-                    className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] leading-none text-neutral-200"
+                    className="absolute -top-4 left-1/2 -translate-x-1/2 text-[12px] leading-none text-neutral-200"
                   >
                     ✓
                   </span>
@@ -275,13 +286,18 @@ export default function TopArtistsTab({ description }) {
                     </button>
                   ) : (
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleSave(a.artist)}
-                        disabled={status[a.artist] === "saved"}
-                        className="text-sm px-2 py-0.5 rounded  text-blue-600 hover:underline disabled:opacity-50"
-                      >
-                        {status[a.artist] === "saved" ? "Saved" : "Save"}
-                      </button>
+                      {a.saved ? (
+                        <span className="text-sm px-2 py-0.5 text-neutral-500">
+                          Saved
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleSave(a.artist)}
+                          className="text-sm px-2 py-0.5 rounded text-blue-600 hover:underline"
+                        >
+                          Save
+                        </button>
+                      )}
                       <button
                         onClick={() => handleIgnore(a.artist)}
                         className="text-sm px-2 py-0.5 rounded text-red-600 hover:underline"
