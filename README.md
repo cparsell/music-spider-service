@@ -1,27 +1,47 @@
 # Music Spider
 
-Music Spider uses your listening history (Plex/Tautulli and/or Spotify) to gather your top artists - most listened to (short and long term), searches for upcoming events from those artists near you, and notifies you by email, Google Calendar, or a generic webhook.
+Music Spider is a self-hosted app that turns your listening history into a personalized concert-discovery tool. It pulls your top artists from Plex (via Tautulli) and/or Spotify, cross-references that list against event search APIs to find upcoming shows near you, and notifies you by email, Google Calendar, or a generic webhook.
 
-Everything is configured after the container is running, from the **Settings** tab in the app itself — nothing needs to be set in code or env files to get started beyond what's covered below.
+## About
+
+### Tech Stack
+
+- **Framework:** Next.js 16 (App Router) with React 19
+- **Styling:** Tailwind CSS 4
+- **Runtime:** Node 20, packaged as a Docker image
+- **Storage:** flat JSON files on disk (no database) — settings, event store, artist lists, and caches, managed through a small custom file-store module with read/write locking
+- **Auth:** OAuth flows for Spotify and Google, using popup windows for the consent step
+- **External APIs:** Tautulli API, Spotify Web API, Ticketmaster Discovery API, Resident Advisor's public GraphQL API, Google **Gmail/Calendar APIs** — with a self-hosted Google Apps Script webhook offered as an OAuth-free alternative for email/calendar
+- **Deployment:** Docker / Docker Compose, with docs for Unraid as well
+
+### Features
+
+- **Top Artists tracking** — from Tautulli, Spotify, both, or manual-only ("none"); short/medium/long-term windows combinable by weighted score or union; configurable max count; optional scheduled auto-refresh
+- **Event search** — Ticketmaster (lat/long + radius) and/or Resident Advisor (region-based), matched against your top-artist list; manual search with live progress/cancel, or scheduled auto-search;
+- **Events UI** — Peruse the discovered events in card and list views, sortable columns, per-event delete/ignore
+- **Custom & Ignore lists** — manually pin artists to always include, or exclude specific artists from top-artists and event search entirely
+- **Notifications** — weekly email digest, Google Calendar sync (OAuth or Apps Script webhook), and a generic JSON webhook (e.g. Discord, Home Assistant) with a customizable template and per-channel test-send buttons
+- **Settings UI** — every integration configured and auto-saved from one in-app tab, with per-section enable/disable and live connection status
+- **Theming** — Grayscale and Catppuccin Mocha themes
 
 ## Requirements
 
-To install:
+**To install:**
 
 - Docker
 
-Artists Source Options:
+**Artists Source Options:**
 
 - Tautulli (API key needed from Tautulli settings)
 - Spotify ([API key needed](https://developer.spotify.com/))
 - List of Artists manully added
 
-Event Search options:
+**Event Search options:**
 
 - Ticketmster ([API key](https://developer.ticketmaster.com/) needed)
 - Resident Advisor (no API key needed)
 
-Notification Options
+**Notification Options**
 
 - Email (requires OAuth or a [webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md))
 - Calendar (requires OAuth or a [webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md))
