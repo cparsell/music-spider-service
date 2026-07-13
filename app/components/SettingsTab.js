@@ -1090,7 +1090,7 @@ export default function SettingsTab() {
         >
           <SettingsSubsection title="Artist Sources">
             <div className="flex flex-col gap-2">
-              <div className="flex rounded-2xl overflow-hidden border-2 border-neutral-300 w-fit">
+              <div className="flex rounded-2xl overflow-hidden border-2 border-neutral-300  w-fit">
                 {ARTIST_SOURCES.map((s) => (
                   <button
                     key={s.value}
@@ -1099,7 +1099,9 @@ export default function SettingsTab() {
                     className={`px-3 py-0.5 ${
                       form.artistSource === s.value
                         ? "bg-neutral-700 text-white "
-                        : "bg-neutral-300 text-neutral-900 cursor-pointer"
+                        : s.value === "none"
+                          ? "bg-neutral-300 text-neutral-900 cursor-pointer"
+                          : "bg-neutral-300 text-neutral-900 cursor-pointer border-r-2 border-r-neutral-500/70"
                     }`}
                   >
                     {s.label}
