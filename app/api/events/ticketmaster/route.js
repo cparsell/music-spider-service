@@ -42,11 +42,15 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
 
     console.debug("Ticketmaster Search complete - Results:", results);
 
-    // Ticketmaster provides a bunch of different images of different sizes.
-    // This picks the highest-resolution one for each event.
-    for (const event of results) {
-      event.image = await findLargestImage(event.image);
-    }
+    // HEAD-checking every image of every event used to happen one request
+    // at a time (event-by-event, image-by-image). These are all independent
+    // network calls with no shared rate limit, so fire them all concurrently
+    // instead.
+    await Promise.all(
+      results.map(async (event) => {
+        event.image = await findLargestImage(event.image);
+      }),
+    );
 
     return results;
   } catch (e) {
@@ -55,30 +59,91 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
   }
 };
 
+/**
+ * Finds the largest image from an array of image objects based on content
+ * length. Checks all candidate URLs concurrently (rather than one at a
+ * time), with a per-request timeout so one slow/hanging image host can't
+ * stall the whole search - since this now runs inside a larger
+ * `Promise.all` across every event, a single hung request would otherwise
+ * hold up everything else too.
+ * @param {*} imagesObj
+ * @returns
+ */
 async function findLargestImage(imagesObj) {
   if (!imagesObj || imagesObj.length < 1) {
     console.error("findLargestImage() - no images provided");
     return "";
   }
-  let largestSize = 0;
-  let largestImageUrl = null;
 
-  for (const image of imagesObj) {
-    const url = image.url;
-    try {
-      const response = await fetch(url, { method: "HEAD" });
-      const contentLength = response.headers.get("Content-Length");
-
-      if (contentLength && parseInt(contentLength, 10) > largestSize) {
-        largestSize = parseInt(contentLength, 10);
-        largestImageUrl = url;
+  const sizes = await Promise.all(
+    imagesObj.map(async (image) => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      try {
+        const response = await fetch(image.url, {
+          method: "HEAD",
+          signal: controller.signal,
+        });
+        const contentLength = response.headers.get("Content-Length");
+        return {
+          url: image.url,
+          size: contentLength ? parseInt(contentLength, 10) : 0,
+        };
+      } catch (error) {
+        console.error(
+          `findLargestImage() Error fetching ${image.url}: ${error}`,
+        );
+        return { url: image.url, size: 0 };
+      } finally {
+        clearTimeout(timeout);
       }
-    } catch (error) {
-      console.error(`findLargestImage() Error fetching ${url}: ${error}`);
+    }),
+  );
+
+  const largest = sizes.reduce((max, curr) =>
+    curr.size > max.size ? curr : max,
+  );
+
+  return largest.size > 0 ? largest.url : null;
+}
+
+// Event cards render at a tall aspect-6/8 with object-cover, so a wide
+// landscape source image gets cropped hard on the sides - a squarer source
+// loses far less. Ticketmaster tags each image with its pixel dimensions
+// (no extra fetch needed, unlike comparing file sizes), so first drop
+// anything below a minimum resolution, then prefer whichever remaining
+// image's aspect ratio is closest to the card's.
+const MIN_IMAGE_WIDTH = 300;
+const TARGET_RATIO = 6 / 8;
+
+/**
+ * Pick the best image from an array of Ticketmaster images, based on minimum width and aspect ratio.
+ * So far this is still returning low-res images for some events
+ * @param {*} imagesArr
+ * @returns
+ */
+function pickCoverImage(imagesArr) {
+  if (!imagesArr || imagesArr.length < 1) {
+    console.error("pickCoverImage() - no images provided");
+    return "";
+  }
+
+  const bySize = [...imagesArr].sort((a, b) => (b.width || 0) - (a.width || 0));
+  const highRes = bySize.filter((img) => (img.width || 0) >= MIN_IMAGE_WIDTH);
+  const pool = highRes.length > 0 ? highRes : bySize;
+
+  let best = null;
+  let bestDistance = Infinity;
+  for (const img of pool) {
+    if (!img.width || !img.height) continue;
+    const distance = Math.abs(img.width / img.height - TARGET_RATIO);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = img;
     }
   }
 
-  return largestImageUrl;
+  return (best || pool[0])?.url || "";
 }
 
 /**

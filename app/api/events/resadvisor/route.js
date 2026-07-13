@@ -132,7 +132,10 @@ export const searchRA = async (artistList) => {
             url: "https://ra.co" + listing.contentUrl,
           },
         ],
-        image: listing.images?.[0]?.filename,
+        // flyerFront is RA's own designated cover art for the event - a much
+        // more reliable "cover-like" pick than an arbitrary photo from
+        // images[], which is only used as a fallback if it's missing.
+        image: listing.flyerFront || listing.images?.[0]?.filename,
         acts,
         address: listing.venue?.address,
       });
