@@ -1,4 +1,8 @@
-import { ignoredArtists } from "@/lib/artistLists.js";
+import {
+  ignoredArtists,
+  addIgnoredArtist,
+  addIgnoredArtists,
+} from "@/lib/artistLists.js";
 
 export async function GET() {
   return Response.json({ artists: await ignoredArtists.getAll() });
@@ -8,8 +12,8 @@ export async function POST(req) {
   const { name, names } = await req.json();
   try {
     const artists = Array.isArray(names)
-      ? await ignoredArtists.addMany(names)
-      : await ignoredArtists.add(name);
+      ? await addIgnoredArtists(names)
+      : await addIgnoredArtist(name);
     return Response.json({ artists });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 400 });

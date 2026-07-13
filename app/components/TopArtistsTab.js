@@ -152,7 +152,11 @@ export default function TopArtistsTab({ description }) {
   const handleSave = async (name) => {
     try {
       await addArtist("/api/artists/manual", name);
+      // Saving now also removes it from the ignore list server-side (the two
+      // lists are mutually exclusive) - clear any local "ignored" status so
+      // the UI doesn't keep showing it as ignored too.
       setCustomListArtists((s) => new Set(s).add(name));
+      setStatus((s) => ({ ...s, [name]: "unignored" }));
       setStatusMessage(`Saved ${name} to custom artists`);
       setStatusError(false);
     } catch (err) {
@@ -164,7 +168,14 @@ export default function TopArtistsTab({ description }) {
   const handleIgnore = async (name) => {
     try {
       await addArtist("/api/artists/ignored", name);
+      // Same in the other direction - ignoring removes it from the custom
+      // list server-side, so drop it from the locally-tracked saved set too.
       setStatus((s) => ({ ...s, [name]: "ignored" }));
+      setCustomListArtists((s) => {
+        const next = new Set(s);
+        next.delete(name);
+        return next;
+      });
       setStatusMessage(`Added ${name} to ignore list`);
       setStatusError(false);
     } catch (err) {
