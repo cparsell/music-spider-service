@@ -2,7 +2,9 @@
 
 Music Spider is a self-hosted app that turns your listening history into a personalized concert-discovery tool. It pulls your top artists from Plex (via Tautulli) and/or Spotify, cross-references that list against event search APIs to find upcoming shows near you, and notifies you by email, Google Calendar, or a generic webhook.
 
-I first programmed [Music Spider](https://github.com/cparsell/music-spider) in Google Apps Script in 2023. This was fine for me but eventually I wanted to set it up in a way that made it easier to share with others.
+I first programmed [Music Spider](https://github.com/cparsell/music-spider) in Google Apps Script in 2023. At that time, it just worked with Spotify's API to get one's music listening history. This was fine for me but eventually I wanted to set it up in a way that made it easier to share with others. In this version, I reworked it to be able to get listening history from Tautulli (Plex).
+
+The only two ticket APIs (currently) free and available ot use are Ticketmaster and Resident Advisor. Correct me if I'm wrong but I've looked for others. When I first wrote this in 2023, there were only a few other GitHub projects that demonstrated using Resident Advisor's GraphQL API but I had to do some graphQL-fu to figure out how to use it flexibly.
 
 ## About
 
