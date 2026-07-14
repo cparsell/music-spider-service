@@ -33,8 +33,6 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 
 ## Requirements
 
-**To install:**
-
 - Docker
 - Artists Source Options:
   - Tautulli (API key needed from Tautulli settings)
