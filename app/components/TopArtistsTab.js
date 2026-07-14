@@ -88,6 +88,12 @@ export default function TopArtistsTab({ description }) {
     setLoading(true);
     setStatusMessage("Loading top artists...");
     setStatusError(false);
+    // A cached response returns almost instantly; if it's still going after
+    // this long, the cache was stale and the server is refreshing from
+    // Spotify/Tautulli listening history before it can respond.
+    const slowTimer = setTimeout(() => {
+      setStatusMessage("Refreshing listening history...");
+    }, 1200);
     return fetch(`/api/top-artists?terms=${selectedTerms.join(",")}`)
       .then((res) => res.json())
       .then((data) => {
@@ -119,7 +125,10 @@ export default function TopArtistsTab({ description }) {
         setStatusMessage(err.message || "Failed to load top artists");
         setStatusError(true);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        clearTimeout(slowTimer);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
