@@ -43,7 +43,6 @@ Music Spider is a self-hosted app that turns your listening history into a perso
   - Custom webhook - can be used to send event summary to Discord, Slack, etc.
   - [Apps Script webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md))
   - OAuth connection to Google ()
-  -
 
 ## Running it
 
