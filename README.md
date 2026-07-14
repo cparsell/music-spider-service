@@ -2,6 +2,8 @@
 
 Music Spider is a self-hosted app that turns your listening history into a personalized concert-discovery tool. It pulls your top artists from Plex (via Tautulli) and/or Spotify, cross-references that list against event search APIs to find upcoming shows near you, and notifies you by email, Google Calendar, or a generic webhook.
 
+I first programmed [Music Spider](https://github.com/cparsell/music-spider) in Google Apps Script in 2023. This was fine for me but eventually I wanted to set it up in a way that made it easier to share with others.
+
 ## About
 
 ### Tech Stack
@@ -9,9 +11,9 @@ Music Spider is a self-hosted app that turns your listening history into a perso
 - **Framework:** Next.js 16 (App Router) with React 19
 - **Styling:** Tailwind CSS 4
 - **Runtime:** Node 20, packaged as a Docker image
-- **Storage:** flat JSON files on disk (no database) — settings, event store, artist lists, and caches, managed through a small custom file-store module with read/write locking
+- **Storage:** flat JSON files on disk (no database) - settings, event store, artist lists, and caches, managed through a small file-store module with read/write locking
 - **Auth:** OAuth flows for Spotify and Google, using popup windows for the consent step
-- **External APIs:** Tautulli API, Spotify Web API, Ticketmaster Discovery API, Resident Advisor's public GraphQL API, Google **Gmail/Calendar APIs** — with a self-hosted Google Apps Script webhook offered as an OAuth-free alternative for email/calendar
+- **External APIs:** Tautulli API, Spotify Web API, Ticketmaster Discovery API, Resident Advisor's public GraphQL API, Google Gmail/Calendar APIs — with a self-hosted Google Apps Script webhook offered as an OAuth-free alternative for email/calendar
 - **Deployment:** Docker / Docker Compose, with docs for Unraid as well
 
 ### Features
