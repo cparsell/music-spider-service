@@ -199,9 +199,21 @@ const SECTIONS = [
   {
     title: "Webhook",
     description:
-      'Sends a weekly POST request with the JSON body defined below to any URL that accepts an incoming webhook - e.g. a Discord channel webhook, or a Home Assistant automation using a "Webhook" trigger (which accepts any JSON shape you send and lets you build the notification yourself from there). Use {{subject}}, {{summary}}, and {{count}} as placeholders - each is JSON-escaped automatically, so it\'s safe to drop inside a quoted string like "content": "{{summary}}". The result must be valid JSON once the placeholders are filled in. Note some services (e.g. Discord) cap message length around 2000 characters.',
+      'Sends a weekly POST request with the JSON body defined below to any URL that accepts an incoming webhook - e.g. a Discord channel webhook, or a Home Assistant automation using a "Webhook" trigger (which accepts any JSON shape you send and lets you build the notification yourself from there). Use {{subject}}, {{summary}}, and {{count}} as placeholders - each is JSON-escaped automatically, so it\'s safe to drop inside a quoted string like "content": "{{summary}}". The result must be valid JSON once the placeholders are filled in. Note some services (e.g. Discord) cap message length around 2000 characters. Bold formatting and bullet list below only affect the {{summary}} placeholder - Slack and Discord use different markup for bold (*text* vs **text**), so neither is filled in by default.',
     fields: [
       { key: "webhookUrl", label: "Webhook URL", type: "text" },
+      {
+        key: "webhookBoldFormat",
+        label:
+          "Bold formatting (wraps event/act names in {{summary}} - e.g. ** for Discord, * for Slack. Blank = no bold)",
+        type: "text",
+      },
+      {
+        key: "webhookBulletFormat",
+        label:
+          "Bullet list (prefixes each event line in {{summary}}. Blank = • )",
+        type: "text",
+      },
       {
         key: "webhookTemplate",
         label: "Body template (JSON)",

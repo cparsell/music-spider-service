@@ -6,7 +6,13 @@ import TabLayout from "./TabLayout";
 function formatDate(dateValue) {
   const d = new Date(dateValue);
   if (isNaN(d)) return String(dateValue);
-  const datePart = d.toLocaleDateString();
+  const datePart = new Intl.DateTimeFormat("en-US", {
+    // timeZone: "America/Los_Angeles",
+    // year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).format(d);
+
   // toLocaleTimeString gives e.g. "7:00 PM" / "7:30 PM" - drop the :00 for
   // on-the-hour times and the space before AM/PM for a compact "7PM" /
   // "7:30PM" on cards.
@@ -448,9 +454,7 @@ export default function EventsTab() {
                     underneath. */}
                 <div className="absolute inset-x-0 bottom-0 p-3 flex items-end justify-between gap-2 text-white">
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold leading-tight">
-                      {event.eName}
-                    </p>
+                    <p className="font-semibold leading-tight">{event.eName}</p>
                     <p className="text-sm text-neutral-300">
                       {event.venue}
                       {/* {event.city ? `, ${event.city}` : ""} */}

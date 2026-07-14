@@ -28,6 +28,8 @@ export async function POST() {
       template: config.webhookTemplate,
       events: upcoming,
       knownArtists,
+      bold: config.webhookBoldFormat,
+      bullet: config.webhookBulletFormat,
     });
     return Response.json({ sent: true, count: upcoming.length });
   } catch (err) {

@@ -20,35 +20,32 @@ Music Spider is a self-hosted app that turns your listening history into a perso
 - **Event search** — Ticketmaster (lat/long + radius) and/or Resident Advisor (region-based), matched against your top-artist list; manual search with live progress/cancel, or scheduled auto-search;
 - **Events UI** — Peruse the discovered events in card and list views, sortable columns, per-event delete/ignore
 - **Custom & Ignore lists** — manually pin artists to always include, or exclude specific artists from top-artists and event search entirely
-- **Notifications** — weekly email digest, Google Calendar sync (OAuth or Apps Script webhook), and a generic JSON webhook (e.g. Discord, Home Assistant) with a customizable template and per-channel test-send buttons
+- **Notifications** —
+  - weekly event digest email,
+  - Google Calendar sync, and a generic JSON webhook (e.g. Discord, Home Assistant) with a customizable template and per-channel test-send buttons
 - **Settings UI** — every integration configured and auto-saved from one in-app tab, with per-section enable/disable and live connection status
 - **Theming** — Grayscale and Catppuccin Mocha themes
+- **Apps Script Webhook Handler Script** (optional) - If one wants to avoid the OAuth process with Google (requires HTTPS), I use this Google Apps Script webapp to handle sending a weekly email and adding calendar events
 
-## Running it
-
-### Requirements
+## Requirements
 
 **To install:**
 
 - Docker
+- Artists Source Options:
+  - Tautulli (API key needed from Tautulli settings)
+  - Spotify ([API key needed](https://developer.spotify.com/))
+  - List of Artists manully added
+- Event Search options:
+  - Ticketmster ([API key](https://developer.ticketmaster.com/) needed)
+  - Resident Advisor (no API key needed)
+- Options for Notifications
+  - Custom webhook - can be used to send event summary to Discord, Slack, etc.
+  - [Apps Script webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md))
+  - OAuth connection to Google ()
+  -
 
-**Artists Source Options:**
-
-- Tautulli (API key needed from Tautulli settings)
-- Spotify ([API key needed](https://developer.spotify.com/))
-- List of Artists manully added
-
-**Event Search options:**
-
-- Ticketmster ([API key](https://developer.ticketmaster.com/) needed)
-- Resident Advisor (no API key needed)
-
-**Notification Options**
-
-- Email (requires OAuth or a [webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md))
-- Calendar (requires OAuth or a [webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md))
-
-### Setup Guides
+## Running it
 
 - [Set up using Docker Compose](https://github.com/cparsell/music-spider-service/blob/main/Setup-DockerCompose.md)
 - [Set on Unraid](https://github.com/cparsell/music-spider-service/blob/main/Setup-Unraid.md)
