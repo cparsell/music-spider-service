@@ -41,8 +41,8 @@ Music Spider is a self-hosted app that turns your listening history into a perso
   - Resident Advisor (no API key needed)
 - Options for Notifications
   - Custom webhook - can be used to send event summary to Discord, Slack, etc.
-  - [Apps Script webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md))
-  - OAuth connection to Google ()
+  - OAuth connection to Google (requires an HTTPS connection if redirect URI is anything other than `localhost`)
+  - [Apps Script webhook script](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md) - set up as an alternative to OAuth.
 
 ## Running it
 
