@@ -92,9 +92,9 @@ Use the **Send Test Email** / **Create Test Calendar Event** buttons in Music Sp
 
 ### Google OAuth and HTTPS
 
-If you choose the OAuth integration method (for Spotify or Google) and access Music Spider from anywhere other than `127.0.0.1`/`localhost` — e.g. a LAN IP, a hostname, or over the internet — **the redirect URI must be reachable at that same address, and Google in particular requires it to be HTTPS**. Put Music Spider behind a reverse proxy with TLS (e.g. Caddy, Traefik, or your NAS's built-in reverse proxy) if you want OAuth working from anything other than the same machine. The Apps Script webhook option sidesteps this entirely for Google.
+If you choose the OAuth integration method (for Spotify or Google) and access Music Spider from anywhere other than `127.0.0.1`/`localhost` — e.g. a LAN IP, a hostname, or over the internet — **the redirect URI must be reachable at that same address, and Google in particular requires it to be HTTPS**. Put Music Spider behind a reverse proxy with TLS (e.g. Caddy, Traefik, SWAG, or your NAS's built-in reverse proxy) if you want OAuth working from anything other than the same machine.
 
-The [Apps Script webhook script](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md) was set up as an alternative to the OAuth method - no HTTPS needed.
+The [Apps Script webhook script](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md) sidesteps this entirely for Google. It was set up as an alternative to the OAuth method - no HTTPS needed.
 
 ## License
 
