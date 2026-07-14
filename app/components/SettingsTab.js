@@ -758,8 +758,8 @@ const SAVE_DEBOUNCE_MS = 600;
 export default function SettingsTab() {
   const [form, setForm] = useState(null);
   const [saveState, setSaveState] = useState("idle"); // idle | pending | saving | saved | error
-  // Which top-level SettingsSection (by title) is currently open - null when
-  // all are collapsed. Only one at a time, accordion-style.
+  // Which top-level SettingsSection is currently open
+  // null when all are collapsed.
   const [openSection, setOpenSection] = useState(null);
   const toggleSection = (title) =>
     setOpenSection((current) => (current === title ? null : title));
@@ -794,13 +794,12 @@ export default function SettingsTab() {
     }
   };
 
-  // Auto-save: any change to `form` (text, radio, checkbox) is persisted a
-  // short beat after the user stops changing things, instead of on every
-  // keystroke or requiring a manual save button.
+  // Auto-save - any change to form is persisted a
+  // short beat after the user stops changing things
   useEffect(() => {
     if (!form) return;
     if (skipNextSave.current) {
-      // Don't save immediately after the initial GET populates the form.
+      // Don't save immediately after the initial GET populates the form
       skipNextSave.current = false;
       return;
     }
@@ -813,10 +812,9 @@ export default function SettingsTab() {
     return () => clearTimeout(debounceRef.current);
   }, [form]);
 
-  // The cleanup above cancels the debounce timer on every re-run, which also
-  // fires on unmount (e.g. switching tabs) - without this, a save still
-  // waiting out its debounce window gets silently dropped instead of ever
-  // reaching settings.json. Flush it immediately here instead.
+  // Without this, a save waiting out its debounce window gets dropped
+  // instead of ever reaching settings.json.
+  // Flush it immediately here instead.
   useEffect(() => {
     return () => {
       if (pendingSaveRef.current) {
@@ -826,9 +824,7 @@ export default function SettingsTab() {
     };
   }, []);
 
-  // Apply the theme to the document immediately on change, rather than
-  // waiting for the debounced save + a full page reload (layout.js only
-  // sets data-theme on first server render).
+  // Apply the theme to the document immediately on change
   useEffect(() => {
     if (form?.theme) document.documentElement.dataset.theme = form.theme;
   }, [form?.theme]);
@@ -878,9 +874,7 @@ export default function SettingsTab() {
   // extra section-specific controls (connection status, test buttons,
   // schedule pickers) follow it - shared by every field-driven subsection
   // below so that logic only lives in one place. `disabled` grays the whole
-  // thing out and blocks interaction (e.g. the Tautulli section when
-  // Spotify is the exclusively-selected artist source) without having to
-  // thread a `disabled` prop through every distinct field/control type.
+  // thing out and blocks interaction
   const renderSectionFields = (section, disabled = false) => (
     <div
       className={disabled ? "opacity-40 pointer-events-none" : undefined}
