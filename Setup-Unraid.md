@@ -9,8 +9,8 @@
 - **Icon URL**: `https://raw.githubusercontent.com/cparsell/music-spider-service/refs/heads/main/app/ms-logo-string-ico2-01.png`
 - **WebUI**: `http://[IP]:[PORT]`
 
-- **Port mapping:** container port `6100` to whatever host port you want (`6100` is fine unless it's taken).
-- **Path mapping:** container path `/app/data` to an appdata path, e.g. `/mnt/user/appdata/music-spider-service`.
+- **Port mapping:** Map a container port `6100` to whatever host port you want (`6100` is fine unless it's taken).
+- **Path mapping:** Map a container path `/app/data` to your appdata path, e.g. `/mnt/user/appdata/music-spider-service`.
 
 3. _Apply_. The app will be reachable at `http://<unraid-ip>:6100`.
 
