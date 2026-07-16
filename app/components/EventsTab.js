@@ -75,7 +75,7 @@ function renderActs(actsList, fallback) {
         <span key={act.name + i}>
           {i > 0 && ", "}
           {act.known ? (
-            <strong className="text-amber-100">{act.name}</strong>
+            <strong className="text-white">{act.name}</strong>
           ) : (
             act.name
           )}
@@ -376,7 +376,7 @@ export default function EventsTab() {
                       />
                     )}
                   </td>
-                  <td className="py-2 pr-4">{event.eName}</td>
+                  <td className="py-2 pr-4 font-semibold">{event.eName}</td>
                   <td className="py-2 pr-4">
                     {event.venue}
                     {event.address && (
