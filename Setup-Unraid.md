@@ -22,8 +22,7 @@ Unraid's Docker UI doesn't run `docker compose` directly, so pick one of these:
 3. Change the volume line to use an Unraid appdata path, e.g. `/mnt/user/appdata/music-spider-service:/app/data`.
 4. Bring the stack up. The app will be reachable at `http://<unraid-ip>:6100`.
 
-## Unraid-specific gotchas
+## Unraid-specific Notes
 
-- **WebUI button**: if the container was added via **Add Container** (Option 1) or raw `docker run` rather than through an Unraid Community Applications template, the `[IP]:[PORT]` placeholder in the WebUI URL field doesn't get substituted — clicking the button opens a blank/blocked popup. Use the literal reachable address instead, e.g. `http://192.168.1.50:6100/`.
 - **OAuth redirect URIs**: since Unraid is reached over your LAN rather than `127.0.0.1`, set the `Spotify Redirect URI` / `Google Redirect URI` fields in Music Spider (and the matching values registered in the Spotify/Google developer consoles) to Unraid's actual reachable address. Google's OAuth also requires HTTPS at that address once it's anything other than `127.0.0.1`/`localhost` — see [Google OAuth and HTTPS](#google-oauth-and-https) below.
 - Give the Unraid box a reserved/static LAN IP in your router so the URLs above don't silently break if its address changes later.
