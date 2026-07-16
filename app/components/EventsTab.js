@@ -67,6 +67,25 @@ function buildSearchResultMessage(result) {
   return message;
 }
 
+function renderActs(actsList, fallback) {
+  if (!actsList?.items?.length) return fallback;
+  return (
+    <>
+      {actsList.items.map((act, i) => (
+        <span key={act.name + i}>
+          {i > 0 && ", "}
+          {act.known ? (
+            <strong className="text-amber-100">{act.name}</strong>
+          ) : (
+            act.name
+          )}
+        </span>
+      ))}
+      {actsList.truncated && "..."}
+    </>
+  );
+}
+
 export default function EventsTab() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -75,13 +94,7 @@ export default function EventsTab() {
   const [statusError, setStatusError] = useState(false);
   const [progress, setProgress] = useState(null);
   // Remembered across reloads/tab switches (localStorage, not server state -
-  // purely a per-browser display preference) so returning to this tab shows
-  // whichever view was last used instead of always resetting to card view.
-  // Starts as "card" (matching what the server renders with no access to
-  // localStorage) and is corrected in an effect right after mount - reading
-  // localStorage directly in the initializer would make the client's first
-  // render disagree with the server-rendered HTML and produce a hydration
-  // mismatch.
+  // purely a per-browser display preference)
   const [viewMode, setViewMode] = useState("card");
   const [sortConfig, setSortConfig] = useState({
     key: "date",
@@ -89,8 +102,7 @@ export default function EventsTab() {
   });
   // A search runs server-side independent of this component's lifecycle -
   // switching tabs unmounts it, but the search keeps going. These track the
-  // poll loop and whether we've actually observed it running (vs. stale
-  // leftover state from a previous search) across that remount.
+  // poll loop and whether we've actually observed it running
   const pollRef = useRef(null);
   const sawRunningRef = useRef(false);
 
@@ -374,7 +386,10 @@ export default function EventsTab() {
                     )}
                   </td>
                   <td className="py-2 pr-4">
-                    {event.actsDisplay || event.acts?.join(", ") || ""}
+                    {renderActs(
+                      event.actsList,
+                      event.actsDisplay || event.acts?.join(", ") || "",
+                    )}
                   </td>
                   <td className="py-2 pr-4 text-sm">
                     <div className="flex flex-col gap-1 whitespace-nowrap">
@@ -448,10 +463,6 @@ export default function EventsTab() {
                     />
                   ))}
                 <div className="absolute inset-0 bg-linear-to-t from-black to-transparent to-70% pointer-events-none" />
-                {/* Two-column flex row rather than two overlapping absolute
-                    divs, so the button column reserves its own space and the
-                    info column wraps around it instead of running full-width
-                    underneath. */}
                 <div className="absolute inset-x-0 bottom-0 p-3 flex items-end justify-between gap-2 text-white">
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold leading-tight">{event.eName}</p>
@@ -466,7 +477,7 @@ export default function EventsTab() {
                     )}
                     {event.actsDisplay && (
                       <p className="text-sm mt-1 text-white">
-                        Acts: {event.actsDisplay}
+                        {renderActs(event.actsList, event.actsDisplay)}
                       </p>
                     )}
                     <div className="flex flex-col gap-1 mt-1">

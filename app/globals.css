@@ -124,10 +124,13 @@ body {
 
   --color-blue-600: #89b4fa !important; /* Blue */
 
+  --color-yellow-300: #f9e2af !important; /* Yellow */
+
   --color-amber-100: #f9e2af !important; /* Yellow */
   --color-amber-200: #fab387 !important; /* Peach */
   --color-amber-800: #6e3b12 !important; /* extended: dark peach, for contrast on amber-100 */
 
+  --color-green-500: #a6e3a1 !important;
   --color-green-600: #40a02b !important; /* extended: saturated enough for white button text */
   --color-green-700: #2f7d1f !important; /* extended: darker still */
 
