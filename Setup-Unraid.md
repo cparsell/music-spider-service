@@ -9,7 +9,7 @@ Unraid's Docker UI doesn't run `docker compose` directly, so pick one of these:
 
 - **Repository**: `139139/music-spider:latest`.
 - **Icon URL**: `https://raw.githubusercontent.com/cparsell/music-spider-service/refs/heads/main/app/ms-logo-string-ico2-01.png`
-- Set **WebUI** to `http://[IP]:[PORT]`
+- **WebUI**: `http://[IP]:[PORT]`
 
 - **Port mapping:** container port `6100` to whatever host port you want (`6100` is fine unless it's taken).
 - **Path mapping:** container path `/app/data` to an appdata path, e.g. `/mnt/user/appdata/music-spider-service`.
