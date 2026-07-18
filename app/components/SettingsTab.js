@@ -1200,8 +1200,6 @@ export default function SettingsTab({ isConfigured }) {
             {renderSectionFields(sectionByTitle["Top Artists"])}
           </SettingsSubsection>
 
-          <SettingsSubsection title="Top Artist Combination Mode"></SettingsSubsection>
-
           <SettingsSubsection
             title="Tautulli API"
             defaultOpen={!isConfigured}
