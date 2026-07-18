@@ -8,6 +8,20 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 
 ## About
 
+### Features
+
+- **Top Artists tracking:** from Tautulli, Spotify, both, or manual-only (no API fetching); ranks your top artists in short term, medium term, and long-term windows; optional scheduled auto-refresh
+- **Custom list:** manually pin artists to always include
+- **Ignore list:** exclude specific artists from top-artists and event search entirely (e.g. artists who are not alive, not touring, or you're just not going to see them live)
+- **Event search:** Ticketmaster and/or Resident Advisor matched against your list of artists - schedule weekly event searches to update the list or start the search manually
+- **Events UI:** Peruse the discovered events in card and list views, sortable columns, per-event delete/ignore
+- **Notifications:**
+  - weekly event digest email
+  - Google Calendar sync, and a generic JSON webhook (e.g. Discord, Home Assistant) with a customizable template and per-channel test-send buttons
+- **Settings UI:** every integration configured and auto-saved from one in-app tab, with per-section enable/disable and live connection status
+- **Theming:** Grayscale and Catppuccin Mocha themes
+- **Apps Script Webhook Handler Script** (optional) - If one wants to avoid the OAuth process with Google (requires HTTPS), I use this Google Apps Script webapp to handle sending a weekly email and adding calendar events
+
 ### Tech Stack
 
 - **Framework:** Next.js 16 (App Router) with React 19
@@ -18,21 +32,7 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - **External APIs:** Tautulli API, Spotify Web API, Ticketmaster Discovery API, Resident Advisor's public GraphQL API, Google Gmail/Calendar APIs - with a self-hosted Google Apps Script webhook offered as an OAuth-free alternative for email/calendar
 - **Deployment:** Docker / Docker Compose, with instructions for Unraid as well
 
-### Features
-
-- **Top Artists tracking** - from Tautulli, Spotify, both, or manual-only (no API fetching); ranks your top artists in short term, medium term, and long-term windows; optional scheduled auto-refresh
-- **Custom list** - manually pin artists to always include
-- **Ignore list** - exclude specific artists from top-artists and event search entirely (e.g. artists who are not alive, not touring, or you're just not going to see them live)
-- **Event search** - Ticketmaster and/or Resident Advisor matched against your list of artists - schedule weekly event searches to update the list or start the search manually
-- **Events UI** - Peruse the discovered events in card and list views, sortable columns, per-event delete/ignore
-- **Notifications** -
-  - weekly event digest email,
-  - Google Calendar sync, and a generic JSON webhook (e.g. Discord, Home Assistant) with a customizable template and per-channel test-send buttons
-- **Settings UI** - every integration configured and auto-saved from one in-app tab, with per-section enable/disable and live connection status
-- **Theming** - Grayscale and Catppuccin Mocha themes
-- **Apps Script Webhook Handler Script** (optional) - If one wants to avoid the OAuth process with Google (requires HTTPS), I use this Google Apps Script webapp to handle sending a weekly email and adding calendar events
-
-## Requirements
+### Requirements
 
 - Docker
 - Artists Source Options:
@@ -47,14 +47,14 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
   - OAuth connection to Google (requires an HTTPS connection if redirect URI is anything other than `localhost`)
   - [Apps Script webhook script](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md) - set up as an alternative to OAuth.
 
-## Running it
+## Installation
 
-- [Set up using Docker Compose](https://github.com/cparsell/music-spider-service/blob/main/Setup-DockerCompose.md)
-- [Set on Unraid](https://github.com/cparsell/music-spider-service/blob/main/Setup-Unraid.md)
+- [Docker Compose](https://github.com/cparsell/music-spider-service/blob/main/Setup-DockerCompose.md)
+- [Unraid](https://github.com/cparsell/music-spider-service/blob/main/Setup-Unraid.md)
 
 ## Configuring the app
 
-Every setting below lives in the **Settings** tab and auto-saves as you type - there's no separate save button. Sections are collapsible; only what you enable actually gets used (disabled sections make no API calls).
+In the web UI, the settings live in the **Settings** tab and changes auto-save as you type. Sections are collapsible; only what you enable actually gets used (disabled sections make no API calls).
 
 ### Artists
 
@@ -64,14 +64,12 @@ Choose where your "top artists" list comes from, under **Artists > Artist Source
 - **Spotify only** - pulls your Spotify top artists. Requires a Spotify app: go to the [Spotify Developer Dashboard](https://developer.spotify.com/), create an app, copy the Redirect URI shown in Music Spider's Spotify section into the app's settings, then paste the app's Client ID/Secret back into Music Spider and click **Connect Spotify Account**.
 - **Both** - merges the two: Tautulli's real play counts win for any artist it knows about, and Spotify fills in anything Tautulli didn't surface. Requires both sets of credentials above.
 
-Only the source(s) you pick need credentials - the other section grays out and is skipped entirely.
-
 ### Event Search
 
 Pick one or both sources under **Event Search > Event Search Sources**:
 
 - **Ticketmaster** -
-  - `API Key ` from [Ticketmaster Developer Dashboard](https://developer.ticketmaster.com/). Create an account then create an "app". **NOTE: Ticketmaster asks you to set a `Redirect URI` but it is unnecessary. You can set it to `http://127.0.0.1/` if required to get the API key**
+  - `API Key` from [Ticketmaster Developer Dashboard](https://developer.ticketmaster.com/). Create an account then create an "app". **NOTE: Ticketmaster asks you to set a `Redirect URI` but it is unnecessary. You can set it to `http://127.0.0.1/` if required to get the API key**
   - `Lat/Long` of your area can be found at [latlong.net](https://www.latlong.net/)
   - `Radius` (in miles or km).
 - **Resident Advisor** - no API key needed. Just open the **Resident Advisor** subsection and use the region search box to find and add your city/country - matching events near those regions are pulled automatically.
