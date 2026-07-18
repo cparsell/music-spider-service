@@ -6,6 +6,8 @@ import { RA_REGIONS } from "@/lib/raRegions.js";
 
 const RA_REGIONS_BY_ID = new Map(RA_REGIONS.map((r) => [r.id, r.label]));
 
+const SAVE_DEBOUNCE_MS = 600;
+
 const THEMES = [
   {
     value: "grayscale",
@@ -93,7 +95,7 @@ const SECTIONS = [
     ],
   },
   {
-    title: "Tautulli",
+    title: "Tautulli API",
     fields: [
       { key: "tautulliUrl", label: "URL", type: "text" },
       { key: "tautulliApiKey", label: "API Key", type: "password" },
@@ -106,7 +108,7 @@ const SECTIONS = [
     ],
   },
   {
-    title: "Spotify",
+    title: "Spotify API",
     description:
       "To fetch Spotify listening history, go to the Spotify Developer Dashboard \(https://developer.spotify.com/), create up an application, and add the Redirect URI below. Save the Client ID and Client Secret below. Then press 'Connect'",
     fields: [
@@ -116,7 +118,7 @@ const SECTIONS = [
     ],
   },
   {
-    title: "Ticketmaster",
+    title: "Ticketmaster API",
     fields: [
       { key: "ticketmasterApiKey", label: "API Key", type: "password" },
       { key: "latLong", label: "Lat/Long", type: "text" },
@@ -133,7 +135,7 @@ const SECTIONS = [
     ],
   },
   {
-    title: "Resident Advisor",
+    title: "Resident Advisor API",
     fields: [
       {
         key: "raRegion",
@@ -146,15 +148,8 @@ const SECTIONS = [
     title: "Google (Email & Calendar)",
     description:
       'Two ways to let Music Spider send event emails and/or add events to Google Calendar - pick one below. "OAuth" connects a Google account directly: in the Google Cloud Console, create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI below as an authorized redirect URI. Enter the Client ID/Secret below, then click "Connect Google Account." Note this requires an HTTPS connection to the redirect URI once accessed from anywhere other than 127.0.0.1/localhost. "Apps Script Webhook" instead sends requests to a small script you deploy yourself at script.google.com (see apps-script/Code.gs in the repo) - no OAuth client, redirect URI, or HTTPS needed on Music Spider\'s end, at the cost of maintaining that script.',
-    warning:
-      'Connecting a Google account via OAuth grants this app permission to send email as you (Gmail\'s "gmail.send" scope, send-only) and, if Calendar sync is enabled below, to create events on your calendar ("calendar.events" scope). Neither scope can read, delete, or otherwise access your existing mail or calendar. The Apps Script webhook option grants no such permissions to this app directly - instead your own script (which you control and can review) does the sending. Either way, if you plan to use this feature, review this app\'s source code yourself to confirm there is no misuse of that access.',
+
     fields: [
-      { key: "emailRecipient", label: "Recipient email", type: "text" },
-      {
-        key: "calendarId",
-        label: "Calendar ID (blank = primary calendar)",
-        type: "text",
-      },
       {
         key: "googleIntegrationMode",
         label: "Integration method",
@@ -194,6 +189,12 @@ const SECTIONS = [
         type: "password",
         showIf: (f) => f.googleIntegrationMode === "appsScript",
       },
+      { key: "emailRecipient", label: "Recipient email", type: "text" },
+      {
+        key: "calendarId",
+        label: "Calendar ID (blank = primary calendar)",
+        type: "text",
+      },
     ],
   },
   {
@@ -232,14 +233,22 @@ const SECTIONS = [
 // `openSection` below.
 function SettingsSection({ title, open, onToggle, children }) {
   return (
-    <div className="break-inside-avoid mb-6 border border-neutral-700 rounded-lg bg-neutral-800">
+    <div className="break-inside-avoid mb-6 border border-neutral-700 rounded-lg bg-neutral-800 ">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
         className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left cursor-pointer"
       >
-        <h2 className="font-bold text-neutral-200">{title}</h2>
+        <h2
+          className={
+            open
+              ? "font-bold text-white  border-neutral-700 w-full border-b"
+              : "font-bold text-white  border-neutral-700 w-full"
+          }
+        >
+          {title}
+        </h2>
         <svg
           viewBox="0 0 20 20"
           fill="none"
@@ -274,7 +283,7 @@ function SettingsSection({ title, open, onToggle, children }) {
 // divider between subsections within the parent's body.
 function SettingsSubsection({
   title,
-  defaultOpen = true,
+  defaultOpen = false,
   children,
   disabled = false,
 }) {
@@ -488,6 +497,18 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
 
   return (
     <div className="mt-2 flex flex-col gap-1">
+      <p className="text-sm text-amber-200   border border-amber-200 rounded p-2 mb-3">
+        ⚠️ Connecting a Google account via OAuth grants this app permission to
+        send email as you (Gmail's "gmail.send" scope, send-only) and, if
+        Calendar sync is enabled below, to create events on your calendar
+        ("calendar.events" scope). Neither scope can read, delete, or otherwise
+        access your existing mail or calendar. The Apps Script webhook option
+        grants no such permissions to this app directly - instead your own
+        script (which you control and can review) does the sending. Either way,
+        if you plan to use this feature, review this app's source code yourself
+        to confirm there is no misuse of that access.
+      </p>
+
       <div className="flex items-center gap-3">
         {status === null ? null : status.connected ? (
           <>
@@ -753,9 +774,7 @@ function RegionPicker({ value, onChange }) {
   );
 }
 
-const SAVE_DEBOUNCE_MS = 600;
-
-export default function SettingsTab() {
+export default function SettingsTab({ isConfigured }) {
   const [form, setForm] = useState(null);
   const [saveState, setSaveState] = useState("idle"); // idle | pending | saving | saved | error
   // Which top-level SettingsSection is currently open
@@ -944,30 +963,81 @@ export default function SettingsTab() {
           )}
       </div>
       {section.title === "Top Artists" && (
-        <div className="flex items-center gap-2 mt-3 text-sm">
-          <label className="flex items-center gap-2">
+        <div>
+          <div className="flex items-center gap-2 mt-3 text-sm">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.topArtistsAutoRefreshEnabled}
+                onChange={(e) =>
+                  updateField("topArtistsAutoRefreshEnabled", e.target.checked)
+                }
+              />
+              Automatically refresh every
+            </label>
             <input
-              type="checkbox"
-              checked={form.topArtistsAutoRefreshEnabled}
+              type="number"
+              min="1"
+              value={form.topArtistsAutoRefreshDays ?? 1}
               onChange={(e) =>
-                updateField("topArtistsAutoRefreshEnabled", e.target.checked)
+                updateField(
+                  "topArtistsAutoRefreshDays",
+                  e.target.value,
+                  "number",
+                )
               }
+              className="border rounded px-2 py-1 w-16"
             />
-            Automatically refresh every
-          </label>
-          <input
-            type="number"
-            min="1"
-            value={form.topArtistsAutoRefreshDays ?? 1}
-            onChange={(e) =>
-              updateField("topArtistsAutoRefreshDays", e.target.value, "number")
-            }
-            className="border rounded px-2 py-1 w-16"
-          />
-          <span>day(s)</span>
+            <span>day(s)</span>
+          </div>
+          <br />
+          <h3 className="font-semibold">History Depth</h3>
+          <p className="text-sm text-neutral-500 mb-2">
+            Which top-artists window(s) to pull from when building the artist
+            list used for event searches. Selecting more than one combines them
+            using the Top Artist Combination Mode below.
+          </p>
+          <div className="flex flex-col gap-2">
+            {EVENT_SEARCH_TERM_OPTIONS.map((t) => (
+              <label key={t.value} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.eventSearchTerms?.includes(t.value) ?? false}
+                  onChange={(e) =>
+                    toggleEventSearchTerm(t.value, e.target.checked)
+                  }
+                />
+                {t.label}
+              </label>
+            ))}
+          </div>
+          <br />
+          <h3 className="font-semibold">Combination Mode</h3>
+          <div className="flex flex-col gap-3">
+            {COMBINED_MODES.map((m) => (
+              <label
+                key={m.value}
+                className="flex items-start gap-3 border border-neutral-700 rounded p-3 cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  name="combinedTopArtistsMode"
+                  checked={form.combinedTopArtistsMode === m.value}
+                  onChange={() =>
+                    updateField("combinedTopArtistsMode", m.value)
+                  }
+                  className="mt-1"
+                />
+                <div>
+                  <p className="font-medium">{m.label}</p>
+                  <p className="text-sm text-neutral-500">{m.description}</p>
+                </div>
+              </label>
+            ))}
+          </div>
         </div>
       )}
-      {section.title === "Spotify" && (
+      {section.title === "Spotify API" && (
         <SpotifyConnection redirectUri={form.spotifyRedirectUri} />
       )}
       {section.title === "Google (Email & Calendar)" && (
@@ -1094,7 +1164,10 @@ export default function SettingsTab() {
           open={openSection === "Artists"}
           onToggle={() => toggleSection("Artists")}
         >
-          <SettingsSubsection title="Artist Sources">
+          <SettingsSubsection
+            title="Artist Sources"
+            defaultOpen={!isConfigured}
+          >
             <div className="flex flex-col gap-2">
               <div className="flex rounded-2xl overflow-hidden border-2 border-neutral-300  w-fit">
                 {ARTIST_SOURCES.map((s) => (
@@ -1127,72 +1200,26 @@ export default function SettingsTab() {
             {renderSectionFields(sectionByTitle["Top Artists"])}
           </SettingsSubsection>
 
-          <SettingsSubsection title="Event Search Artist Terms">
-            <p className="text-sm text-neutral-500 mb-2">
-              Which top-artists window(s) to pull from when building the artist
-              list used for event searches. Selecting more than one combines
-              them using the Top Artist Combination Mode below.
-            </p>
-            <div className="flex flex-col gap-2">
-              {EVENT_SEARCH_TERM_OPTIONS.map((t) => (
-                <label
-                  key={t.value}
-                  className="flex items-center gap-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    checked={form.eventSearchTerms?.includes(t.value) ?? false}
-                    onChange={(e) =>
-                      toggleEventSearchTerm(t.value, e.target.checked)
-                    }
-                  />
-                  {t.label}
-                </label>
-              ))}
-            </div>
-          </SettingsSubsection>
-
-          <SettingsSubsection title="Top Artist Combination Mode">
-            <div className="flex flex-col gap-3">
-              {COMBINED_MODES.map((m) => (
-                <label
-                  key={m.value}
-                  className="flex items-start gap-3 border border-neutral-700 rounded p-3 cursor-pointer"
-                >
-                  <input
-                    type="radio"
-                    name="combinedTopArtistsMode"
-                    checked={form.combinedTopArtistsMode === m.value}
-                    onChange={() =>
-                      updateField("combinedTopArtistsMode", m.value)
-                    }
-                    className="mt-1"
-                  />
-                  <div>
-                    <p className="font-medium">{m.label}</p>
-                    <p className="text-sm text-neutral-500">{m.description}</p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </SettingsSubsection>
+          <SettingsSubsection title="Top Artist Combination Mode"></SettingsSubsection>
 
           <SettingsSubsection
-            title="Tautulli"
+            title="Tautulli API"
+            defaultOpen={!isConfigured}
             disabled={["spotify", "none"].includes(form.artistSource)}
           >
             {renderSectionFields(
-              sectionByTitle["Tautulli"],
+              sectionByTitle["Tautulli API"],
               ["spotify", "none"].includes(form.artistSource),
             )}
           </SettingsSubsection>
 
           <SettingsSubsection
-            title="Spotify"
+            title="Spotify API"
+            defaultOpen={!isConfigured}
             disabled={["tautulli", "none"].includes(form.artistSource)}
           >
             {renderSectionFields(
-              sectionByTitle["Spotify"],
+              sectionByTitle["Spotify API"],
               ["tautulli", "none"].includes(form.artistSource),
             )}
           </SettingsSubsection>
@@ -1203,7 +1230,10 @@ export default function SettingsTab() {
           open={openSection === "Event Search"}
           onToggle={() => toggleSection("Event Search")}
         >
-          <SettingsSubsection title="Event Search Sources">
+          <SettingsSubsection
+            title="Event Search Sources"
+            defaultOpen={!isConfigured}
+          >
             <p className="text-sm text-neutral-500 mb-2">
               Which APIs to query when running an event search. Disabling one
               skips it entirely (no API calls made) rather than just hiding its
@@ -1260,21 +1290,23 @@ export default function SettingsTab() {
           </SettingsSubsection>
 
           <SettingsSubsection
-            title="Ticketmaster"
+            title="Ticketmaster API"
+            defaultOpen={!isConfigured}
             disabled={!(form.eventSearchSources || []).includes("ticketmaster")}
           >
             {renderSectionFields(
-              sectionByTitle["Ticketmaster"],
+              sectionByTitle["Ticketmaster API"],
               !(form.eventSearchSources || []).includes("ticketmaster"),
             )}
           </SettingsSubsection>
 
           <SettingsSubsection
-            title="Resident Advisor"
+            title="Resident Advisor API"
+            defaultOpen={!isConfigured}
             disabled={!(form.eventSearchSources || []).includes("resadvisor")}
           >
             {renderSectionFields(
-              sectionByTitle["Resident Advisor"],
+              sectionByTitle["Resident Advisor API"],
               !(form.eventSearchSources || []).includes("resadvisor"),
             )}
           </SettingsSubsection>

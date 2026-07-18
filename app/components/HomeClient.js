@@ -169,7 +169,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
             />
           )}
           {tab === "events" && <EventsTab />}
-          {tab === "settings" && <SettingsTab />}
+          {tab === "settings" && <SettingsTab isConfigured={isConfigured} />}
         </div>
       </div>
     </main>
