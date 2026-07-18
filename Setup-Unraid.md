@@ -5,10 +5,10 @@
 1. In Unraid's **Docker** tab, click **Add Container**.
 2. Use the following settings (set to **Advanced View**, not **Basic View**):
 
-- **Repository**: `139139/music-spider:latest`.
+- **Name:** `Music-Spider`
+- **Repository**: `139139/music-spider:latest`
 - **Icon URL**: `https://raw.githubusercontent.com/cparsell/music-spider-service/refs/heads/main/app/ms-logo-string-ico2-01.png`
 - **WebUI**: `http://[IP]:[PORT]`
-
 - **Port mapping:** Map a container port `6100` to whatever host port you want (`6100` is fine unless it's taken).
 - **Path mapping:** Map a container path `/app/data` to your appdata path, e.g. `/mnt/user/appdata/music-spider-service`.
 
