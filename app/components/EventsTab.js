@@ -331,6 +331,7 @@ export default function EventsTab() {
             No events yet. Run a search to find some.
           </p>
         ) : viewMode === "list" ? (
+          // List view
           <table className="w-full border-collapse">
             <thead>
               <tr className="text-left text-sm text-neutral-500 border-b">
@@ -435,7 +436,8 @@ export default function EventsTab() {
             </tbody>
           </table>
         ) : (
-          <ul className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 overflow-auto pr-2 mt-2">
+          // Card view
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 overflow-auto mt-5 pb-3">
             {sortedEvents.map((event) => (
               <li
                 key={event.id}
