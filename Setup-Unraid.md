@@ -18,3 +18,7 @@
 
 - **OAuth redirect URIs**: since Unraid is reached over your LAN rather than `127.0.0.1`, set the `Spotify Redirect URI` / `Google Redirect URI` fields in Music Spider (and the matching values registered in the Spotify/Google developer consoles) to Unraid's actual reachable address. Google's OAuth also requires HTTPS at that address once it's anything other than `127.0.0.1`/`localhost` — see [Google OAuth and HTTPS](#google-oauth-and-https) below.
 - Give the Unraid box a reserved/static LAN IP in your router so the URLs above don't silently break if its address changes later.
+
+---
+
+[Back to README](https://github.com/cparsell/music-spider-service/blob/main/README.md)

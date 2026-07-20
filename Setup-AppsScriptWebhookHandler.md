@@ -10,3 +10,7 @@ This is the simpler of the two Google options — no Cloud project, OAuth client
 4. **(Recommended) Set a shared secret** so a leaked or guessed webapp URL can't be used to send mail or create events on your behalf: in the Apps Script project, go to **Project Settings > Script Properties**, add a property named `SHARED_SECRET` with a value of your choosing, and enter that same value into Music Spider's **Apps Script Shared Secret** field. Leave both blank to skip this check.
 
 If you ever edit the script afterward, redeploy via **Deploy > Manage deployments > edit (pencil icon) > New version** — otherwise the live URL keeps running the old code.
+
+---
+
+[Back to README](https://github.com/cparsell/music-spider-service/blob/main/README.md)
