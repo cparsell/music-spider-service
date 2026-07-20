@@ -30,6 +30,33 @@ const COLUMNS = [
   { key: "date", label: "Date" },
 ];
 
+function CalendarButton({ eventId, date, calendarEventId, syncing, onClick }) {
+  const added = !!calendarEventId;
+  return (
+    <button
+      onClick={onClick}
+      disabled={added || syncing}
+      title={added ? "Already added to Calendar" : "Add to Calendar"}
+      className={
+        "shrink-0 text-neutral-200 disabled:opacity-40  cursor-pointer disabled:cursor-auto"
+      }
+    >
+      <svg
+        viewBox="0 0 24 24"
+        width="14"
+        height="14"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M3 10h18M8 3v4M16 3v4" />
+        {added && <path d="M8 14l2.5 2.5L16 11" />}
+      </svg>
+    </button>
+  );
+}
+
 function getSortValue(event, key) {
   switch (key) {
     case "eName":
@@ -100,6 +127,9 @@ export default function EventsTab() {
     key: "date",
     direction: "asc",
   });
+  const [syncingDates, setSyncingDates] = useState(() => new Set());
+  const [calendarAvailable, setCalendarAvailable] = useState(false);
+
   // A search runs server-side independent of this component's lifecycle -
   // switching tabs unmounts it, but the search keeps going. These track the
   // poll loop and whether we've actually observed it running
@@ -131,10 +161,8 @@ export default function EventsTab() {
     );
   };
 
-  // Refreshes just the events list, without loadEvents()'s own "Loading
-  // events..."/"Loaded N events" status messages - those would otherwise
-  // land asynchronously after (and clobber) the search-completion message
-  // set alongside this call.
+  // Refreshes just the events list, without loadEvents()'s own
+  // "Loading events..." / "Loaded N events" status messages
   const refreshEventsSilently = () => {
     fetch("/api/events")
       .then((res) => res.json())
@@ -161,10 +189,6 @@ export default function EventsTab() {
           return;
         }
 
-        // Not running - but if we've never actually seen it running (e.g.
-        // the request that was supposed to start it hasn't landed on the
-        // server yet), keep waiting rather than mistaking leftover state
-        // from a previous search for this one having finished instantly.
         if (!sawRunningRef.current) return;
 
         clearInterval(pollRef.current);
@@ -188,9 +212,8 @@ export default function EventsTab() {
 
     loadEvents();
 
-    // Pick up a search already in progress (e.g. started before this tab
-    // was switched away and back) instead of showing a blank idle state
-    // while it keeps running unseen server-side.
+    // show up a search already in progress (e.g. started before this tab
+    // was switched away and back)
     fetch("/api/events/search/progress")
       .then((res) => res.json())
       .then((data) => {
@@ -198,6 +221,14 @@ export default function EventsTab() {
         sawRunningRef.current = true;
         applyRunningState(data);
         watchProgress();
+      })
+      .catch(() => {});
+
+    // check if Google Calendar is connected
+    fetch("/api/google/status")
+      .then((res) => res.json())
+      .then((data) => {
+        setCalendarAvailable(data.calendarAvailable);
       })
       .catch(() => {});
 
@@ -250,6 +281,37 @@ export default function EventsTab() {
     setEvents(data.events || []);
     setStatusMessage(ignore ? "Event deleted and ignored" : "Event deleted");
     setStatusError(false);
+  };
+
+  const addEventToCalendar = async (eventId, date) => {
+    const key = `${eventId}:${date}`;
+    setSyncingDates((prev) => new Set([...prev, date]));
+
+    try {
+      const res = await fetch(`/api/events/${eventId}/calendar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatusMessage(data.error || "Failed to add to Calendar");
+        setStatusError(true);
+        return;
+      }
+      setEvents(data.events || []);
+      setStatusMessage("Added to Google Calendar");
+      setStatusError(false);
+    } catch (err) {
+      setStatusMessage(err.message || "Failed to add event to calendar");
+      setStatusError(true);
+    } finally {
+      setSyncingDates((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
   };
 
   const sortedEvents = [...events].sort(
@@ -395,7 +457,25 @@ export default function EventsTab() {
                   <td className="py-2 pr-4 text-sm">
                     <div className="flex flex-col gap-1 whitespace-nowrap">
                       {event.dates?.map((d) => (
-                        <span key={d.date}>{formatDate(d.date)}</span>
+                        <span
+                          key={d.date}
+                          className="flex items-center gap-1.5"
+                        >
+                          {formatDate(d.date)}
+                          {calendarAvailable && (
+                            <CalendarButton
+                              eventId={event.id}
+                              date={d.date}
+                              calendarEventId={d.calendarEventId}
+                              syncing={syncingDates.has(
+                                `${event.id}:${d.date}`,
+                              )}
+                              onClick={() =>
+                                addEventToCalendar(event.id, d.date)
+                              }
+                            />
+                          )}
+                        </span>
                       ))}
                     </div>
                   </td>
@@ -416,17 +496,17 @@ export default function EventsTab() {
                       )}
                     </div>
                   </td>
-                  <td className="py-2 ">
+                  <td className="py-2 grid grid-cols-[repeat(auto-fill,minmax(40px,1fr))]">
                     <button
                       onClick={() => deleteEvent(event.id)}
-                      className="text-sm px-2 py-0.5  text-red-600 hover:underline"
+                      className="text-sm px-2 py-0.5  text-red-600 hover:underline cursor-pointer"
                     >
                       delete
                     </button>
                     <button
                       onClick={() => deleteEvent(event.id, { ignore: true })}
                       title="Delete and exclude from future searches"
-                      className="text-sm px-2 py-0.5  text-red-600 hover:underline"
+                      className="text-sm px-2 py-0.5  text-red-600 hover:underline cursor-pointer"
                     >
                       ignore
                     </button>
@@ -484,9 +564,23 @@ export default function EventsTab() {
                     )}
                     <div className="flex flex-col gap-1 mt-1">
                       {event.dates?.map((d) => (
-                        <div key={d.date} className="flex gap-2 text-sm">
-                          <span className="text-neutral-300 shrink-0">
+                        <div
+                          key={d.date}
+                          className="flex gap-2 text-sm items-center"
+                        >
+                          <span className="text-neutral-300 shrink-0 flex items-center gap-1.5">
                             {formatDate(d.date)}
+                            {calendarAvailable && (
+                              <CalendarButton
+                                eventId={event.id}
+                                date={d.date}
+                                calendarEventId={d.calendarEventId}
+                                syncing={syncingDates.has(
+                                  `${event.id}:${d.date}`,
+                                )}
+                                onClick={() => addToCalendar(event.id, d.date)}
+                              />
+                            )}
                           </span>
                           <div className="flex flex-col">
                             {d.urls?.map((u) => (

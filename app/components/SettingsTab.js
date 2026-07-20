@@ -1095,7 +1095,8 @@ export default function SettingsTab({ isConfigured }) {
                 updateField("googleCalendarSyncEnabled", e.target.checked)
               }
             />
-            Add newly found events to Google Calendar
+            Add all events to Google Calendar (if unchecked, events can be added
+            individually instead from Events Tab)
           </label>
           {form.googleIntegrationMode !== "appsScript" && <GoogleActionsTest />}
         </>
