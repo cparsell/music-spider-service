@@ -1,6 +1,6 @@
-### Setting up the Apps Script webhook
+# Setting up the Apps Script webhook
 
-This is the simpler of the two Google options — no Cloud project, OAuth client, or HTTPS required on Music Spider's end. The script runs under your own Google account and Google hosts the endpoint for you.
+If you don't want to set up HTTPS for the OAuth connection to Google, This is a simple workaround — no Cloud project, OAuth client, or HTTPS required on Music Spider's end. The script runs under your own Google account and Google hosts the endpoint for you.
 
 1. Go to [script.google.com](https://script.google.com), create a new project, and replace the default `Code.gs` contents with this repo's [`apps-script/Code.gs`](apps-script/Code.gs).
 2. **Deploy > New deployment**, select type **Web app**:

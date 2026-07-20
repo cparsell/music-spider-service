@@ -1,6 +1,8 @@
+# Configuration
+
 In the web UI, the settings live in the **Settings** tab and changes auto-save as you type.
 
-### Artists
+## Artists
 
 Choose where your "top artists" list comes from, under **Artists > Artist Sources**:
 
@@ -8,7 +10,7 @@ Choose where your "top artists" list comes from, under **Artists > Artist Source
 - **Spotify only** - pulls your Spotify top artists. Requires a Spotify app: go to the [Spotify Developer Dashboard](https://developer.spotify.com/), create an app, copy the Redirect URI shown in Music Spider's Spotify section into the app's settings, then paste the app's Client ID/Secret back into Music Spider and click **Connect Spotify Account**.
 - **Both** - merges the two: Tautulli's real play counts win for any artist it knows about, and Spotify fills in anything Tautulli didn't surface. Requires both sets of credentials above.
 
-### Event Search
+## Event Search
 
 Pick one or both sources under **Event Search > Event Search Sources**:
 
@@ -18,7 +20,7 @@ Pick one or both sources under **Event Search > Event Search Sources**:
   - `Radius` (in miles or km).
 - **Resident Advisor** - no API key needed. Just open the **Resident Advisor** subsection and use the region search box to find and add your city/country - matching events near those regions are pulled automatically.
 
-### Notifications
+## Notifications
 
 Configured under the **Notification** section, once events are found:
 
@@ -31,7 +33,7 @@ Both the OAuth and Apps Script paths grant Music Spider send-only email access a
 
 Use the **Send Test Email** / **Create Test Calendar Event** buttons in Music Spider's Settings to confirm it's wired up correctly.
 
-### Google OAuth and HTTPS
+## Google OAuth and HTTPS
 
 If you choose the OAuth integration method (for Spotify or Google) and access Music Spider from anywhere other than `127.0.0.1`/`localhost` - e.g. a LAN IP, a hostname, or over the internet - **the redirect URI must be reachable at that same address, and Google in particular requires it to be HTTPS**. Put Music Spider behind a reverse proxy with TLS (e.g. Caddy, Traefik, SWAG, or your NAS's built-in reverse proxy) if you want OAuth working from anything other than the same machine.
 
