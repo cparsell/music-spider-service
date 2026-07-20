@@ -20,7 +20,8 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - **Notifications:**
   - weekly event digest email
   - Google Calendar sync, and a generic JSON webhook (e.g. Discord, Home Assistant) with a customizable template and per-channel test-send buttons
-- **Settings UI:** every integration configured and auto-saved from one in-app tab, with per-section enable/disable and live connection status
+  - Webhook (for Discord, Slack, Home Assistant, etc.)
+- **Settings UI:**
 - **Theming:** Grayscale and Catppuccin Mocha themes
 - **Apps Script Webhook Handler Script** (optional) - If one wants to avoid the OAuth process with Google (requires HTTPS), I use this Google Apps Script webapp to handle sending a weekly email and adding calendar events
 
