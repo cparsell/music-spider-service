@@ -18,7 +18,7 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - **Event search:** Ticketmaster and/or Resident Advisor matched against your list of artists - schedule weekly event searches to update the list or start the search manually
 - **Events UI:** Peruse the discovered events in card and list views, sortable columns, per-event delete/ignore
 - **Notifications:**
-  - weekly event digest email
+  - Weekly event digest email
   - Google Calendar sync, and a generic JSON webhook (e.g. Discord, Home Assistant) with a customizable template and per-channel test-send buttons
   - Webhook (for Discord, Slack, Home Assistant, etc.)
 - **Settings UI:**
