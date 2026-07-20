@@ -1,4 +1,4 @@
-In the web UI, the settings live in the **Settings** tab and changes auto-save as you type. Sections are collapsible; only what you enable actually gets used (disabled sections make no API calls).
+In the web UI, the settings live in the **Settings** tab and changes auto-save as you type.
 
 ### Artists
 
