@@ -8,7 +8,7 @@ const TICKETMASTER_URL =
 // Event cards render at a tall aspect-6/8 with object-cover, first drop
 // anything below a minimum resolution, then prefer whichever remaining
 // image's aspect ratio is closest to the card's.
-const MIN_IMAGE_WIDTH = 300;
+const MIN_IMAGE_WIDTH = 600;
 const TARGET_RATIO = 6 / 8;
 
 /**
