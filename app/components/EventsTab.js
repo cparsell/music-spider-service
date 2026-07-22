@@ -9,13 +9,11 @@ function formatDate(dateValue) {
   const datePart = new Intl.DateTimeFormat("en-US", {
     // timeZone: "America/Los_Angeles",
     // year: "numeric",
+    weekday: "short",
     month: "numeric",
     day: "numeric",
   }).format(d);
 
-  // toLocaleTimeString gives e.g. "7:00 PM" / "7:30 PM" - drop the :00 for
-  // on-the-hour times and the space before AM/PM for a compact "7PM" /
-  // "7:30PM" on cards.
   const timePart = d
     .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
     .replace(":00", "")
