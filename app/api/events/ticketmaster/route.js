@@ -5,6 +5,12 @@ import { isCancelRequested } from "@/lib/searchProgress.js";
 const TICKETMASTER_URL =
   "https://app.ticketmaster.com/discovery/v2/events.json";
 
+// Event cards render at a tall aspect-6/8 with object-cover, first drop
+// anything below a minimum resolution, then prefer whichever remaining
+// image's aspect ratio is closest to the card's.
+const MIN_IMAGE_WIDTH = 300;
+const TARGET_RATIO = 6 / 8;
+
 /**
  * ----------------------------------------------------------------------------------------------------------------
  * Search Ticketmaster for every artist in artistsArr.
@@ -42,14 +48,12 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
 
     console.debug("Ticketmaster Search complete - Results:", results);
 
-    // HEAD-checking every image of every event used to happen one request
-    // at a time (event-by-event, image-by-image). These are all independent
-    // network calls with no shared rate limit, so fire them all concurrently
-    // instead.
-    await Promise.all(
-      results.map(async (event) => {
+    await mapWithConcurrency(
+      results,
+      IMAGE_CHECK_CONCURRENCY,
+      async (event) => {
         event.image = await findLargestImage(event.image);
-      }),
+      },
     );
 
     return results;
@@ -59,13 +63,34 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
   }
 };
 
+// How many events' image checks run at once. Bounds the total number of
+// simultaneous outbound HEAD requests (each event has several image
+// candidates on top of this) so the production container's DNS resolver
+// doesn't get overwhelmed - see the call site for why this exists.
+const IMAGE_CHECK_CONCURRENCY = 6;
+
+/**
+ * Runs fn over items with at most `limit` calls in flight at once.
+ */
+async function mapWithConcurrency(items, limit, fn) {
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < items.length) {
+      const item = items[cursor++];
+      await fn(item);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, worker),
+  );
+}
+
 /**
  * Finds the largest image from an array of image objects based on content
  * length. Checks all candidate URLs concurrently (rather than one at a
  * time), with a per-request timeout so one slow/hanging image host can't
- * stall the whole search - since this now runs inside a larger
- * `Promise.all` across every event, a single hung request would otherwise
- * hold up everything else too.
+ * stall the whole search. Falls back to the metadata-based pick if every
+ * HEAD check fails, rather than leaving the event with no image at all.
  * @param {*} imagesObj
  * @returns
  */
@@ -104,17 +129,8 @@ async function findLargestImage(imagesObj) {
     curr.size > max.size ? curr : max,
   );
 
-  return largest.size > 0 ? largest.url : null;
+  return largest.size > 0 ? largest.url : pickCoverImage(imagesObj);
 }
-
-// Event cards render at a tall aspect-6/8 with object-cover, so a wide
-// landscape source image gets cropped hard on the sides - a squarer source
-// loses far less. Ticketmaster tags each image with its pixel dimensions
-// (no extra fetch needed, unlike comparing file sizes), so first drop
-// anything below a minimum resolution, then prefer whichever remaining
-// image's aspect ratio is closest to the card's.
-const MIN_IMAGE_WIDTH = 300;
-const TARGET_RATIO = 6 / 8;
 
 /**
  * Pick the best image from an array of Ticketmaster images, based on minimum width and aspect ratio.
