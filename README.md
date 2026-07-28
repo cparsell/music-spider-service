@@ -1,6 +1,6 @@
 # Music Spider
 
-Music Spider is a self-hosted tool for turning your listening history into a concert-discovery tool. It pulls your top artists from Plex (via Tautulli) and/or Spotify, cross-references that list against event search APIs to find upcoming shows near you, and notifies you by email, Google Calendar, or a generic webhook.
+Music Spider is a self-hosted tool for finding concerts based on your music listening history. It pulls your top artists from Plex (via Tautulli) and/or Spotify, cross-references that list against event search APIs to find upcoming shows near you, and notifies you by email, Google Calendar, or a generic webhook. It *only* finds concerts of artists you listen to - never recommends something because you liked something else.  
 
 ![Sidenotes Basics](https://github.com/cparsell/music-spider-service/blob/main/Screenshot-EventsTab.png)
 
