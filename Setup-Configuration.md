@@ -24,6 +24,7 @@ Pick one or both sources under **Event Search > Event Search Sources**:
 
 Configured under the **Notification** section, once events are found:
 
+- **SMTP**: Send email notification using SMTP connection
 - **Generic webhook**: enable "Send a weekly webhook digest" under **Webhook** and provide a URL that accepts an incoming POST (e.g. a Discord channel webhook, or a Home Assistant automation with a "Webhook" trigger). Customize the JSON body template using the `{{subject}}`, `{{summary}}`, and `{{count}}` placeholders - each is JSON-escaped automatically. Use the **Send Test Webhook** button to try it out.
 - **Email**: enable "Send a weekly email digest"
 - **Google Calendar**: If checked, "Add newly found events to Google Calendar" will sync all new events to the specified calendar. If unchecked, these can be added individually (manually).

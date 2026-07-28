@@ -1,6 +1,6 @@
 # Music Spider
 
-Music Spider is a self-hosted tool for finding concerts based on your music listening history. It pulls your top artists from Plex (via Tautulli) and/or Spotify, cross-references that list against event search APIs to find upcoming shows near you, and notifies you by email, Google Calendar, or a generic webhook. It *only* finds concerts of artists you listen to - never recommends something because you liked something else.  
+Music Spider is a self-hosted tool for finding concerts based on your music listening history. It pulls your top artists from Plex (via Tautulli) and/or Spotify, cross-references that list against event search APIs to find upcoming shows near you, and notifies you by email, Google Calendar, or a generic webhook. It _only_ finds concerts of artists you listen to - never recommends something because you liked something else.
 
 ![Sidenotes Basics](https://github.com/cparsell/music-spider-service/blob/main/Screenshot-EventsTab.png)
 
@@ -19,8 +19,8 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - **Events UI:** Peruse the discovered events in card and list views, sortable columns, per-event delete/ignore
 - **Notifications:**
   - Weekly event digest email
-  - Google Calendar sync, and a generic JSON webhook (e.g. Discord, Home Assistant) with a customizable template and per-channel test-send buttons
-  - Webhook (for Discord, Slack, Home Assistant, etc.)
+  - Google Calendar sync,
+  - generic JSON webhook (e.g. Discord, Home Assistant)
 - **Settings UI:**
 - **Theming:** Grayscale and Catppuccin Mocha themes
 - **Apps Script Webhook Handler Script** (optional) - If one wants to avoid the OAuth process with Google (requires HTTPS), I use this Google Apps Script webapp to handle sending a weekly email and adding calendar events
@@ -46,9 +46,10 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
   - Ticketmster ([API key](https://developer.ticketmaster.com/) needed)
   - Resident Advisor (no API key needed)
 - Options for Notifications
+  - SMTP email connection
   - Custom webhook - can be used to send event summary to Discord, Slack, etc.
   - OAuth connection to Google (requires an HTTPS connection if redirect URI is anything other than `localhost`)
-  - [Apps Script webhook script](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md) - set up as an alternative to OAuth.
+  - [Apps Script webhook script](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md) - This was set up as an alternative to OAuth connection to Google while testing this app.
 
 ## Installation
 
