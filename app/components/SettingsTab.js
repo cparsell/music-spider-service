@@ -222,6 +222,28 @@ const SECTIONS = [
       },
     ],
   },
+  {
+    title: "SMTP Email",
+    description:
+      "An alternative to the Google (Email & Calendar) section above for anyone who'd rather send the weekly event digest through their own mail provider instead of connecting a Google account. Use STARTTLS for the standard submission port (usually 587), or Implicit TLS (SSL) for a port that expects an encrypted connection from the start (usually 465) - check your provider's docs if unsure.",
+    fields: [
+      { key: "smtpHost", label: "SMTP Host", type: "text" },
+      { key: "smtpPort", label: "Port", type: "number" },
+      {
+        key: "smtpSecure",
+        label: "Encryption",
+        type: "switch",
+        options: [
+          { value: false, label: "STARTTLS" },
+          { value: true, label: "Implicit TLS (SSL)" },
+        ],
+      },
+      { key: "smtpUser", label: "Username", type: "text" },
+      { key: "smtpPassword", label: "Password", type: "password" },
+      { key: "smtpFrom", label: "From address", type: "text" },
+      { key: "smtpRecipient", label: "Recipient email", type: "text" },
+    ],
+  },
 ];
 
 // Wraps a settings section in a bordered box with a clickable header.
@@ -600,24 +622,68 @@ function WebhookTest() {
   );
 }
 
+function SmtpTest() {
+  const [sending, setSending] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
+
+  const sendTest = async () => {
+    setSending(true);
+    setMessage("Sending...");
+    setError(false);
+    try {
+      const res = await fetch("/api/events/smtp", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send email");
+      setMessage(`Sent with ${data.count} upcoming events.`);
+      setError(false);
+    } catch (err) {
+      setMessage(err.message);
+      setError(true);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="mt-2 flex items-center gap-3">
+      <button
+        type="button"
+        onClick={sendTest}
+        disabled={sending}
+        className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50"
+      >
+        {sending ? "Sending..." : "Send Test SMTP Email"}
+      </button>
+      {message && (
+        <span
+          className={`text-sm ${error ? "text-red-600" : "text-neutral-600"}`}
+        >
+          {message}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function GoogleActionsTest() {
   const [busy, setBusy] = useState(""); // "" | "email" | "calendar"
-  const [message, setMessage] = useState("");
+  const [message, setStatusMessage] = useState("");
   const [error, setError] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
 
   const run = async (kind, path, successMessage) => {
     setBusy(kind);
-    setMessage("Sending...");
+    setStatusMessage("Sending...");
     setError(false);
     try {
       const res = await fetch(path, { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Request failed");
-      setMessage(successMessage);
+      setStatusMessage(successMessage);
       setError(false);
     } catch (err) {
-      setMessage(err.message);
+      setStatusMessage(err.message);
       setError(true);
     } finally {
       setBusy("");
@@ -627,16 +693,16 @@ function GoogleActionsTest() {
   const sendEmail = async () => {
     setSendingEmail(true);
     setStatusMessage("Sending email...");
-    setStatusError(false);
+    setError(false);
     try {
       const res = await fetch("/api/events/email", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send email");
       setStatusMessage(`Email sent with ${data.count} upcoming events.`);
-      setStatusError(false);
+      setError(false);
     } catch (err) {
       setStatusMessage(err.message);
-      setStatusError(true);
+      setError(true);
     } finally {
       setSendingEmail(false);
     }
@@ -1114,6 +1180,19 @@ export default function SettingsTab({ isConfigured }) {
           <WebhookTest />
         </>
       )}
+      {section.title === "SMTP Email" && (
+        <>
+          <label className="flex items-center gap-2 text-sm mt-1">
+            <input
+              type="checkbox"
+              checked={form.smtpEnabled}
+              onChange={(e) => updateField("smtpEnabled", e.target.checked)}
+            />
+            Send a weekly email digest via SMTP
+          </label>
+          <SmtpTest />
+        </>
+      )}
     </div>
   );
 
@@ -1322,6 +1401,10 @@ export default function SettingsTab({ isConfigured }) {
 
           <SettingsSubsection title="Webhook">
             {renderSectionFields(sectionByTitle["Webhook"])}
+          </SettingsSubsection>
+
+          <SettingsSubsection title="SMTP Email">
+            {renderSectionFields(sectionByTitle["SMTP Email"])}
           </SettingsSubsection>
         </SettingsSection>
       </div>
