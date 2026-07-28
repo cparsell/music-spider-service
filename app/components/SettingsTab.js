@@ -147,7 +147,7 @@ const SECTIONS = [
   {
     title: "SMTP Email",
     description:
-      "An alternative to the Google (Email & Calendar) section above for anyone who'd rather send the weekly event digest through their own mail provider instead of connecting a Google account. Use STARTTLS for the standard submission port (usually 587), or Implicit TLS (SSL) for a port that expects an encrypted connection from the start (usually 465) - check your provider's docs if unsure.",
+      "Send a weekly event digest through your own mail provider. Use STARTTLS for the standard submission port (usually 587), or Implicit TLS (SSL) for a port that expects an encrypted connection from the start (usually 465) - check your provider's docs if unsure.",
     fields: [
       { key: "smtpHost", label: "SMTP Host", type: "text" },
       { key: "smtpPort", label: "Port", type: "number" },
