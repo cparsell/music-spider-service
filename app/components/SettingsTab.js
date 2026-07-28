@@ -145,6 +145,28 @@ const SECTIONS = [
     ],
   },
   {
+    title: "SMTP Email",
+    description:
+      "An alternative to the Google (Email & Calendar) section above for anyone who'd rather send the weekly event digest through their own mail provider instead of connecting a Google account. Use STARTTLS for the standard submission port (usually 587), or Implicit TLS (SSL) for a port that expects an encrypted connection from the start (usually 465) - check your provider's docs if unsure.",
+    fields: [
+      { key: "smtpHost", label: "SMTP Host", type: "text" },
+      { key: "smtpPort", label: "Port", type: "number" },
+      {
+        key: "smtpSecure",
+        label: "Encryption",
+        type: "switch",
+        options: [
+          { value: false, label: "STARTTLS" },
+          { value: true, label: "Implicit TLS (SSL)" },
+        ],
+      },
+      { key: "smtpUser", label: "Username", type: "text" },
+      { key: "smtpPassword", label: "Password", type: "password" },
+      { key: "smtpFrom", label: "From address", type: "text" },
+      { key: "smtpRecipient", label: "Recipient email", type: "text" },
+    ],
+  },
+  {
     title: "Google (Email & Calendar)",
     description:
       'Two ways to let Music Spider send event emails and/or add events to Google Calendar - pick one below. "OAuth" connects a Google account directly: in the Google Cloud Console, create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI below as an authorized redirect URI. Enter the Client ID/Secret below, then click "Connect Google Account." Note this requires an HTTPS connection to the redirect URI once accessed from anywhere other than 127.0.0.1/localhost. "Apps Script Webhook" instead sends requests to a small script you deploy yourself at script.google.com (see apps-script/Code.gs in the repo) - no OAuth client, redirect URI, or HTTPS needed on Music Spider\'s end, at the cost of maintaining that script.',
@@ -222,37 +244,10 @@ const SECTIONS = [
       },
     ],
   },
-  {
-    title: "SMTP Email",
-    description:
-      "An alternative to the Google (Email & Calendar) section above for anyone who'd rather send the weekly event digest through their own mail provider instead of connecting a Google account. Use STARTTLS for the standard submission port (usually 587), or Implicit TLS (SSL) for a port that expects an encrypted connection from the start (usually 465) - check your provider's docs if unsure.",
-    fields: [
-      { key: "smtpHost", label: "SMTP Host", type: "text" },
-      { key: "smtpPort", label: "Port", type: "number" },
-      {
-        key: "smtpSecure",
-        label: "Encryption",
-        type: "switch",
-        options: [
-          { value: false, label: "STARTTLS" },
-          { value: true, label: "Implicit TLS (SSL)" },
-        ],
-      },
-      { key: "smtpUser", label: "Username", type: "text" },
-      { key: "smtpPassword", label: "Password", type: "password" },
-      { key: "smtpFrom", label: "From address", type: "text" },
-      { key: "smtpRecipient", label: "Recipient email", type: "text" },
-    ],
-  },
 ];
 
 // Wraps a settings section in a bordered box with a clickable header.
-// Collapsed, only the header (title + chevron) remains visible - the body
-// stays mounted but is animated to zero height via a grid-rows transition
-// (the standard trick for animating to/from an intrinsic height in CSS).
-// Controlled by the parent (rather than managing its own open state) so
-// only one of these top-level sections can be open at a time - see
-// `openSection` below.
+// Collapsed, only the header (title + chevron) remains visible
 function SettingsSection({ title, open, onToggle, children }) {
   return (
     <div className="break-inside-avoid mb-6 border border-neutral-700 rounded-lg bg-neutral-800 ">
@@ -300,9 +295,7 @@ function SettingsSection({ title, open, onToggle, children }) {
   );
 }
 
-// Nested inside a SettingsSection - same idea (title + chevron, collapses to
-// just the header) but lighter weight: no border box of its own, just a
-// divider between subsections within the parent's body.
+// Nested inside a SettingsSection - also collapses
 function SettingsSubsection({
   title,
   defaultOpen = false,
@@ -1106,6 +1099,19 @@ export default function SettingsTab({ isConfigured }) {
       {section.title === "Spotify API" && (
         <SpotifyConnection redirectUri={form.spotifyRedirectUri} />
       )}
+      {section.title === "SMTP Email" && (
+        <>
+          <label className="flex items-center gap-2 text-sm mt-1">
+            <input
+              type="checkbox"
+              checked={form.smtpEnabled}
+              onChange={(e) => updateField("smtpEnabled", e.target.checked)}
+            />
+            Send a weekly email digest via SMTP
+          </label>
+          <SmtpTest />
+        </>
+      )}
       {section.title === "Google (Email & Calendar)" && (
         <>
           {form.googleIntegrationMode === "appsScript" ? (
@@ -1178,19 +1184,6 @@ export default function SettingsTab({ isConfigured }) {
             Send a weekly webhook digest of upcoming events
           </label>
           <WebhookTest />
-        </>
-      )}
-      {section.title === "SMTP Email" && (
-        <>
-          <label className="flex items-center gap-2 text-sm mt-1">
-            <input
-              type="checkbox"
-              checked={form.smtpEnabled}
-              onChange={(e) => updateField("smtpEnabled", e.target.checked)}
-            />
-            Send a weekly email digest via SMTP
-          </label>
-          <SmtpTest />
         </>
       )}
     </div>
@@ -1395,16 +1388,15 @@ export default function SettingsTab({ isConfigured }) {
           open={openSection === "Notification"}
           onToggle={() => toggleSection("Notification")}
         >
+          <SettingsSubsection title="SMTP Email">
+            {renderSectionFields(sectionByTitle["SMTP Email"])}
+          </SettingsSubsection>
           <SettingsSubsection title="Google (Email & Calendar)">
             {renderSectionFields(sectionByTitle["Google (Email & Calendar)"])}
           </SettingsSubsection>
 
           <SettingsSubsection title="Webhook">
             {renderSectionFields(sectionByTitle["Webhook"])}
-          </SettingsSubsection>
-
-          <SettingsSubsection title="SMTP Email">
-            {renderSectionFields(sectionByTitle["SMTP Email"])}
           </SettingsSubsection>
         </SettingsSection>
       </div>
