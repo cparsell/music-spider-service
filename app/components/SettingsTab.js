@@ -908,10 +908,18 @@ export default function SettingsTab({ isConfigured }) {
   }, [form?.theme]);
 
   const updateField = (key, value, type) => {
-    setForm((f) => ({
-      ...f,
-      [key]: type === "number" ? Number(value) : value,
-    }));
+    setForm((f) => {
+      const next = { ...f, [key]: type === "number" ? Number(value) : value };
+      // Implicit TLS and STARTTLS live on different standard ports, and
+      // mismatching them fails with an opaque OpenSSL "wrong version number"
+      // error - so move the port along with the toggle. Only when it's still
+      // the other mode's default, so a deliberate custom port survives.
+      if (key === "smtpSecure") {
+        if (value === true && Number(f.smtpPort) === 587) next.smtpPort = 465;
+        if (value === false && Number(f.smtpPort) === 465) next.smtpPort = 587;
+      }
+      return next;
+    });
   };
 
   const toggleEventSearchTerm = (term, checked) => {
@@ -959,7 +967,7 @@ export default function SettingsTab({ isConfigured }) {
       aria-disabled={disabled}
     >
       {section.description && (
-        <p className="text-sm text-neutral-500 mb-2">{section.description}</p>
+        <p className="text-sm text-neutral-400 mb-2">{section.description}</p>
       )}
       {section.warning && (
         <p className="text-sm text-amber-200   border border-amber-200 rounded p-2 mb-3">
