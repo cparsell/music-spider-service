@@ -7,7 +7,7 @@ In the web UI, the settings live in the **Settings** tab and changes auto-save a
 Choose where your "top artists" list comes from, under **Artists > Artist Sources**:
 
 - **Tautulli only** - pulls play counts from your Tautulli instance (Plex). Requires the Tautulli URL, an API key (Tautulli > Settings > Web Interface > API), and optionally a Music Section ID to limit it to one library (find it in Tautulli under Libraries > Music - it appears in the URL as `section_id=X`).
-- **Spotify only** - pulls your Spotify top artists. Requires a Spotify app: go to the [Spotify Developer Dashboard](https://developer.spotify.com/), create an app, copy the Redirect URI shown in Music Spider's Spotify section into the app's settings, then paste the app's Client ID/Secret back into Music Spider and click **Connect Spotify Account**.
+- **Spotify only** - pulls your Spotify top artists. Requires a Spotify app: go to the [Spotify Developer Dashboard](https://developer.spotify.com/), create an app, copy the Redirect URI shown in Music Spider's Spotify section into the app's settings, then paste the app's Client ID back into Music Spider and click **Connect Spotify Account**. Uses OAuth with PKCE, so no Client Secret is needed.
 - **Both** - merges the two: Tautulli's real play counts win for any artist it knows about, and Spotify fills in anything Tautulli didn't surface. Requires both sets of credentials above.
 
 ## Event Search

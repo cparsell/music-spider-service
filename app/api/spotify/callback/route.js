@@ -21,13 +21,11 @@ function finish(status, message) {
 ${message}
 </body></html>`;
 
-  return new Response(html, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/html",
-      "Set-Cookie": "spotify_oauth_state=; Path=/; Max-Age=0",
-    },
-  });
+  const headers = new Headers({ "Content-Type": "text/html" });
+  headers.append("Set-Cookie", "spotify_oauth_state=; Path=/; Max-Age=0");
+  headers.append("Set-Cookie", "spotify_pkce_verifier=; Path=/; Max-Age=0");
+
+  return new Response(html, { status: 200, headers });
 }
 
 export async function GET(request) {
@@ -36,11 +34,12 @@ export async function GET(request) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
   const cookieState = request.cookies.get("spotify_oauth_state")?.value;
+  const codeVerifier = request.cookies.get("spotify_pkce_verifier")?.value;
 
   if (error) {
     return finish("error", `Spotify authorization failed: ${error}`);
   }
-  if (!code || !state || state !== cookieState) {
+  if (!code || !state || state !== cookieState || !codeVerifier) {
     return finish("error", "Spotify authorization failed: invalid state");
   }
 
@@ -50,16 +49,13 @@ export async function GET(request) {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization:
-          "Basic " +
-          Buffer.from(
-            `${config.spotifyClientId}:${config.spotifyClientSecret}`,
-          ).toString("base64"),
       },
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code,
         redirect_uri: config.spotifyRedirectUri,
+        client_id: config.spotifyClientId,
+        code_verifier: codeVerifier,
       }),
     });
     if (!res.ok) {

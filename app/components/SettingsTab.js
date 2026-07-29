@@ -110,10 +110,9 @@ const SECTIONS = [
   {
     title: "Spotify API",
     description:
-      "To fetch Spotify listening history, go to the Spotify Developer Dashboard \(https://developer.spotify.com/), create up an application, and add the Redirect URI below. Save the Client ID and Client Secret below. Then press 'Connect'",
+      "To fetch Spotify listening history, go to the Spotify Developer Dashboard \(https://developer.spotify.com/), create up an application, and add the Redirect URI below. Save the Client ID below. Then press 'Connect'. Uses PKCE, so no Client Secret is needed.",
     fields: [
       { key: "spotifyClientId", label: "Client ID", type: "text" },
-      { key: "spotifyClientSecret", label: "Client Secret", type: "password" },
       { key: "spotifyRedirectUri", label: "Redirect URI", type: "text" },
     ],
   },

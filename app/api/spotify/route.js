@@ -1,8 +1,11 @@
-import { randomUUID } from "crypto";
+import { randomUUID, randomBytes, createHash } from "crypto";
 import { getResolvedConfig } from "@/lib/settings.js";
 
-// Starts the Spotify OAuth flow: redirects the user to Spotify's consent
-// screen. The callback lands at app/api/spotify/callback/route.js.
+// Starts the Spotify OAuth flow (Authorization Code with PKCE): redirects
+// the user to Spotify's consent screen. No client secret is involved - the
+// code_verifier below stands in for it, proving to Spotify's token endpoint
+// that the app completing the exchange is the same one that started it.
+// The callback lands at app/api/spotify/callback/route.js.
 export async function GET() {
   const config = await getResolvedConfig();
   if (!config.spotifyClientId || !config.spotifyRedirectUri) {
@@ -13,19 +16,32 @@ export async function GET() {
   }
 
   const state = randomUUID();
+  const codeVerifier = randomBytes(32).toString("base64url");
+  const codeChallenge = createHash("sha256")
+    .update(codeVerifier)
+    .digest("base64url");
+
   const params = new URLSearchParams({
     client_id: config.spotifyClientId,
     response_type: "code",
     redirect_uri: config.spotifyRedirectUri,
     scope: "user-top-read",
     state,
+    code_challenge_method: "S256",
+    code_challenge: codeChallenge,
   });
 
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: `https://accounts.spotify.com/authorize?${params}`,
-      "Set-Cookie": `spotify_oauth_state=${state}; HttpOnly; Path=/; Max-Age=600; SameSite=Lax`,
-    },
+  const headers = new Headers({
+    Location: `https://accounts.spotify.com/authorize?${params}`,
   });
+  headers.append(
+    "Set-Cookie",
+    `spotify_oauth_state=${state}; HttpOnly; Path=/; Max-Age=600; SameSite=Lax`,
+  );
+  headers.append(
+    "Set-Cookie",
+    `spotify_pkce_verifier=${codeVerifier}; HttpOnly; Path=/; Max-Age=600; SameSite=Lax`,
+  );
+
+  return new Response(null, { status: 302, headers });
 }

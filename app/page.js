@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 function isConfigured(config) {
   const hasTautulli = !!(config.tautulliUrl && config.tautulliApiKey);
-  const hasSpotify = !!(config.spotifyClientId && config.spotifyClientSecret);
+  const hasSpotify = !!config.spotifyClientId;
   return hasTautulli || hasSpotify;
 }
 
