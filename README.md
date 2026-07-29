@@ -40,7 +40,7 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - Docker
 - Artists Source Options:
   - Tautulli (API key needed from Tautulli settings)
-  - Spotify ([API key needed](https://developer.spotify.com/))
+  - Spotify ([API key](https://developer.spotify.com/))
   - List of Artists manully added
 - Event Search options:
   - Ticketmster ([API key](https://developer.ticketmaster.com/) needed)
@@ -49,7 +49,6 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
   - SMTP email connection
   - Custom webhook - can be used to send event summary to Discord, Slack, etc.
   - OAuth connection to Google (requires an HTTPS connection if redirect URI is anything other than `localhost`)
-  - [Apps Script webhook script](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md) - This was set up as an alternative to OAuth connection to Google while testing this app.
 
 ## Installation
 

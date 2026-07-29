@@ -29,10 +29,12 @@ Configured under the **Notification** section, once events are found:
 - **Email**: enable "Send a weekly email digest"
 - **Google Calendar**: If checked, "Add newly found events to Google Calendar" will sync all new events to the specified calendar. If unchecked, these can be added individually (manually).
 
+### Connecting to Google
+
 Pick one of two ways to let Music Spider actually talk to Google (for Email and/or Calendar):
 
 - **OAuth** - connects a Google account directly. In the [Google Cloud Console](https://console.cloud.google.com/), create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI shown in Music Spider as an authorized redirect URI. Enter the Client ID/Secret, then click **Connect Google Account**. This only works over HTTPS once you're accessing Music Spider from anywhere other than `127.0.0.1`/`localhost` - see [Google OAuth and HTTPS](#google-oauth-and-https) below.
-- **Apps Script Webhook** - send email/calendar actions through a small script you deploy yourself instead. No OAuth client, redirect URI, or HTTPS needed on Music Spider's end. See [Setting up the Apps Script webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md).
+- **Apps Script Webhook** - send email/calendar actions through a small script you deploy yourself instead. No OAuth client, redirect URI, or HTTPS needed on Music Spider's end. I initially set it up while developing this. It's not the cleanest way to do it but it works. See [Setting up the Apps Script webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md) if you want to use this method.
 
 Both the OAuth and Apps Script paths grant Music Spider send-only email access and calendar-event-creation access at most - never read/delete access to your existing mail or calendar. Review the source yourself before connecting either if you want to confirm that.
 
