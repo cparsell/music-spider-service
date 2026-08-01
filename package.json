@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start -p 3100",
     "lint": "eslint",
-    "lock": "docker run --rm -v \"$PWD\":/app -w /app node:20-alpine npm install --package-lock-only",
+    "lock": "node scripts/lock.js",
     "dock": "next build && docker build -t 139139/music-spider:latest . && docker push 139139/music-spider:latest"
   },
   "dependencies": {
