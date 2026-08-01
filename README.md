@@ -62,3 +62,7 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 ## License
 
 [MIT](LICENSE)
+
+## Support
+
+<a href="https://buymeacoffee.com/netsurgem"><img src="https://github.com/cparsell/music-spider-service/blob/main/bmc-button.png?raw=true" width="150"></a>
