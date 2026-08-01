@@ -7,18 +7,15 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
   const { checkAndSendWeeklyEmail } = await import("./lib/emailScheduler.js");
-  const { checkAndSendWeeklyWebhook } = await import(
-    "./lib/webhookScheduler.js"
-  );
-  const { checkAndSendWeeklySmtpEmail } = await import(
-    "./lib/smtpScheduler.js"
-  );
-  const { checkAndRefreshTopArtists } = await import(
-    "./lib/topArtistsRefreshScheduler.js"
-  );
-  const { checkAndRunEventSearch } = await import(
-    "./lib/eventsSearchScheduler.js"
-  );
+  const { checkAndSendWeeklyWebhook } =
+    await import("./lib/webhookScheduler.js");
+  const { checkAndSendWeeklySmtpEmail } =
+    await import("./lib/smtpScheduler.js");
+  const { checkAndRefreshTopArtists } =
+    await import("./lib/topArtistsRefreshScheduler.js");
+  const { checkAndRunEventSearch } =
+    await import("./lib/eventsSearchScheduler.js");
+  const { pruneAndSaveExpiredEvents } = await import("./lib/eventsStore.js");
   const CHECK_INTERVAL_MS = 60 * 60 * 1000; // hourly
 
   const runChecks = () => {
@@ -36,6 +33,9 @@ export async function register() {
     );
     checkAndRunEventSearch().catch((err) =>
       console.error("Events auto-search scheduler error:", err),
+    );
+    pruneAndSaveExpiredEvents().catch((err) =>
+      console.error("Prune expired events error:", err),
     );
   };
 
