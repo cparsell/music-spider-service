@@ -219,6 +219,30 @@ const SECTIONS = [
     ],
   },
   {
+    title: "Google Calendar (Service Account)",
+    description:
+      'Add events to a Google Calendar using a GCP service account - no consent screen, redirect URI, or HTTPS needed. Create a service account in the Google Cloud Console, download its JSON key, then share the calendar you want with the service account\'s email address, giving it "Make changes to events" (see Setup-GoogleCalendarAccess.md in the repo for the full walkthrough). This only covers calendar events - email still uses SMTP or the Google option above. While enabled, it takes precedence over the OAuth/Apps Script method for calendar events.',
+    fields: [
+      {
+        key: "googleServiceAccountEnabled",
+        label: "Use a service account for Google Calendar events",
+        type: "checkbox",
+      },
+      {
+        key: "googleServiceAccountJson",
+        label:
+          "Service account key - paste the whole JSON key file, or the path to it on disk (e.g. /config/service-account.json if you'd rather mount it)",
+        type: "serviceAccountKey",
+      },
+      {
+        key: "googleServiceAccountCalendarId",
+        label:
+          "Calendar ID - the calendar you shared with the service account (for your main calendar, this is your Gmail address). Required: a blank/primary calendar would write to the service account's own hidden calendar.",
+        type: "text",
+      },
+    ],
+  },
+  {
     title: "Webhook",
     description:
       'Sends a weekly POST request with the JSON body defined below to any URL that accepts an incoming webhook - e.g. a Discord channel webhook, or a Home Assistant automation using a "Webhook" trigger (which accepts any JSON shape you send and lets you build the notification yourself from there). Use {{subject}}, {{summary}}, and {{count}} as placeholders - each is JSON-escaped automatically, so it\'s safe to drop inside a quoted string like "content": "{{summary}}". The result must be valid JSON once the placeholders are filled in. Note some services (e.g. Discord) cap message length around 2000 characters. Bold formatting and bullet list below only affect the {{summary}} placeholder - Slack and Discord use different markup for bold (*text* vs **text**), so neither is filled in by default.',
@@ -751,6 +775,186 @@ function GoogleActionsTest() {
   );
 }
 
+// A service account key is a private key, so it isn't left sitting on
+// screen once one is saved - the textarea only comes back on request.
+function ServiceAccountKeyInput({ value, onChange }) {
+  const [editing, setEditing] = useState(false);
+  const saved = !!value.trim();
+  const isPath = saved && !value.trim().startsWith("{");
+
+  if (saved && !editing) {
+    return (
+      <div className="flex items-center gap-3 border border-neutral-400 rounded px-2 py-1">
+        <span className="text-neutral-300 truncate">
+          {isPath ? value : "A key is saved (hidden)"}
+        </span>
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="ml-auto shrink-0 text-neutral-300 hover:underline cursor-pointer"
+        >
+          Replace
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          className="shrink-0 text-red-600 hover:underline cursor-pointer"
+        >
+          Clear
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={5}
+        spellCheck={false}
+        placeholder={'{\n  "type": "service_account",\n  ...\n}'}
+        className="border border-neutral-400 rounded px-2 py-1 font-mono text-xs"
+      />
+      {saved && (
+        <button
+          type="button"
+          onClick={() => setEditing(false)}
+          className="self-start text-xs text-neutral-400 hover:underline cursor-pointer"
+        >
+          Hide key
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ServiceAccountConnection({ keyValue, calendarId, enabled }) {
+  const [status, setStatus] = useState(null); // { configured, clientEmail, error }
+  const [busy, setBusy] = useState(""); // "" | "verify" | "test"
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Reloads whenever the key or calendar changes, so the service account
+  // address updates as soon as a new key is pasted in. Waits out the
+  // settings auto-save debounce first, since this reads what's on disk.
+  useEffect(() => {
+    let canceled = false;
+    const timer = setTimeout(() => {
+      fetch("/api/google/service-account")
+        .then((res) => res.json())
+        .then((data) => {
+          if (!canceled) setStatus(data);
+        })
+        .catch(() => {});
+    }, SAVE_DEBOUNCE_MS + 300);
+    return () => {
+      canceled = true;
+      clearTimeout(timer);
+    };
+  }, [keyValue, calendarId, enabled]);
+
+  const run = async (kind, path, describe) => {
+    setBusy(kind);
+    setMessage("Working...");
+    setError(false);
+    try {
+      const res = await fetch(path, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
+      setMessage(describe(data));
+      setError(false);
+    } catch (err) {
+      setMessage(err.message);
+      setError(true);
+    } finally {
+      setBusy("");
+    }
+  };
+
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(status.clientEmail);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard blocked (e.g. non-HTTPS origin) - the address is on
+      // screen anyway, so there's nothing to recover from
+    }
+  };
+
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      {status?.configured ? (
+        <div className="text-sm text-neutral-300">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-green-700">Key loaded</span>
+            <code className="text-xs bg-neutral-900 rounded px-1 py-0.5 break-all">
+              {status.clientEmail}
+            </code>
+            <button
+              type="button"
+              onClick={copyEmail}
+              className="text-xs text-neutral-400 hover:underline cursor-pointer"
+            >
+              {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
+          <p className="text-neutral-500 mt-1">
+            Share the calendar above with this address in Google Calendar
+            (Settings and sharing → Share with specific people → Make changes to
+            events).
+          </p>
+        </div>
+      ) : status?.error ? (
+        <p className="text-sm text-red-600">{status.error}</p>
+      ) : (
+        <p className="text-sm text-neutral-500">No key saved yet.</p>
+      )}
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          type="button"
+          onClick={() =>
+            run(
+              "verify",
+              "/api/google/service-account",
+              (data) => `Access confirmed for ${data.calendarId}.`,
+            )
+          }
+          disabled={!!busy || !enabled}
+          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
+        >
+          {busy === "verify" ? "Checking..." : "Verify Calendar Access"}
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            run(
+              "test",
+              "/api/google/calendar/test",
+              () =>
+                "Test event created (tomorrow, same time) - delete it from your calendar when done.",
+            )
+          }
+          disabled={!!busy || !enabled}
+          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
+        >
+          {busy === "test" ? "Creating..." : "Create Test Calendar Event"}
+        </button>
+      </div>
+      {message && (
+        <span
+          className={`text-sm ${error ? "text-red-600" : "text-neutral-500"}`}
+        >
+          {message}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function RegionPicker({ value, onChange }) {
   const [search, setSearch] = useState("");
 
@@ -955,6 +1159,27 @@ export default function SettingsTab({ isConfigured }) {
     SECTIONS.map((section) => [section.title, section]),
   );
 
+  // Mirrors the precedence in lib/googleCalendar.js: an enabled, configured
+  // service account wins for Calendar events regardless of
+  // googleIntegrationMode; otherwise that setting decides. Surfaced in both
+  // Google subsections below so it's clear which one is actually live when
+  // more than one method has been configured (they can be independently
+  // "set up" without being the one actually used).
+  const serviceAccountConfigured = !!(
+    form.googleServiceAccountJson || ""
+  ).trim();
+  const activeCalendarMethod =
+    form.googleServiceAccountEnabled && serviceAccountConfigured
+      ? "serviceAccount"
+      : form.googleIntegrationMode === "appsScript"
+        ? "appsScript"
+        : "oauth";
+  const CALENDAR_METHOD_LABELS = {
+    serviceAccount: "GCP Service Account",
+    appsScript: "Apps Script Webhook",
+    oauth: "Google OAuth",
+  };
+
   // Renders a SECTIONS entry's description/warning/fields, plus whatever
   // extra section-specific controls (connection status, test buttons,
   // schedule pickers) follow it - shared by every field-driven subsection
@@ -1004,6 +1229,24 @@ export default function SettingsTab({ isConfigured }) {
                     </button>
                   ))}
                 </div>
+              </div>
+            ) : f.type === "checkbox" ? (
+              <label key={f.key} className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={!!form[f.key]}
+                  onChange={(e) => updateField(f.key, e.target.checked)}
+                  className="mt-1"
+                />
+                {f.label}
+              </label>
+            ) : f.type === "serviceAccountKey" ? (
+              <div key={f.key} className="flex flex-col gap-1 text-sm">
+                {f.label}
+                <ServiceAccountKeyInput
+                  value={form[f.key] ?? ""}
+                  onChange={(v) => updateField(f.key, v)}
+                />
               </div>
             ) : f.type === "textarea" ? (
               <label key={f.key} className="flex flex-col gap-1 text-sm">
@@ -1121,6 +1364,22 @@ export default function SettingsTab({ isConfigured }) {
       )}
       {section.title === "Google (Email & Calendar)" && (
         <>
+          {activeCalendarMethod === "serviceAccount" && (
+            <p className="text-sm text-amber-200 border border-amber-200 rounded p-2 mb-3">
+              ⚠️ Calendar events currently go through the{" "}
+              <strong>GCP Service Account</strong> below, not this section's{" "}
+              {form.googleIntegrationMode === "appsScript"
+                ? "Apps Script webhook"
+                : "OAuth connection"}
+              . This section still handles Email either way. Uncheck "Use a
+              service account for Google Calendar events" below to switch
+              Calendar back to{" "}
+              {form.googleIntegrationMode === "appsScript"
+                ? "Apps Script"
+                : "OAuth"}
+              .
+            </p>
+          )}
           {form.googleIntegrationMode === "appsScript" ? (
             <GoogleActionsTest />
           ) : (
@@ -1178,6 +1437,50 @@ export default function SettingsTab({ isConfigured }) {
             individually instead from Events Tab)
           </label>
           {form.googleIntegrationMode !== "appsScript" && <GoogleActionsTest />}
+        </>
+      )}
+      {section.title === "Google Calendar (Service Account)" && (
+        <>
+          {activeCalendarMethod === "serviceAccount" ? (
+            <p className="text-sm text-green-700 border border-green-700/50 rounded p-2 mb-3">
+              ✓ This is the active method for Calendar events.
+            </p>
+          ) : form.googleServiceAccountEnabled ? (
+            <p className="text-sm text-amber-200 border border-amber-200 rounded p-2 mb-3">
+              ⚠️ Enabled, but no key is saved yet - Calendar events are still
+              using {CALENDAR_METHOD_LABELS[activeCalendarMethod]} (Google
+              (Email &amp; Calendar) section) until one is added.
+            </p>
+          ) : (
+            <p className="text-sm text-neutral-400 border border-neutral-700 rounded p-2 mb-3">
+              Not active - Calendar events currently use{" "}
+              {CALENDAR_METHOD_LABELS[activeCalendarMethod]} (Google (Email
+              &amp; Calendar) section above). Check the box below to switch.
+            </p>
+          )}
+          <ServiceAccountConnection
+            keyValue={form.googleServiceAccountJson || ""}
+            calendarId={form.googleServiceAccountCalendarId || ""}
+            enabled={!!form.googleServiceAccountEnabled}
+          />
+          <label className="flex items-start gap-2 text-sm mt-3">
+            <input
+              type="checkbox"
+              checked={form.googleCalendarSyncEnabled}
+              onChange={(e) =>
+                updateField("googleCalendarSyncEnabled", e.target.checked)
+              }
+              className="mt-1"
+            />
+            <span>
+              Add all events to Google Calendar (if unchecked, events can be
+              added individually instead from Events Tab)
+              <span className="text-neutral-500">
+                {" "}
+                - same setting as in the Google (Email &amp; Calendar) section.
+              </span>
+            </span>
+          </label>
         </>
       )}
       {section.title === "Webhook" && (
@@ -1400,6 +1703,12 @@ export default function SettingsTab({ isConfigured }) {
           </SettingsSubsection>
           <SettingsSubsection title="Google (Email & Calendar)">
             {renderSectionFields(sectionByTitle["Google (Email & Calendar)"])}
+          </SettingsSubsection>
+
+          <SettingsSubsection title="Google Calendar (Service Account)">
+            {renderSectionFields(
+              sectionByTitle["Google Calendar (Service Account)"],
+            )}
           </SettingsSubsection>
 
           <SettingsSubsection title="Webhook">

@@ -1,13 +1,13 @@
 import { getResolvedConfig } from "@/lib/settings.js";
 import { createCalendarEvent } from "@/lib/googleCalendar.js";
 
-// Creates a test event that lets a user confirm their OAuth connection
-// or Apps Script webhook can write to the target calendar
+// Creates a test event that lets a user confirm their OAuth connection,
+// Apps Script webhook, or service account can write to the target calendar
 export async function POST() {
   const config = await getResolvedConfig();
 
   try {
-    const start = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const start = new Date(Date.now());
     const created = await createCalendarEvent({
       calendarId: config.calendarId,
       summary: "Music Spider test event",

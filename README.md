@@ -19,7 +19,7 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - **Events UI:** Peruse the discovered events in card and list views, sortable columns, per-event delete/ignore
 - **Notifications:**
   - Weekly event digest email
-  - Google Calendar sync,
+  - Google Calendar sync - via a connected Google account (OAuth) or a GCP service account (no OAuth consent screen or HTTPS needed),
   - generic JSON webhook (e.g. Discord, Home Assistant)
 - **Settings UI:**
 - **Theming:** Grayscale and Catppuccin Mocha themes
@@ -49,6 +49,7 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
   - SMTP email connection
   - Custom webhook - can be used to send event summary to Discord, Slack, etc.
   - OAuth connection to Google (requires an HTTPS connection if redirect URI is anything other than `localhost`)
+  - GCP service account for Google Calendar ([setup](https://github.com/cparsell/music-spider-service/blob/main/Setup-GoogleCalendarAccess.md)) - calendar events only, but no OAuth client or HTTPS needed
 
 ## Installation
 

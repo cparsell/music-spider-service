@@ -28,6 +28,7 @@ Configured under the **Notification** section, once events are found:
 - **Generic webhook**: enable "Send a weekly webhook digest" under **Webhook** and provide a URL that accepts an incoming POST (e.g. a Discord channel webhook, or a Home Assistant automation with a "Webhook" trigger). Customize the JSON body template using the `{{subject}}`, `{{summary}}`, and `{{count}}` placeholders - each is JSON-escaped automatically. Use the **Send Test Webhook** button to try it out.
 - **Google Email**: Use Google API to send a weekly email digest of events. See [Connecting to Google]
 - **Google Calendar**: If checked, "Add newly found events to Google Calendar" will sync all new events to the specified calendar. If unchecked, these can be added individually (manually).
+- **Google Calendar (Service Account)**: Calendar-only alternative to connecting your own Google account - see [Using a service account for Calendar](#using-a-service-account-for-calendar) below.
 
 ### Connecting to Google
 
@@ -39,6 +40,19 @@ Pick one of two ways to let Music Spider actually talk to Google (for Email and/
 Both the OAuth and Apps Script paths grant Music Spider send-only email access and calendar-event-creation access at most - never read/delete access to your existing mail or calendar. Review the source yourself before connecting either if you want to confirm that.
 
 Use the **Send Test Email** / **Create Test Calendar Event** buttons in Music Spider's Settings to confirm it's wired up correctly.
+
+### Using a service account for Google Calendar
+
+If you only want calendar events (not email), a **GCP service account** is the simplest option - no consent screen, no redirect URI, and no HTTPS needed. You create a service account in the Google Cloud Console, download its JSON key, and share the calendar you want with the service account's email address. Music Spider signs in as that account directly.
+
+Configure it under **Notification → Google Calendar (Service Account)**: check **Use a service account for Google Calendar events**, paste the JSON key (or a path to the key file on disk, if you'd rather mount it into the container), and enter the **Calendar ID** of the calendar you shared. Then use **Verify Calendar Access** and **Create Test Calendar Event** to confirm it works. Full walkthrough: [Giving Music Spider access to a Google Calendar](https://github.com/cparsell/music-spider-service/blob/main/Setup-GoogleCalendarAccess.md).
+
+Caveats worth knowing:
+
+- It covers **calendar events only** - email still needs SMTP, OAuth, or the Apps Script webhook, since a service account can't send Gmail without domain-wide delegation.
+- The Calendar ID is required. A blank/`primary` calendar would write to the service account's own hidden calendar rather than yours, so Music Spider refuses instead.
+- While enabled, it takes precedence over the OAuth/Apps Script method for calendar events.
+- Music Spider only requests the `calendar.events` scope, so the account can only touch calendars you've explicitly shared with it.
 
 ## Google OAuth and HTTPS
 

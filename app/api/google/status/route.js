@@ -4,9 +4,11 @@ import {
   hasCalendarScope,
 } from "@/lib/googleTokens.js";
 import { getResolvedConfig } from "@/lib/settings.js";
+import { isServiceAccountEnabled } from "@/lib/googleServiceAccount.js";
 
 async function getCalendarAvailable() {
   const config = await getResolvedConfig();
+  if (isServiceAccountEnabled(config)) return true;
   if (config.googleIntegrationMode === "appsScript") {
     return !!(config.appsScriptWebhookUrl && config.appsScriptSharedSecret);
   }
