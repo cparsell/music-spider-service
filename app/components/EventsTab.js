@@ -469,6 +469,11 @@ export default function EventsTab() {
                           className="flex items-center gap-1.5"
                         >
                           {formatDate(d.date)}
+                          {d.isNew && (
+                            <span className="rounded-full bg-yellow-300 text-neutral-800 text-[10px] font-semibold px-1.5 py-0.5">
+                              New
+                            </span>
+                          )}
                           {calendarAvailable && (
                             <CalendarButton
                               eventId={event.id}
@@ -582,6 +587,11 @@ export default function EventsTab() {
                         >
                           <span className="text-neutral-300 shrink-0 flex items-center gap-1.5">
                             {formatDate(d.date)}
+                            {d.isNew && (
+                              <span className="rounded-full bg-yellow-300 text-neutral-800 text-[10px] font-semibold px-1.5 py-0.5">
+                                New
+                              </span>
+                            )}
                             {calendarAvailable && (
                               <CalendarButton
                                 eventId={event.id}
