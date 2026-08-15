@@ -1,9 +1,11 @@
-import { getEvents, removeEvent } from "@/lib/eventsStore.js";
+import { attachIsNew, getEvents, removeEvent } from "@/lib/eventsStore.js";
 import { ignoredEvents } from "@/lib/ignoredEvents.js";
 import { attachActsDisplay } from "@/lib/formatActs.js";
 
 export async function GET() {
-  return Response.json({ events: await attachActsDisplay(await getEvents()) });
+  return Response.json({
+    events: attachIsNew(await attachActsDisplay(await getEvents())),
+  });
 }
 
 export async function DELETE(req) {

@@ -18,6 +18,7 @@
     var(--color-blue-700) 35%,
     var(--color-neutral-400) 65%
   ) !important;
+  --bg-yellow-300: black !important; /* Yellow */
 }
 
 @theme inline {

@@ -437,7 +437,16 @@ export default function EventsTab() {
                       />
                     )}
                   </td>
-                  <td className="py-2 pr-4 font-semibold">{event.eName}</td>
+                  <td className="py-2 pr-4 font-semibold">
+                    <div className="flex items-center gap-2">
+                      {event.eName}
+                      {event.isNew && (
+                        <span className="rounded-full bg-yellow-300 text-neutral-800 text-xs font-semibold px-2 py-0.5">
+                          New
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="py-2 pr-4">
                     {event.venue}
                     {event.address && (
@@ -519,8 +528,13 @@ export default function EventsTab() {
             {sortedEvents.map((event) => (
               <li
                 key={event.id}
-                className="relative aspect-6/8 rounded-xl overflow-hidden bg-neutral-800 text-shadow-lg hover:text-shadow-xlg shadow-black/50 "
+                className="relative aspect-6/8 rounded-xl overflow-hidden bg-neutral-800  hover:text-shadow-xlg shadow-black/50 "
               >
+                {event.isNew && (
+                  <span className="absolute top-2 right-2 z-10 rounded-full bg-yellow-300 text-neutral-800 text-xs font-semibold px-2 py-0.5 shadow">
+                    New
+                  </span>
+                )}
                 {event.image &&
                   (event.dates?.[0]?.urls?.[0]?.url ? (
                     <a
@@ -542,8 +556,8 @@ export default function EventsTab() {
                       className="absolute inset-0 w-full h-full object-cover opacity-80 hover:opacity-100"
                     />
                   ))}
-                <div className="absolute inset-0 bg-linear-to-t from-black to-transparent to-70% pointer-events-none" />
-                <div className="absolute inset-x-0 bottom-0 p-3 flex items-end justify-between gap-2 text-white">
+                <div className="absolute inset-0 bg-linear-to-t from-black to-transparent to-70% pointer-events-none " />
+                <div className="absolute inset-x-0 bottom-0 p-3 flex items-end justify-between gap-2 text-white text-shadow-lg">
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold leading-tight">{event.eName}</p>
                     <p className="text-sm text-neutral-300">
