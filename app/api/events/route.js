@@ -21,7 +21,9 @@ export async function DELETE(req) {
       }
     }
     const events = await removeEvent(id);
-    return Response.json({ events: await attachActsDisplay(events) });
+    return Response.json({
+      events: attachIsNew(await attachActsDisplay(events)),
+    });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 400 });
   }

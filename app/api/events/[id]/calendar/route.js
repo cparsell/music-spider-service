@@ -1,4 +1,8 @@
-import { getEvents, setDateCalendarEventId } from "@/lib/eventsStore.js";
+import {
+  attachIsNew,
+  getEvents,
+  setDateCalendarEventId,
+} from "@/lib/eventsStore.js";
 import { attachActsDisplay } from "@/lib/formatActs.js";
 import { getResolvedConfig } from "@/lib/settings.js";
 import { createCalendarEvent } from "@/lib/googleCalendar.js";
@@ -30,7 +34,9 @@ export async function POST(req, { params }) {
       url: dateEntry.urls?.[0]?.url,
     });
     const events = await setDateCalendarEventId(id, date, created.id);
-    return Response.json({ events: await attachActsDisplay(events) });
+    return Response.json({
+      events: attachIsNew(await attachActsDisplay(events)),
+    });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
   }
