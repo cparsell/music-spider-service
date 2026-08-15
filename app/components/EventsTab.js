@@ -470,7 +470,7 @@ export default function EventsTab() {
                         >
                           {formatDate(d.date)}
                           {d.isNew && (
-                            <span className="rounded-full bg-yellow-300 text-neutral-800 text-[10px] font-semibold px-1.5 py-0.5 shadow-none">
+                            <span className="rounded-full bg-yellow-300 text-neutral-800 text-[10px] font-semibold px-1.5 py-0.5 text-shadow-none">
                               New
                             </span>
                           )}
@@ -588,7 +588,7 @@ export default function EventsTab() {
                           <span className="text-neutral-300 shrink-0 flex items-center gap-1.5">
                             {formatDate(d.date)}
                             {d.isNew && (
-                              <span className="rounded-full bg-yellow-300 text-neutral-800 text-[10px] font-semibold px-1.5 py-0.5 shadow-none">
+                              <span className="rounded-full bg-yellow-300 text-neutral-800 text-[10px] font-semibold px-1.5 py-0.5 text-shadow-none">
                                 New
                               </span>
                             )}

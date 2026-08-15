@@ -149,3 +149,10 @@ h2 {
 .text-shadow-lg {
   text-shadow: 0 2px 4px rgb(0 0 0 / 100%);
 }
+
+/* shadow-none only resets box-shadow - text-shadow is a separate, inherited
+   property that needs its own reset for elements (like the "New" badge)
+   nested inside a text-shadow-lg ancestor. */
+.text-shadow-none {
+  text-shadow: none;
+}
