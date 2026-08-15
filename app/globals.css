@@ -91,7 +91,9 @@ body {
 }
 
 [data-theme="grayscale"] {
-  --color-yellow-300: var(--color-neutral-400) !important; /* Yellow shows as gray */
+  --color-yellow-300: var(
+    --color-neutral-400
+  ) !important; /* What shows as yellow in other themes is turned grayscale */
 }
 
 /* Theme: "Grayscale" is the default and needs no override block here since
