@@ -166,49 +166,21 @@ const SECTIONS = [
     ],
   },
   {
-    title: "Google (Email & Calendar)",
+    title: "Google OAuth (Email & Calendar)",
     description:
-      'Two ways to let Music Spider send event emails and/or add events to Google Calendar - pick one below. "OAuth" connects a Google account directly: in the Google Cloud Console, create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI below as an authorized redirect URI. Enter the Client ID/Secret below, then click "Connect Google Account." Note this requires an HTTPS connection to the redirect URI once accessed from anywhere other than 127.0.0.1/localhost. "Apps Script Webhook" instead sends requests to a small script you deploy yourself at script.google.com (see apps-script/Code.gs in the repo) - no OAuth client, redirect URI, or HTTPS needed on Music Spider\'s end, at the cost of maintaining that script.',
+      'Lets Music Spider send event emails and/or add events to Google Calendar via a directly-connected Google account. In the Google Cloud Console, create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI below as an authorized redirect URI. Enter the Client ID/Secret below, then click "Connect Google Account." Note this requires an HTTPS connection to the redirect URI once accessed from anywhere other than 127.0.0.1/localhost.',
 
     fields: [
-      {
-        key: "googleIntegrationMode",
-        label: "Integration method",
-        type: "switch",
-        options: [
-          { value: "oauth", label: "OAuth" },
-          { value: "appsScript", label: "Apps Script Webhook" },
-        ],
-      },
-      {
-        key: "googleClientId",
-        label: "Google Client ID",
-        type: "text",
-        showIf: (f) => f.googleIntegrationMode !== "appsScript",
-      },
+      { key: "googleClientId", label: "Google Client ID", type: "text" },
       {
         key: "googleClientSecret",
         label: "Google Client Secret",
         type: "password",
-        showIf: (f) => f.googleIntegrationMode !== "appsScript",
       },
       {
         key: "googleRedirectUri",
         label: "Google Redirect URI",
         type: "text",
-        showIf: (f) => f.googleIntegrationMode !== "appsScript",
-      },
-      {
-        key: "appsScriptWebhookUrl",
-        label: "Apps Script Webhook URL",
-        type: "text",
-        showIf: (f) => f.googleIntegrationMode === "appsScript",
-      },
-      {
-        key: "appsScriptSharedSecret",
-        label: "Apps Script Shared Secret (optional, recommended)",
-        type: "password",
-        showIf: (f) => f.googleIntegrationMode === "appsScript",
       },
       { key: "emailRecipient", label: "Recipient email", type: "text" },
       {
@@ -219,9 +191,9 @@ const SECTIONS = [
     ],
   },
   {
-    title: "Google Calendar (Service Account)",
+    title: "Google Service Account (Calendar)",
     description:
-      'Add events to a Google Calendar using a GCP service account - no consent screen, redirect URI, or HTTPS needed. Create a service account in the Google Cloud Console, download its JSON key, then share the calendar you want with the service account\'s email address, giving it "Make changes to events" (see Setup-GoogleCalendarAccess.md in the repo for the full walkthrough). This only covers calendar events - email still uses SMTP or the Google option above. While enabled, it takes precedence over the OAuth/Apps Script method for calendar events.',
+      'Add events to a Google Calendar using a GCP service account - no consent screen, redirect URI, or HTTPS needed. Create a service account in the Google Cloud Console, download its JSON key, then share the calendar you want with the service account\'s email address, giving it "Make changes to events" (see Setup-GoogleCalendarAccess.md in the repo for the full walkthrough). This only covers calendar events - email still uses SMTP or the Google option above. While enabled, it takes precedence over the OAuth method for calendar events.',
     fields: [
       {
         key: "googleServiceAccountEnabled",
@@ -540,11 +512,9 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
         send email as you (Gmail's "gmail.send" scope, send-only) and, if
         Calendar sync is enabled below, to create events on your calendar
         ("calendar.events" scope). Neither scope can read, delete, or otherwise
-        access your existing mail or calendar. The Apps Script webhook option
-        grants no such permissions to this app directly - instead your own
-        script (which you control and can review) does the sending. Either way,
-        if you plan to use this feature, review this app's source code yourself
-        to confirm there is no misuse of that access.
+        access your existing mail or calendar. If you plan to use this feature,
+        review this app's source code yourself to confirm there is no misuse of
+        that access.
       </p>
 
       <div className="flex items-center gap-3">
@@ -1160,23 +1130,19 @@ export default function SettingsTab({ isConfigured }) {
   );
 
   // Mirrors the precedence in lib/googleCalendar.js: an enabled, configured
-  // service account wins for Calendar events regardless of
-  // googleIntegrationMode; otherwise that setting decides. Surfaced in both
-  // Google subsections below so it's clear which one is actually live when
-  // more than one method has been configured (they can be independently
-  // "set up" without being the one actually used).
+  // service account wins for Calendar events; otherwise OAuth is used.
+  // Surfaced in both Google subsections below so it's clear which one is
+  // actually live when both have been configured (they can be
+  // independently "set up" without being the one actually used).
   const serviceAccountConfigured = !!(
     form.googleServiceAccountJson || ""
   ).trim();
   const activeCalendarMethod =
     form.googleServiceAccountEnabled && serviceAccountConfigured
       ? "serviceAccount"
-      : form.googleIntegrationMode === "appsScript"
-        ? "appsScript"
-        : "oauth";
+      : "oauth";
   const CALENDAR_METHOD_LABELS = {
     serviceAccount: "GCP Service Account",
-    appsScript: "Apps Script Webhook",
     oauth: "Google OAuth",
   };
 
@@ -1362,32 +1328,21 @@ export default function SettingsTab({ isConfigured }) {
           <SmtpTest />
         </>
       )}
-      {section.title === "Google (Email & Calendar)" && (
+      {section.title === "Google OAuth (Email & Calendar)" && (
         <>
           {activeCalendarMethod === "serviceAccount" && (
             <p className="text-sm text-amber-200 border border-amber-200 rounded p-2 mb-3">
               ⚠️ Calendar events currently go through the{" "}
-              <strong>GCP Service Account</strong> below, not this section's{" "}
-              {form.googleIntegrationMode === "appsScript"
-                ? "Apps Script webhook"
-                : "OAuth connection"}
-              . This section still handles Email either way. Uncheck "Use a
-              service account for Google Calendar events" below to switch
-              Calendar back to{" "}
-              {form.googleIntegrationMode === "appsScript"
-                ? "Apps Script"
-                : "OAuth"}
-              .
+              <strong>GCP Service Account</strong> below, not this section's
+              OAuth connection. This section still handles Email either way.
+              Uncheck "Use a service account for Google Calendar events" below
+              to switch Calendar back to OAuth.
             </p>
           )}
-          {form.googleIntegrationMode === "appsScript" ? (
-            <GoogleActionsTest />
-          ) : (
-            <GoogleConnection
-              redirectUri={form.googleRedirectUri}
-              calendarSyncEnabled={form.googleCalendarSyncEnabled}
-            />
-          )}
+          <GoogleConnection
+            redirectUri={form.googleRedirectUri}
+            calendarSyncEnabled={form.googleCalendarSyncEnabled}
+          />
           <label className="flex items-center gap-2 text-sm mt-3">
             <input
               type="checkbox"
@@ -1436,10 +1391,10 @@ export default function SettingsTab({ isConfigured }) {
             Add all events to Google Calendar (if unchecked, events can be added
             individually instead from Events Tab)
           </label>
-          {form.googleIntegrationMode !== "appsScript" && <GoogleActionsTest />}
+          <GoogleActionsTest />
         </>
       )}
-      {section.title === "Google Calendar (Service Account)" && (
+      {section.title === "Google Service Account (Calendar)" && (
         <>
           {activeCalendarMethod === "serviceAccount" ? (
             <p className="text-sm text-green-700 border border-green-700/50 rounded p-2 mb-3">
@@ -1449,13 +1404,14 @@ export default function SettingsTab({ isConfigured }) {
             <p className="text-sm text-amber-200 border border-amber-200 rounded p-2 mb-3">
               ⚠️ Enabled, but no key is saved yet - Calendar events are still
               using {CALENDAR_METHOD_LABELS[activeCalendarMethod]} (Google
-              (Email &amp; Calendar) section) until one is added.
+              OAuth (Email &amp; Calendar) section) until one is added.
             </p>
           ) : (
             <p className="text-sm text-neutral-400 border border-neutral-700 rounded p-2 mb-3">
               Not active - Calendar events currently use{" "}
-              {CALENDAR_METHOD_LABELS[activeCalendarMethod]} (Google (Email
-              &amp; Calendar) section above). Check the box below to switch.
+              {CALENDAR_METHOD_LABELS[activeCalendarMethod]} (Google OAuth
+              (Email &amp; Calendar) section above). Check the box below to
+              switch.
             </p>
           )}
           <ServiceAccountConnection
@@ -1477,7 +1433,8 @@ export default function SettingsTab({ isConfigured }) {
               added individually instead from Events Tab)
               <span className="text-neutral-500">
                 {" "}
-                - same setting as in the Google (Email &amp; Calendar) section.
+                - same setting as in the Google OAuth (Email &amp; Calendar)
+                section.
               </span>
             </span>
           </label>
@@ -1701,13 +1658,15 @@ export default function SettingsTab({ isConfigured }) {
           <SettingsSubsection title="SMTP Email">
             {renderSectionFields(sectionByTitle["SMTP Email"])}
           </SettingsSubsection>
-          <SettingsSubsection title="Google (Email & Calendar)">
-            {renderSectionFields(sectionByTitle["Google (Email & Calendar)"])}
+          <SettingsSubsection title="Google OAuth (Email & Calendar)">
+            {renderSectionFields(
+              sectionByTitle["Google OAuth (Email & Calendar)"],
+            )}
           </SettingsSubsection>
 
-          <SettingsSubsection title="Google Calendar (Service Account)">
+          <SettingsSubsection title="Google Service Account (Calendar)">
             {renderSectionFields(
-              sectionByTitle["Google Calendar (Service Account)"],
+              sectionByTitle["Google Service Account (Calendar)"],
             )}
           </SettingsSubsection>
 

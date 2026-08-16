@@ -23,7 +23,6 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
   - generic JSON webhook (e.g. Discord, Home Assistant)
 - **Settings UI:**
 - **Theming:** Grayscale and Catppuccin Mocha themes
-- **Apps Script Webhook Handler Script** (optional) - If one wants to avoid the OAuth process with Google (requires HTTPS), I use this Google Apps Script webapp to handle sending a weekly email and adding calendar events
 
 ### Tech Stack
 
@@ -32,7 +31,7 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - **Runtime:** Node 20, packaged as a Docker image
 - **Storage:** flat JSON files on disk (no database) - settings, event store, artist lists, and caches, managed through a small file-store module with read/write locking
 - **Auth:** OAuth flows for Spotify and Google, using popup windows for the consent step
-- **External APIs:** Tautulli API, Spotify Web API, Ticketmaster Discovery API, Resident Advisor's public GraphQL API, Google Gmail/Calendar APIs - with a self-hosted Google Apps Script webhook offered as an OAuth-free alternative for email/calendar
+- **External APIs:** Tautulli API, Spotify Web API, Ticketmaster Discovery API, Resident Advisor's public GraphQL API, Google Gmail/Calendar APIs
 - **Deployment:** Docker / Docker Compose, with instructions for Unraid as well
 
 ### Requirements

@@ -1,8 +1,8 @@
 import { getResolvedConfig } from "@/lib/settings.js";
 import { createCalendarEvent } from "@/lib/googleCalendar.js";
 
-// Creates a test event that lets a user confirm their OAuth connection,
-// Apps Script webhook, or service account can write to the target calendar
+// Creates a test event that lets a user confirm their OAuth connection or
+// service account can write to the target calendar
 export async function POST() {
   const config = await getResolvedConfig();
 

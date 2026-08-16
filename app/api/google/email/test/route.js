@@ -2,8 +2,7 @@ import { getResolvedConfig } from "@/lib/settings.js";
 import { sendGmailMessage } from "@/lib/gmail.js";
 
 // Sends a test email, allowing a user confirm their OAuth connection
-// or Apps Script webhook is wired up correctly without waiting on
-// real event data.
+// is wired up correctly without waiting on real event data.
 export async function POST() {
   const config = await getResolvedConfig();
   if (!config.emailRecipient) {

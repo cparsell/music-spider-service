@@ -32,12 +32,9 @@ Configured under the **Notification** section, once events are found:
 
 ### Connecting to Google
 
-Pick one of two ways to let Music Spider actually talk to Google (for Email and/or Calendar):
+Let Music Spider talk to Google (for Email and/or Calendar) by connecting a Google account directly via **OAuth**: in the [Google Cloud Console](https://console.cloud.google.com/), create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI shown in Music Spider as an authorized redirect URI. Enter the Client ID/Secret, then click **Connect Google Account**. This only works over HTTPS once you're accessing Music Spider from anywhere other than `127.0.0.1`/`localhost` - see [Google OAuth and HTTPS](#google-oauth-and-https) below.
 
-- **OAuth** - connects a Google account directly. In the [Google Cloud Console](https://console.cloud.google.com/), create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI shown in Music Spider as an authorized redirect URI. Enter the Client ID/Secret, then click **Connect Google Account**. This only works over HTTPS once you're accessing Music Spider from anywhere other than `127.0.0.1`/`localhost` - see [Google OAuth and HTTPS](#google-oauth-and-https) below.
-- **Apps Script Webhook** - This method was only created for myself to use during development. I've kept it available in case someone else wants to use this method but it probably makes more sense to set up SMTP or OAuth connection. The webhook sends email/calendar actions through a small script you deploy yourself instead. No OAuth client, redirect URI, or HTTPS needed on Music Spider's end. See [Setting up the Apps Script webhook](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md) if you want to use this method.
-
-Both the OAuth and Apps Script paths grant Music Spider send-only email access and calendar-event-creation access at most - never read/delete access to your existing mail or calendar. Review the source yourself before connecting either if you want to confirm that.
+This grants Music Spider send-only email access and calendar-event-creation access at most - never read/delete access to your existing mail or calendar. Review the source yourself before connecting if you want to confirm that.
 
 Use the **Send Test Email** / **Create Test Calendar Event** buttons in Music Spider's Settings to confirm it's wired up correctly.
 
@@ -49,16 +46,16 @@ Configure it under **Notification → Google Calendar (Service Account)**: check
 
 Caveats worth knowing:
 
-- It covers **calendar events only** - email still needs SMTP, OAuth, or the Apps Script webhook, since a service account can't send Gmail without domain-wide delegation.
+- It covers **calendar events only** - email still needs SMTP or OAuth, since a service account can't send Gmail without domain-wide delegation.
 - The Calendar ID is required. A blank/`primary` calendar would write to the service account's own hidden calendar rather than yours, so Music Spider refuses instead.
-- While enabled, it takes precedence over the OAuth/Apps Script method for calendar events.
+- While enabled, it takes precedence over the OAuth method for calendar events.
 - Music Spider only requests the `calendar.events` scope, so the account can only touch calendars you've explicitly shared with it.
 
 ## Google OAuth and HTTPS
 
-If you choose the OAuth integration method (for Spotify or Google) and access Music Spider from anywhere other than `127.0.0.1`/`localhost` - e.g. a LAN IP, a hostname, or over the internet - **the redirect URI must be reachable at that same address, and Google in particular requires it to be HTTPS**. Put Music Spider behind a reverse proxy with TLS (e.g. Caddy, Traefik, SWAG, or your NAS's built-in reverse proxy) if you want OAuth working from anything other than the same machine.
+If you use OAuth (for Spotify or Google) and access Music Spider from anywhere other than `127.0.0.1`/`localhost` - e.g. a LAN IP, a hostname, or over the internet - **the redirect URI must be reachable at that same address, and Google in particular requires it to be HTTPS**. Put Music Spider behind a reverse proxy with TLS (e.g. Caddy, Traefik, SWAG, or your NAS's built-in reverse proxy) if you want OAuth working from anything other than the same machine.
 
-The [Apps Script webhook script](https://github.com/cparsell/music-spider-service/blob/main/Setup-AppsScriptWebhookHandler.md) sidesteps this entirely for Google. It was set up as an alternative to the OAuth method - no HTTPS needed.
+A GCP service account (see [above](#using-a-service-account-for-google-calendar)) sidesteps this entirely for Calendar, with no HTTPS needed.
 
 ---
 

@@ -21,6 +21,6 @@
 
 Notes:
 
-- Service account mode only covers **calendar events**. Sending email still goes through SMTP, OAuth, or the Apps Script webhook — a service account can't send Gmail without domain-wide delegation.
-- While it's enabled, calendar events use the service account even if `googleIntegrationMode` is set to OAuth or Apps Script. Uncheck it to go back to the other method.
+- Service account mode only covers **calendar events**. Sending email still goes through SMTP or OAuth — a service account can't send Gmail without domain-wide delegation.
+- While it's enabled, calendar events use the service account even if OAuth is also configured. Uncheck it to go back to OAuth.
 - The app only ever requests the `calendar.events` scope, so the service account can only touch calendars you've explicitly shared with it.
