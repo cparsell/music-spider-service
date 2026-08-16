@@ -39,12 +39,11 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 
 - Docker
 - Artists Source Options:
-  - Tautulli (API key needed from Tautulli settings)
-  - Spotify ([API key](https://developer.spotify.com/))
+  - Tautulli: API key needed (from Tautulli settings)
+  - Spotify: API key from [developer.spotify.com](https://developer.spotify.com/)
   - List of Artists manually added
 - Event Search options:
-  - Ticketmster ([API key](https://developer.ticketmaster.com/) needed)
-  - Resident Advisor (no API key needed)
+  - Ticketmster: API key from [developer.ticketmaster.com](https://developer.ticketmaster.com/)
 - Options for Notifications
   - SMTP email connection
   - Custom webhook - can be used to send event summary to Discord, Slack, etc.
