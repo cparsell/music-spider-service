@@ -41,7 +41,6 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - Artists Source Options:
   - Tautulli: API key needed (from Tautulli settings)
   - Spotify: API key from [developer.spotify.com](https://developer.spotify.com/)
-  - List of Artists manually added
 - Event Search options:
   - Ticketmster: API key from [developer.ticketmaster.com](https://developer.ticketmaster.com/)
 - Options for Notifications
