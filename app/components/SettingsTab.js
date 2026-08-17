@@ -215,6 +215,21 @@ const SECTIONS = [
     ],
   },
   {
+    title: "CalDAV (Calendar)",
+    description:
+      "Add events to any CalDAV calendar - Nextcloud, Radicale, Baikal, iCloud, Fastmail, or another CalDAV-compatible server. Independent of the Google options above; both can be enabled at once if you want events synced to two calendars. Enter the specific calendar's collection URL (not just the server root) and, if the server requires it, a username/password (an app-specific password if your provider supports one, rather than your main account password).",
+    fields: [
+      {
+        key: "caldavEnabled",
+        label: "Use CalDAV for calendar events",
+        type: "checkbox",
+      },
+      { key: "caldavUrl", label: "Calendar URL", type: "text" },
+      { key: "caldavUsername", label: "Username", type: "text" },
+      { key: "caldavPassword", label: "Password", type: "password" },
+    ],
+  },
+  {
     title: "Webhook",
     description:
       'Sends a weekly POST request with the JSON body defined below to any URL that accepts an incoming webhook - e.g. a Discord channel webhook, or a Home Assistant automation using a "Webhook" trigger (which accepts any JSON shape you send and lets you build the notification yourself from there). Use {{subject}}, {{summary}}, and {{count}} as placeholders - each is JSON-escaped automatically, so it\'s safe to drop inside a quoted string like "content": "{{summary}}". The result must be valid JSON once the placeholders are filled in. Note some services (e.g. Discord) cap message length around 2000 characters. Bold formatting and bullet list below only affect the {{summary}} placeholder - Slack and Discord use different markup for bold (*text* vs **text**), so neither is filled in by default.',
@@ -925,6 +940,98 @@ function ServiceAccountConnection({ keyValue, calendarId, enabled }) {
   );
 }
 
+function CalDavConnection({ url, username, password, enabled }) {
+  const [status, setStatus] = useState(null); // { configured, url }
+  const [busy, setBusy] = useState(""); // "" | "verify" | "test"
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
+
+  // Reloads whenever the connection details change, waiting out the
+  // settings auto-save debounce first, since this reads what's on disk.
+  useEffect(() => {
+    let canceled = false;
+    const timer = setTimeout(() => {
+      fetch("/api/caldav")
+        .then((res) => res.json())
+        .then((data) => {
+          if (!canceled) setStatus(data);
+        })
+        .catch(() => {});
+    }, SAVE_DEBOUNCE_MS + 300);
+    return () => {
+      canceled = true;
+      clearTimeout(timer);
+    };
+  }, [url, username, password, enabled]);
+
+  const run = async (kind, path, describe) => {
+    setBusy(kind);
+    setMessage("Working...");
+    setError(false);
+    try {
+      const res = await fetch(path, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Request failed");
+      setMessage(describe(data));
+      setError(false);
+    } catch (err) {
+      setMessage(err.message);
+      setError(true);
+    } finally {
+      setBusy("");
+    }
+  };
+
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      {status?.configured ? (
+        <p className="text-sm text-green-700">
+          Configured - {status.url}
+        </p>
+      ) : (
+        <p className="text-sm text-neutral-500">
+          Not configured - enable it and add a calendar URL above.
+        </p>
+      )}
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <button
+          type="button"
+          onClick={() =>
+            run("verify", "/api/caldav", () => "Connection confirmed.")
+          }
+          disabled={!!busy || !enabled}
+          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
+        >
+          {busy === "verify" ? "Checking..." : "Verify Calendar Access"}
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            run(
+              "test",
+              "/api/caldav/test",
+              () =>
+                "Test event created - delete it from your calendar when done.",
+            )
+          }
+          disabled={!!busy || !enabled}
+          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
+        >
+          {busy === "test" ? "Creating..." : "Create Test Calendar Event"}
+        </button>
+      </div>
+      {message && (
+        <span
+          className={`text-sm ${error ? "text-red-600" : "text-neutral-500"}`}
+        >
+          {message}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function RegionPicker({ value, onChange }) {
   const [search, setSearch] = useState("");
 
@@ -1440,6 +1547,33 @@ export default function SettingsTab({ isConfigured }) {
           </label>
         </>
       )}
+      {section.title === "CalDAV (Calendar)" && (
+        <>
+          <CalDavConnection
+            url={form.caldavUrl || ""}
+            username={form.caldavUsername || ""}
+            password={form.caldavPassword || ""}
+            enabled={!!form.caldavEnabled}
+          />
+          <label className="flex items-start gap-2 text-sm mt-3">
+            <input
+              type="checkbox"
+              checked={form.caldavSyncEnabled}
+              onChange={(e) =>
+                updateField("caldavSyncEnabled", e.target.checked)
+              }
+              className="mt-1"
+            />
+            <span>
+              Add all newly found events to the CalDAV calendar automatically
+              <span className="text-neutral-500">
+                {" "}
+                - runs alongside Google Calendar sync if that's also enabled.
+              </span>
+            </span>
+          </label>
+        </>
+      )}
       {section.title === "Webhook" && (
         <>
           <label className="flex items-center gap-2 text-sm mt-1">
@@ -1668,6 +1802,10 @@ export default function SettingsTab({ isConfigured }) {
             {renderSectionFields(
               sectionByTitle["Google Service Account (Calendar)"],
             )}
+          </SettingsSubsection>
+
+          <SettingsSubsection title="CalDAV (Calendar)">
+            {renderSectionFields(sectionByTitle["CalDAV (Calendar)"])}
           </SettingsSubsection>
 
           <SettingsSubsection title="Webhook">

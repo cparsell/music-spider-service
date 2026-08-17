@@ -1,23 +1,12 @@
-import {
-  getStoredTokens,
-  clearTokens,
-  hasCalendarScope,
-} from "@/lib/googleTokens.js";
-import { getResolvedConfig } from "@/lib/settings.js";
-import { isServiceAccountEnabled } from "@/lib/googleServiceAccount.js";
-
-async function getCalendarAvailable() {
-  const config = await getResolvedConfig();
-  if (isServiceAccountEnabled(config)) return true;
-  return hasCalendarScope();
-}
+import { getStoredTokens, clearTokens } from "@/lib/googleTokens.js";
+import { isGoogleCalendarAvailable } from "@/lib/googleCalendar.js";
 
 export async function GET() {
   const tokens = await getStoredTokens();
   return Response.json({
     connected: !!tokens,
     scope: tokens?.scope || "",
-    calendarAvailable: await getCalendarAvailable(),
+    calendarAvailable: await isGoogleCalendarAvailable(),
   });
 }
 

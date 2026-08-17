@@ -28,13 +28,39 @@ const COLUMNS = [
   { key: "date", label: "Date" },
 ];
 
-function CalendarButton({ eventId, date, calendarEventId, syncing, onClick }) {
-  const added = !!calendarEventId;
+// Google Calendar and CalDAV are independent targets - a date can be synced
+// to either, both, or neither, identified by separate `calendarEventId` /
+// `caldavEventId` fields. The button's action reflects whichever targets are
+// currently available (configured in Settings) and still pending for this
+// date, and disables itself only once every available target is synced.
+function CalendarButton({
+  googleAvailable,
+  googleAdded,
+  caldavAvailable,
+  caldavAdded,
+  syncing,
+  onClick,
+}) {
+  const pending = [
+    googleAvailable && !googleAdded && "Google Calendar",
+    caldavAvailable && !caldavAdded && "CalDAV",
+  ].filter(Boolean);
+  const added = [
+    googleAvailable && googleAdded && "Google Calendar",
+    caldavAvailable && caldavAdded && "CalDAV",
+  ].filter(Boolean);
+
+  const done = pending.length === 0;
+  const title = done
+    ? `Already added to ${added.join(" and ")}`
+    : `Add to ${pending.join(" and ")}` +
+      (added.length ? ` (already on ${added.join(" and ")})` : "");
+
   return (
     <button
       onClick={onClick}
-      disabled={added || syncing}
-      title={added ? "Already added to Calendar" : "Add to Calendar"}
+      disabled={done || syncing}
+      title={title}
       className={
         "shrink-0 text-neutral-200 disabled:opacity-40  cursor-pointer disabled:cursor-auto"
       }
@@ -49,7 +75,7 @@ function CalendarButton({ eventId, date, calendarEventId, syncing, onClick }) {
       >
         <rect x="3" y="5" width="18" height="16" rx="2" />
         <path d="M3 10h18M8 3v4M16 3v4" />
-        {added && <path d="M8 14l2.5 2.5L16 11" />}
+        {done && <path d="M8 14l2.5 2.5L16 11" />}
       </svg>
     </button>
   );
@@ -89,6 +115,12 @@ function buildSearchResultMessage(result) {
   if (result.calendarError) {
     message += ` Calendar sync issue: ${result.calendarError}`;
   }
+  if (result.caldavSynced > 0) {
+    message += ` Added ${result.caldavSynced} to CalDAV calendar.`;
+  }
+  if (result.caldavError) {
+    message += ` CalDAV sync issue: ${result.caldavError}`;
+  }
   return message;
 }
 
@@ -127,6 +159,7 @@ export default function EventsTab() {
   });
   const [syncingDates, setSyncingDates] = useState(() => new Set());
   const [calendarAvailable, setCalendarAvailable] = useState(false);
+  const [caldavAvailable, setCaldavAvailable] = useState(false);
 
   // A search runs server-side independent of this component's lifecycle -
   // switching tabs unmounts it, but the search keeps going. These track the
@@ -196,7 +229,9 @@ export default function EventsTab() {
         refreshEventsSilently();
         if (data.result) {
           setStatusMessage(buildSearchResultMessage(data.result));
-          setStatusError(!!data.result.calendarError);
+          setStatusError(
+            !!(data.result.calendarError || data.result.caldavError),
+          );
         }
       } catch {
         // ignore transient poll errors, next tick will retry
@@ -227,6 +262,14 @@ export default function EventsTab() {
       .then((res) => res.json())
       .then((data) => {
         setCalendarAvailable(data.calendarAvailable);
+      })
+      .catch(() => {});
+
+    // check if CalDAV is configured
+    fetch("/api/caldav")
+      .then((res) => res.json())
+      .then((data) => {
+        setCaldavAvailable(data.configured);
       })
       .catch(() => {});
 
@@ -283,7 +326,7 @@ export default function EventsTab() {
 
   const addEventToCalendar = async (eventId, date) => {
     const key = `${eventId}:${date}`;
-    setSyncingDates((prev) => new Set([...prev, date]));
+    setSyncingDates((prev) => new Set([...prev, key]));
 
     try {
       const res = await fetch(`/api/events/${eventId}/calendar`, {
@@ -293,13 +336,19 @@ export default function EventsTab() {
       });
       const data = await res.json();
       if (!res.ok) {
+        setEvents(data.events || events);
         setStatusMessage(data.error || "Failed to add to Calendar");
         setStatusError(true);
         return;
       }
       setEvents(data.events || []);
-      setStatusMessage("Added to Google Calendar");
-      setStatusError(false);
+      const addedPhrase = data.addedTo?.length
+        ? `Added to ${data.addedTo.join(" and ")}.`
+        : "Nothing to add - already synced.";
+      setStatusMessage(
+        data.warning ? `${addedPhrase} ${data.warning}` : addedPhrase,
+      );
+      setStatusError(!!data.warning);
     } catch (err) {
       setStatusMessage(err.message || "Failed to add event to calendar");
       setStatusError(true);
@@ -470,11 +519,12 @@ export default function EventsTab() {
                         >
                           {formatDate(d.date)}
 
-                          {calendarAvailable && (
+                          {(calendarAvailable || caldavAvailable) && (
                             <CalendarButton
-                              eventId={event.id}
-                              date={d.date}
-                              calendarEventId={d.calendarEventId}
+                              googleAvailable={calendarAvailable}
+                              googleAdded={!!d.calendarEventId}
+                              caldavAvailable={caldavAvailable}
+                              caldavAdded={!!d.caldavEventId}
                               syncing={syncingDates.has(
                                 `${event.id}:${d.date}`,
                               )}
@@ -588,15 +638,18 @@ export default function EventsTab() {
                         >
                           <span className="text-neutral-300 shrink-0 flex items-center gap-1.5">
                             {formatDate(d.date)}
-                            {calendarAvailable && (
+                            {(calendarAvailable || caldavAvailable) && (
                               <CalendarButton
-                                eventId={event.id}
-                                date={d.date}
-                                calendarEventId={d.calendarEventId}
+                                googleAvailable={calendarAvailable}
+                                googleAdded={!!d.calendarEventId}
+                                caldavAvailable={caldavAvailable}
+                                caldavAdded={!!d.caldavEventId}
                                 syncing={syncingDates.has(
                                   `${event.id}:${d.date}`,
                                 )}
-                                onClick={() => addToCalendar(event.id, d.date)}
+                                onClick={() =>
+                                  addEventToCalendar(event.id, d.date)
+                                }
                               />
                             )}
                           </span>
