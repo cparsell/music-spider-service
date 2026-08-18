@@ -653,20 +653,22 @@ export default function EventsTab() {
                               />
                             )}
                           </span>
-                          <div className="flex ">
-                            {d.urls?.map((u) => (
-                              <a
-                                key={u.name}
-                                href={u.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-blue-300 hover:underline"
-                              >
-                                {u.name}
-                              </a>
-                            ))}
+                          <div className="flex items-center gap-1">
+                            <div className="flex flex-col">
+                              {d.urls?.map((u) => (
+                                <a
+                                  key={u.name}
+                                  href={u.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-blue-300 hover:underline"
+                                >
+                                  {u.name}
+                                </a>
+                              ))}
+                            </div>
                             {d.isNew && (
-                              <span className="rounded-full bg-yellow-300 text-neutral-800 text-[10px] font-semibold px-1.5 py-0.5 text-shadow-none ml-1">
+                              <span className="rounded-full bg-yellow-300 text-neutral-800 text-[10px] font-semibold px-1.5 py-0.5 text-shadow-none">
                                 New
                               </span>
                             )}
