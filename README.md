@@ -4,7 +4,7 @@ Music Spider finds your most-listened-to artists from Plex (via Tautulli) and/or
 
 ![Sidenotes Basics](https://github.com/cparsell/music-spider-service/blob/main/Screenshot-EventsTab.png)
 
-I first programmed [Music Spider](https://github.com/cparsell/music-spider) in Google Apps Script in 2023. At that time, it only worked with Spotify's API to get one's music listening history. This was fine for me but eventually I wanted to get it out of the Google Apps Script world and make it easier to share with others. In this version, I reworked it to be able to get listening history from Plex through Tautulli. I hope to add the ability to pull listening history from other sources as well.
+I first programmed [Music Spider](https://github.com/cparsell/music-spider) in Google Apps Script in 2023. This was fine for me but eventually I wanted to get it out of the Google Apps Script world and make it easier to share with others. In this version, I reworked it to be able to get listening history from Plex through Tautulli. I hope to add the ability to pull listening history from other sources as well.
 
 The only two ticket APIs (currently) free and available ot use are Ticketmaster and Resident Advisor. Correct me if I'm wrong but I've looked for others. When I first wrote this in 2023, there were only a few other GitHub projects that demonstrated using Resident Advisor's GraphQL API but I had to do some graphQL-fu to figure out how to use it flexibly.
 
@@ -24,6 +24,10 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - **Settings UI:**
 - **Theming:** Grayscale and Catppuccin Mocha themes
 
+#### Goal Features
+
+- [ ] Expand listening history sources (e.g. Last.fm, Jellyfin, Apple Music, Amazon Music, Deezer... Let me know which I should prioritize if there's one you'd like)
+
 ### Tech Stack
 
 - **Framework:** Next.js 16 (App Router) with React 19
@@ -31,7 +35,12 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - **Runtime:** Node 20, packaged as a Docker image
 - **Storage:** flat JSON files on disk (no database) - settings, event store, artist lists, and caches, managed through a small file-store module with read/write locking
 - **Auth:** OAuth flows for Spotify and Google, using popup windows for the consent step
-- **External APIs:** Tautulli API, Spotify Web API, Ticketmaster Discovery API, Resident Advisor's public GraphQL API, Google Gmail/Calendar APIs
+- **External APIs:**
+  - Tautulli API,
+  - Spotify Web API,
+  - Ticketmaster Discovery API,
+  - Resident Advisor's public GraphQL API,
+  - Google Gmail/Calendar APIs
 - **Deployment:** Docker / Docker Compose, with instructions for Unraid as well
 
 ### Requirements
@@ -60,5 +69,3 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 ## License
 
 [MIT](LICENSE)
-
-
