@@ -1,10 +1,10 @@
 # Music Spider
 
-Music Spider finds your most-listened-to artists from Plex (via Tautulli) and/or Spotify, cross-references that list against event search APIs to find upcoming shows near you, and notifies you by email, Google Calendar, or a generic webhook. It _only_ finds concerts of artists you listen to - never recommends something because you liked something else.
+Music Spider finds your most-listened-to artists from Plex (via Tautulli) and/or Spotify, cross-references that list against event search APIs to find upcoming shows near you, and notifies you by email, calendar, or a generic webhook. It finds concerts of your favorite artists.
 
 ![Sidenotes Basics](https://github.com/cparsell/music-spider-service/blob/main/Screenshot-EventsTab.png)
 
-I first programmed [Music Spider](https://github.com/cparsell/music-spider) in Google Apps Script in 2023. This was fine for me but eventually I wanted to get it out of the Google Apps Script world and make it easier to share with others. In this version, I reworked it to be able to get listening history from Plex through Tautulli. I hope to add the ability to pull listening history from other sources as well.
+I first programmed [Music Spider](https://github.com/cparsell/music-spider) in Google Apps Script in 2023. It came about because I almost missed out on a concert I would've regretted missing - and I don't want to use some service that's going to sell my data and send me spam mail. For a few years this Google Apps Script version worked fine for me but eventually I wanted to get it out of Google's servers, host it myself, and make it easier to share with others.
 
 The only two ticket APIs (currently) free and available ot use are Ticketmaster and Resident Advisor. Correct me if I'm wrong but I've looked for others. When I first wrote this in 2023, there were only a few other GitHub projects that demonstrated using Resident Advisor's GraphQL API but I had to do some graphQL-fu to figure out how to use it flexibly.
 
