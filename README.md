@@ -2,7 +2,7 @@
 
 Music Spider finds your most-listened-to artists from Plex (via Tautulli) and/or Spotify, cross-references that list against event search APIs to find upcoming shows near you, and notifies you by email, calendar, or a generic webhook. It finds concerts of your favorite artists.
 
-![Sidenotes Basics](https://github.com/cparsell/music-spider-service/blob/main/Screenshot-EventsTab.png)
+![Sidenotes Basics](https://github.com/cparsell/music-spider-service/blob/main/Screenshot-EventsTab-2026-08-19.png)
 
 I first programmed [Music Spider](https://github.com/cparsell/music-spider) in Google Apps Script in 2023. It came about because I almost missed out on a concert I would've regretted missing - and I don't want to use some service that's going to sell my data and send me spam mail. For a few years this Google Apps Script version worked fine for me but eventually I wanted to get it out of Google's servers, host it myself, and make it easier to share with others.
 
