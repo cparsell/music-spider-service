@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import StatusBar from "./StatusBar";
 import TabLayout from "./TabLayout";
 import { RA_REGIONS } from "@/lib/raRegions.js";
@@ -1034,6 +1035,8 @@ function CalDavConnection({ url, username, password, enabled }) {
 
 function RegionPicker({ value, onChange }) {
   const [search, setSearch] = useState("");
+  const inputRef = useRef(null);
+  const [menuRect, setMenuRect] = useState(null);
 
   const selectedIds = useMemo(
     () =>
@@ -1053,6 +1056,27 @@ function RegionPicker({ value, onChange }) {
         !selectedIds.includes(r.id) && r.label.toLowerCase().includes(term),
     ).slice(0, 20);
   }, [search, selectedIds]);
+
+  // Positions the suggestions list in a portal so it isn't clipped by the
+  // overflow-hidden accordion wrappers (SettingsSection/SettingsSubsection)
+  // this input is nested inside.
+  useEffect(() => {
+    if (matches.length === 0) {
+      setMenuRect(null);
+      return;
+    }
+    const updateRect = () => {
+      const rect = inputRef.current?.getBoundingClientRect();
+      if (rect) setMenuRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    };
+    updateRect();
+    window.addEventListener("scroll", updateRect, true);
+    window.addEventListener("resize", updateRect);
+    return () => {
+      window.removeEventListener("scroll", updateRect, true);
+      window.removeEventListener("resize", updateRect);
+    };
+  }, [matches.length]);
 
   const addRegion = (id) => {
     onChange([...selectedIds, id].join(","));
@@ -1087,27 +1111,38 @@ function RegionPicker({ value, onChange }) {
       )}
       <div className="relative">
         <input
+          ref={inputRef}
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search for a city or country to add..."
           className="border border-neutral-400 rounded px-2 py-1 text-sm w-full"
         />
-        {matches.length > 0 && (
-          <ul className="absolute z-10 mt-1 w-full max-h-56 overflow-auto border border-neutral-600 rounded bg-white shadow">
-            {matches.map((r) => (
-              <li key={r.id}>
-                <button
-                  type="button"
-                  onClick={() => addRegion(r.id)}
-                  className="w-full text-left px-2 py-1 text-sm bg-neutral-700 text-neutral-200 hover:bg-neutral-300 hover:text-neutral-800"
-                >
-                  {r.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        {menuRect &&
+          matches.length > 0 &&
+          createPortal(
+            <ul
+              className="fixed z-50 max-h-56 overflow-auto border border-neutral-600 rounded bg-white shadow"
+              style={{
+                top: menuRect.top,
+                left: menuRect.left,
+                width: menuRect.width,
+              }}
+            >
+              {matches.map((r) => (
+                <li key={r.id}>
+                  <button
+                    type="button"
+                    onClick={() => addRegion(r.id)}
+                    className="w-full text-left px-2 py-1 text-sm bg-neutral-700 text-neutral-200 hover:bg-neutral-300 hover:text-neutral-800"
+                  >
+                    {r.label}
+                  </button>
+                </li>
+              ))}
+            </ul>,
+            document.body,
+          )}
       </div>
     </div>
   );
