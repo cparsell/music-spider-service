@@ -1,6 +1,6 @@
 {
   "name": "music-spider-nextjs",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "license": "MIT",
   "scripts": {
@@ -9,7 +9,7 @@
     "start": "next start -p 3100",
     "lint": "eslint",
     "lock": "node scripts/lock.js",
-    "dock": "next build && docker build -t 139139/music-spider:latest . && docker push 139139/music-spider:latest"
+    "dock": "node scripts/release.js"
   },
   "dependencies": {
     "next": "16.2.10",
