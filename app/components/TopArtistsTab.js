@@ -225,36 +225,54 @@ export default function TopArtistsTab({ description }) {
       description={description}
       controls={
         <div className="flex items-center gap-2">
-          <div className="flex rounded-2xl border-2 border-neutral-200">
-            {TERM_OPTIONS.map((t, i) => (
-              <div key={t.value} className="relative">
-                {selectedTerms.includes(t.value) && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute -top-4 left-1/2 -translate-x-1/2 text-[12px] leading-none text-neutral-200"
-                  >
-                    ✓
-                  </span>
-                )}
+          <div className="flex items-center gap-1.5">
+            {TERM_OPTIONS.map((t) => {
+              const active = selectedTerms.includes(t.value);
+              return (
                 <button
+                  key={t.value}
+                  type="button"
                   onClick={() => toggleTerm(t.value)}
+                  aria-pressed={active}
                   title={
                     selectedTerms.length > 1
                       ? `${[...selectedTerms.map((t) => t.replace("_", " "))]} are combined into one ranking`
                       : `${[...selectedTerms.map((t) => t.replace("_", " "))]} will only be used`
                   }
-                  className={`px-3 py-0.5 cursor-pointer ${i > 0 ? "border-l border-neutral-400" : ""} ${
-                    i === 0 ? "rounded-l-2xl" : ""
-                  } ${i === TERM_OPTIONS.length - 1 ? "rounded-r-2xl" : ""} ${
-                    selectedTerms.includes(t.value)
-                      ? "bg-neutral-800 text-white  "
-                      : "bg-neutral-200 text-neutral-900"
+                  className={`flex items-center gap-1.5 px-3 py-0.5 rounded-2xl border cursor-pointer ${
+                    active
+                      ? "bg-neutral-800 text-white border-neutral-800"
+                      : "bg-neutral-200 text-neutral-900 border-neutral-400"
                   }`}
                 >
+                  <span
+                    aria-hidden="true"
+                    className={`flex items-center justify-center w-3.5 h-3.5 rounded-sm border ${
+                      active
+                        ? "bg-white border-white text-neutral-800"
+                        : "border-neutral-500"
+                    }`}
+                  >
+                    {active && (
+                      <svg
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="w-3 h-3"
+                      >
+                        <path
+                          d="M5 10l3 3 7-7"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </span>
                   {t.label}
                 </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="flex-1 flex justify-end">
             <button
