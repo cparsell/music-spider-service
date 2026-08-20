@@ -165,7 +165,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
             <ArtistListManager
               apiPath="/api/artists/ignored"
               addLabel="Ignore"
-              description="Artists in this list will be ignored when fetching events and top artist lists."
+              description="Artists in this list will be ignored when fetching events and top artist lists - i.e. artists who don't tour anymore, deceased artists, the phrase 'Various Artists', etc."
             />
           )}
           {tab === "events" && <EventsTab />}
