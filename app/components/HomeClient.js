@@ -149,7 +149,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
             <TopArtistsTab
               description={
                 isConfigured
-                  ? "Top artists based on your listening history. Selecting term(s) below also sets which are combined into the artist list used for event searches."
+                  ? "Top artists based on your listening history. Selecting term(s) below also sets which are combined into the artist list used for event searches. Saved artists are added to the `Custom List`."
                   : "Top artists based on your listening history. Selecting term(s) below also sets which are combined into the artist list used for event searches. Configure sources in the settings."
               }
             />
@@ -165,7 +165,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
             <ArtistListManager
               apiPath="/api/artists/ignored"
               addLabel="Ignore"
-              description="Artists in this list will be ignored when fetching events and top artist lists - i.e. artists who don't tour anymore, deceased artists, the phrase 'Various Artists', etc."
+              description="Artists in this list will be ignored when fetching events and top artist lists - i.e. artists who don't tour anymore, deceased artists, the phrase `Various Artists`, etc."
             />
           )}
           {tab === "events" && <EventsTab />}
