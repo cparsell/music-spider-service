@@ -149,8 +149,8 @@ export default function HomeClient({ defaultTab, isConfigured }) {
             <TopArtistsTab
               description={
                 isConfigured
-                  ? "Top artists based on your listening history. Selecting term(s) below also sets which are combined into the artist list used for event searches. Saved artists are added to the `Custom List`. Ignored artists are added to the `Ignore List`."
-                  : "Top artists based on your listening history. Selecting term(s) below also sets which are combined into the artist list used for event searches. Configure sources in the settings."
+                  ? "Top artists based on your listening history. Select which term(s) are combined into the artist list used for event searches. Saved artists are added to the `Custom List`. Ignored artists are added to the `Ignore List`."
+                  : "Top artists based on your listening history. Select which term(s) are combined into the artist list used for event searches. Configure sources in the settings."
               }
             />
           )}

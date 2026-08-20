@@ -26,9 +26,9 @@ function formatCacheAge(cachedAt) {
 }
 
 const TERM_OPTIONS = [
-  { value: "short_term", label: "Short" },
-  { value: "medium_term", label: "Medium" },
-  { value: "long_term", label: "Long" },
+  { value: "short_term", label: "Short (~4 weeks)" },
+  { value: "medium_term", label: "Medium (~6 months)" },
+  { value: "long_term", label: "Long (all time)" },
 ];
 
 export default function TopArtistsTab({ description }) {
@@ -241,8 +241,8 @@ export default function TopArtistsTab({ description }) {
                   }
                   className={`flex items-center gap-1.5 px-3 py-0.5 rounded-2xl border cursor-pointer ${
                     active
-                      ? "bg-neutral-800 text-white border-neutral-800"
-                      : "bg-neutral-200 text-neutral-900 border-neutral-400"
+                      ? "bg-neutral-200 text-neutral-900  border-neutral-800"
+                      : "bg-neutral-800 text-white border-neutral-400"
                   }`}
                 >
                   <span
@@ -254,11 +254,7 @@ export default function TopArtistsTab({ description }) {
                     }`}
                   >
                     {active && (
-                      <svg
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        className="w-3 h-3"
-                      >
+                      <svg viewBox="0 0 20 20" fill="none" className="w-3 h-3">
                         <path
                           d="M5 10l3 3 7-7"
                           stroke="currentColor"

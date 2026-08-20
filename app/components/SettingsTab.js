@@ -770,7 +770,7 @@ function ServiceAccountKeyInput({ value, onChange }) {
 
   if (saved && !editing) {
     return (
-      <div className="flex items-center gap-3 border border-neutral-400 rounded px-2 py-1">
+      <div className="flex items-center gap-3 border border-neutral-300 rounded px-2 py-1">
         <span className="text-neutral-300 truncate">
           {isPath ? value : "A key is saved (hidden)"}
         </span>
@@ -800,7 +800,7 @@ function ServiceAccountKeyInput({ value, onChange }) {
         rows={5}
         spellCheck={false}
         placeholder={'{\n  "type": "service_account",\n  ...\n}'}
-        className="border border-neutral-400 rounded px-2 py-1 font-mono text-xs"
+        className="border border-neutral-300 rounded px-2 py-1 font-mono text-xs"
       />
       {saved && (
         <button
@@ -986,9 +986,7 @@ function CalDavConnection({ url, username, password, enabled }) {
   return (
     <div className="mt-3 flex flex-col gap-2">
       {status?.configured ? (
-        <p className="text-sm text-green-700">
-          Configured - {status.url}
-        </p>
+        <p className="text-sm text-green-700">Configured - {status.url}</p>
       ) : (
         <p className="text-sm text-neutral-500">
           Not configured - enable it and add a calendar URL above.
@@ -1067,7 +1065,12 @@ function RegionPicker({ value, onChange }) {
     }
     const updateRect = () => {
       const rect = inputRef.current?.getBoundingClientRect();
-      if (rect) setMenuRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+      if (rect)
+        setMenuRect({
+          top: rect.bottom + 4,
+          left: rect.left,
+          width: rect.width,
+        });
     };
     updateRect();
     window.addEventListener("scroll", updateRect, true);
@@ -1094,13 +1097,13 @@ function RegionPicker({ value, onChange }) {
           {selectedIds.map((id) => (
             <span
               key={id}
-              className="flex items-center gap-1 bg-neutral-700 rounded px-2 py-1 text-sm"
+              className="flex items-center gap-1 bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-sm"
             >
               {RA_REGIONS_BY_ID.get(id) || `Unknown region (${id})`}
               <button
                 type="button"
                 onClick={() => removeRegion(id)}
-                className="text-neutral-300 hover:text-red-600"
+                className="text-neutral-200 hover:text-red-600"
                 aria-label={`Remove ${RA_REGIONS_BY_ID.get(id) || id}`}
               >
                 ×
@@ -1116,13 +1119,13 @@ function RegionPicker({ value, onChange }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search for a city or country to add..."
-          className="border border-neutral-400 rounded px-2 py-1 text-sm w-full"
+          className="border border-neutral-300 rounded px-2 py-1 text-sm w-full"
         />
         {menuRect &&
           matches.length > 0 &&
           createPortal(
             <ul
-              className="fixed z-50 max-h-56 overflow-auto border border-neutral-600 rounded bg-white shadow"
+              className="fixed z-50 max-h-56 overflow-auto border border-neutral-500 rounded bg-white shadow"
               style={{
                 top: menuRect.top,
                 left: menuRect.left,
@@ -1321,7 +1324,7 @@ export default function SettingsTab({ isConfigured }) {
             ) : f.type === "switch" ? (
               <div key={f.key} className="flex flex-col gap-1 text-sm">
                 {f.label}
-                <div className="flex rounded-2xl overflow-hidden border border-neutral-300 w-fit">
+                <div className="flex rounded-2xl overflow-hidden border border-neutral-400 w-fit">
                   {f.options.map((o) => (
                     <button
                       key={o.value}
@@ -1329,8 +1332,8 @@ export default function SettingsTab({ isConfigured }) {
                       onClick={() => updateField(f.key, o.value)}
                       className={`px-3 py-0.5 ${
                         form[f.key] === o.value
-                          ? "bg-neutral-700 text-white"
-                          : "bg-neutral-300 text-neutral-900 cursor-pointer"
+                          ? "bg-neutral-200 text-neutral-900"
+                          : "bg-neutral-800 text-white  cursor-pointer"
                       }`}
                     >
                       {o.label}
@@ -1545,8 +1548,8 @@ export default function SettingsTab({ isConfigured }) {
           ) : form.googleServiceAccountEnabled ? (
             <p className="text-sm text-amber-200 border border-amber-200 rounded p-2 mb-3">
               ⚠️ Enabled, but no key is saved yet - Calendar events are still
-              using {CALENDAR_METHOD_LABELS[activeCalendarMethod]} (Google
-              OAuth (Email &amp; Calendar) section) until one is added.
+              using {CALENDAR_METHOD_LABELS[activeCalendarMethod]} (Google OAuth
+              (Email &amp; Calendar) section) until one is added.
             </p>
           ) : (
             <p className="text-sm text-neutral-400 border border-neutral-700 rounded p-2 mb-3">
@@ -1678,7 +1681,7 @@ export default function SettingsTab({ isConfigured }) {
             defaultOpen={!isConfigured}
           >
             <div className="flex flex-col gap-2">
-              <div className="flex rounded-2xl overflow-hidden border-2 border-neutral-300  w-fit">
+              <div className="flex rounded-2xl overflow-hidden border border-neutral-400  w-fit">
                 {ARTIST_SOURCES.map((s) => (
                   <button
                     key={s.value}
@@ -1686,10 +1689,10 @@ export default function SettingsTab({ isConfigured }) {
                     onClick={() => updateField("artistSource", s.value)}
                     className={`px-3 py-0.5 ${
                       form.artistSource === s.value
-                        ? "bg-neutral-700 text-white "
+                        ? "bg-neutral-200 text-neutral-900 "
                         : s.value === "none"
-                          ? "bg-neutral-300 text-neutral-900 cursor-pointer"
-                          : "bg-neutral-300 text-neutral-900 cursor-pointer border-r-2 border-r-neutral-500/70"
+                          ? "bg-neutral-800 text-white cursor-pointer"
+                          : "bg-neutral-800 text-white cursor-pointer border-r-2 border-r-neutral-500/70"
                     }`}
                   >
                     {s.label}
