@@ -2,20 +2,11 @@ import { TERM_WINDOWS } from "@/lib/tautulli.js";
 import { getConfiguredTopArtists } from "@/lib/artistSources.js";
 import { getResolvedConfig } from "@/lib/settings.js";
 import { ignoredArtists } from "@/lib/artistLists.js";
-import { getCachedTermResult } from "@/lib/topArtistsCache.js";
+import {
+  getCachedTermResult,
+  cacheKeyForTerms,
+} from "@/lib/topArtistsCache.js";
 import { refreshAllTopArtistLists } from "@/lib/topArtistsRefresh.js";
-
-const ALL_TERMS = Object.keys(TERM_WINDOWS);
-
-// Only the individual terms and the all-three default are proactively
-// cached/refreshed (see topArtistsRefresh.js) - any other subset (e.g. just
-// short+long) is computed live on each request instead of caching every
-// possible combination.
-function cacheKeyForTerms(terms) {
-  if (terms.length === 1) return terms[0];
-  if (terms.length === ALL_TERMS.length) return "combined";
-  return null;
-}
 
 async function withIgnoredFlags(artists, count) {
   const ignoredSet = new Set(await ignoredArtists.getAll());

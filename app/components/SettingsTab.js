@@ -1385,16 +1385,7 @@ export default function SettingsTab({ isConfigured }) {
       {section.title === "Top Artists" && (
         <div>
           <div className="flex items-center gap-2 mt-3 text-sm">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.topArtistsAutoRefreshEnabled}
-                onChange={(e) =>
-                  updateField("topArtistsAutoRefreshEnabled", e.target.checked)
-                }
-              />
-              Automatically refresh every
-            </label>
+            <span>Automatically refresh every </span>
             <input
               type="number"
               min="1"
