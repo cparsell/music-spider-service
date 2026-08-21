@@ -50,7 +50,7 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
   - Tautulli: API key needed (from Tautulli settings)
   - Spotify: API key from [developer.spotify.com](https://developer.spotify.com/)
 - Event Search options:
-  - Ticketmster: API key from [developer.ticketmaster.com](https://developer.ticketmaster.com/)
+  - Ticketmster: Consumer Key from [developer.ticketmaster.com](https://developer.ticketmaster.com/)
 - Options for Notifications
   - SMTP email connection
   - Custom webhook - can be used to send event summary to Discord, Slack, etc.

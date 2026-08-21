@@ -120,7 +120,7 @@ const SECTIONS = [
   {
     title: "Ticketmaster API",
     fields: [
-      { key: "ticketmasterApiKey", label: "API Key", type: "password" },
+      { key: "ticketmasterApiKey", label: "Consumer Key", type: "password" },
       { key: "latLong", label: "Lat/Long", type: "text" },
       { key: "radius", label: "Radius", type: "text" },
       {
