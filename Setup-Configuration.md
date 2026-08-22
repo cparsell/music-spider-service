@@ -34,6 +34,7 @@ How these are combined is influenced by the **Combination Mode** in **Settings**
 Pick one or both sources under **Event Search > Event Search Sources**:
 
 - **Ticketmaster**:
+  - **Note**: The first time Ticketmaster is searched it will take longer. This is so that it can cache the `attraction ID` of each artist. After that, it will batch search 25 artists at a time, making the search process much quicker. It will refresh these `attraction IDs` every 30 days.
   - `Consumer Key` from [Ticketmaster Developer Dashboard](https://developer.ticketmaster.com/). Create an account then create an "app" - use the `Consumer Key` it gives you (not the `Consumer Secret`, which isn't needed for the Discovery API this app uses). **NOTE: Ticketmaster asks you to set a `Redirect URI` but it is unnecessary. You can set it to `http://127.0.0.1/` if required to get the key**
   - `Lat/Long` of your area can be found at [latlong.net](https://www.latlong.net/). Add more than one location by putting each on its own line.
   - `Radius` (in miles or km) - applies to every location.
