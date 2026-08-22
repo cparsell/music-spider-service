@@ -24,10 +24,6 @@ function run(cmd, args, opts = {}) {
     result.error &&
     (result.error.code === "ENOENT" || result.error.code === "EINVAL")
   ) {
-    // On Windows, some commands (e.g. npm) are .cmd/.bat shims that can only
-    // be launched through a shell, not exec'd directly - retry that way.
-    // Args here are plain tokens (no spaces), so unescaped shell
-    // concatenation is safe.
     result = spawnSync(cmd, args, { stdio: "inherit", shell: true, ...opts });
   }
   if (result.error) {
