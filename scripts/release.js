@@ -16,7 +16,7 @@ const readline = require("readline");
 const DOCKER_IMAGE = "139139/music-spider";
 
 function run(cmd, args, opts = {}) {
-  const result = spawnSync(cmd, args, { stdio: "inherit", ...opts });
+  const result = spawnSync(cmd, args, { stdio: "inherit", shell: true, ...opts });
   if (result.error) {
     if (result.error.code === "ENOENT") return { ok: false, missing: true };
     throw result.error;
