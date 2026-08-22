@@ -121,7 +121,12 @@ const SECTIONS = [
     title: "Ticketmaster API",
     fields: [
       { key: "ticketmasterApiKey", label: "Consumer Key", type: "password" },
-      { key: "latLong", label: "Lat/Long", type: "text" },
+      {
+        key: "latLong",
+        label:
+          "Lat/Long - e.g. 34.0522,-118.2437 (comma, space, slash, or similar separators all work)",
+        type: "text",
+      },
       { key: "radius", label: "Radius", type: "text" },
       {
         key: "units",

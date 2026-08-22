@@ -12,6 +12,21 @@ const MIN_IMAGE_WIDTH = 600;
 const TARGET_RATIO = 6 / 8;
 
 /**
+ * Ticketmaster's `latlong` param wants "lat,long" with no space. Users type
+ * this all sorts of ways (comma, space, slash, semicolon, pipe, tab...), so
+ * just pull out the two numbers and reassemble them in the format the API
+ * expects, whatever separator was used.
+ * @param {string} raw
+ * @returns {string}
+ */
+const normalizeLatLong = (raw) => {
+  if (!raw) return raw;
+  const numbers = raw.match(/-?\d+(?:\.\d+)?/g);
+  if (!numbers || numbers.length < 2) return raw.trim();
+  return `${numbers[0]},${numbers[1]}`;
+};
+
+/**
  * ----------------------------------------------------------------------------------------------------------------
  * Search Ticketmaster for every artist in artistsArr.
  *
@@ -31,7 +46,7 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
   const resolved = await getResolvedConfig();
   const config = {
     apiKey: resolved.ticketmasterApiKey,
-    latlong: resolved.latLong,
+    latlong: normalizeLatLong(resolved.latLong),
     radius: resolved.radius,
     units: resolved.units,
   };
