@@ -1,7 +1,10 @@
-// Automates the release steps documented in README-Dev.md: bump the
-// version, commit + tag it, then (after confirming) push, build/push the
-// Docker image under both `latest` and the version tag, and cut a GitHub
-// Release. Plain node (not bash) so this also runs under Windows, same
+// Automates the release steps:
+// 1. bump the version,
+// 2. commit + tag it, then (after confirming)
+// 3. push, build/push the Docker image under both `latest` and the version tag
+// 4. cut a GitHub Release.
+//
+// Plain node (not bash) so this also runs under Windows, same
 // reasoning as scripts/lock.js.
 //
 // Usage:
@@ -17,7 +20,10 @@ const DOCKER_IMAGE = "139139/music-spider";
 
 function run(cmd, args, opts = {}) {
   let result = spawnSync(cmd, args, { stdio: "inherit", ...opts });
-  if (result.error && (result.error.code === "ENOENT" || result.error.code === "EINVAL")) {
+  if (
+    result.error &&
+    (result.error.code === "ENOENT" || result.error.code === "EINVAL")
+  ) {
     // On Windows, some commands (e.g. npm) are .cmd/.bat shims that can only
     // be launched through a shell, not exec'd directly - retry that way.
     // Args here are plain tokens (no spaces), so unescaped shell
@@ -167,7 +173,9 @@ async function main() {
     process.exit(1);
   }
   if (!run("git", ["push", "origin", tag]).ok) {
-    console.error("git push (tag) failed - stopping before Docker/GitHub steps.");
+    console.error(
+      "git push (tag) failed - stopping before Docker/GitHub steps.",
+    );
     process.exit(1);
   }
 
