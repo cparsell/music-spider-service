@@ -124,10 +124,14 @@ const SECTIONS = [
       {
         key: "latLong",
         label:
-          "Lat/Long - e.g. 34.0522,-118.2437 (comma, space, slash, or similar separators all work)",
+          "Lat/Long - one location per line, e.g. 34.0522,-118.2437 (comma, space, slash, or similar separators all work within a line). Multiple locations are all searched.",
+        type: "textarea",
+      },
+      {
+        key: "radius",
+        label: "Radius (applies to every location above)",
         type: "text",
       },
-      { key: "radius", label: "Radius", type: "text" },
       {
         key: "units",
         label: "Units",

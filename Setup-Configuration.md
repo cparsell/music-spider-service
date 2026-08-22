@@ -11,21 +11,23 @@ Choose where your "top artists" list comes from, under **Artists > Artist Source
 - **Both** - merges the two: Tautulli's real play counts win for any artist it knows about, and Spotify fills in anything Tautulli didn't surface. Requires both sets of credentials above.
 
 ### Top Artists configuration
+
 **Top Artists** tab, you can see the list of artists fetched. The list is some combination of three ingredients:
 
 - Long term (all time)
 - Medium term (last 6 months)
 - Short term (last 4 weeks)
 
-In the same **Top Artists** tab, you can select which of these you want included in the search. The displayed list will immediately reflect your selection. 
+In the same **Top Artists** tab, you can select which of these you want included in the search. The displayed list will immediately reflect your selection.
 
 ### Combination
+
 How these are combined is influenced by the **Combination Mode** in **Settings** > **Artists** > **Artist Sources**.
 
 **Combination Modes**:
+
 - **Weighted Mode** (Default): Combines selected top artists lists (short term, long term, etc.) into one list, weighting recent plays more heavily than older ones while still including old favorites.
 - **Union of top lists**: Takes the top artists from each individual window (selected terms) and merges them into one deduplicated list.
-
 
 ## Event Search
 
@@ -33,8 +35,8 @@ Pick one or both sources under **Event Search > Event Search Sources**:
 
 - **Ticketmaster**:
   - `Consumer Key` from [Ticketmaster Developer Dashboard](https://developer.ticketmaster.com/). Create an account then create an "app" - use the `Consumer Key` it gives you (not the `Consumer Secret`, which isn't needed for the Discovery API this app uses). **NOTE: Ticketmaster asks you to set a `Redirect URI` but it is unnecessary. You can set it to `http://127.0.0.1/` if required to get the key**
-  - `Lat/Long` of your area can be found at [latlong.net](https://www.latlong.net/)
-  - `Radius` (in miles or km).
+  - `Lat/Long` of your area can be found at [latlong.net](https://www.latlong.net/). Add more than one location by putting each on its own line.
+  - `Radius` (in miles or km) - applies to every location.
 - **Resident Advisor**: no API key needed. Just open the **Resident Advisor** subsection and use the region search box to find and add your city/country - matching events near those regions are pulled automatically. More than one region can be added.
 
 ## Notifications
