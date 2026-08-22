@@ -415,8 +415,8 @@ export default function EventsTab() {
                   onClick={() => handleSetViewMode(mode)}
                   className={`px-3 py-0.5 capitalize ${
                     viewMode === mode
-                      ? "bg-neutral-700 text-white"
-                      : "bg-neutral-200 text-neutral-900 cursor-pointer"
+                      ? "bg-neutral-200 text-neutral-900"
+                      : "bg-neutral-800 text-white  cursor-pointer"
                   }`}
                 >
                   {mode}
