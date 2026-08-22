@@ -16,7 +16,14 @@ const readline = require("readline");
 const DOCKER_IMAGE = "139139/music-spider";
 
 function run(cmd, args, opts = {}) {
-  const result = spawnSync(cmd, args, { stdio: "inherit", shell: true, ...opts });
+  let result = spawnSync(cmd, args, { stdio: "inherit", ...opts });
+  if (result.error && (result.error.code === "ENOENT" || result.error.code === "EINVAL")) {
+    // On Windows, some commands (e.g. npm) are .cmd/.bat shims that can only
+    // be launched through a shell, not exec'd directly - retry that way.
+    // Args here are plain tokens (no spaces), so unescaped shell
+    // concatenation is safe.
+    result = spawnSync(cmd, args, { stdio: "inherit", shell: true, ...opts });
+  }
   if (result.error) {
     if (result.error.code === "ENOENT") return { ok: false, missing: true };
     throw result.error;
