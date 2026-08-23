@@ -39,16 +39,34 @@ export default function ArtistListManager({ apiPath, addLabel, description }) {
 
   const addArtist = async (e) => {
     e.preventDefault();
-    const names = input
+    const newNames = input
       .split("\n")
       .map((n) => n.trim())
       .filter(Boolean);
-    if (names.length === 0) return;
 
+    const existingArtists = artists;
+    const filteredNames = newNames.filter(
+      (name) => !existingArtists.includes(name),
+    );
+    const ignoredNames = newNames.filter((name) =>
+      existingArtists.includes(name),
+    );
+    let ignoredMsg = "";
+    ignoredNames.length > 0
+      ? (ignoredMsg = `(${ignoredNames.length} artists ignored, already in list)`)
+      : "";
+    if (filteredNames.length === 0) {
+      setStatusMessage(ignoredMsg);
+      return;
+    }
     const res = await fetch(apiPath, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(names.length === 1 ? { name: names[0] } : { names }),
+      body: JSON.stringify(
+        filteredNames.length === 1
+          ? { name: filteredNames[0] }
+          : { filteredNames },
+      ),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -58,10 +76,11 @@ export default function ArtistListManager({ apiPath, addLabel, description }) {
     }
     setArtists(data.artists);
     setInput("");
+
     setStatusMessage(
-      names.length === 1
-        ? `Added ${names[0]}`
-        : `Added ${names.length} artists`,
+      filteredNames.length === 1
+        ? `Added ${filteredNames[0]} ${ignoredMsg}`
+        : `Added ${filteredNames.length} artists ${ignoredMsg}`,
     );
     setStatusError(false);
   };

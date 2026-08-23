@@ -26,9 +26,9 @@ function formatCacheAge(cachedAt) {
 }
 
 const TERM_OPTIONS = [
-  { value: "short_term", label: "Short (~4 weeks)" },
-  { value: "medium_term", label: "Medium (~6 months)" },
-  { value: "long_term", label: "Long (all time)" },
+  { value: "short_term", label: "Short" },
+  { value: "medium_term", label: "Medium" },
+  { value: "long_term", label: "Long" },
 ];
 
 export default function TopArtistsTab({ description }) {
