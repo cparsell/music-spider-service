@@ -547,7 +547,7 @@ export default function EventsTab() {
                       {event.dates?.map((d) =>
                         d.urls?.map((u) => (
                           <a
-                            key={u.name + d.date}
+                            key={u.url}
                             href={u.url}
                             target="_blank"
                             rel="noreferrer"
@@ -657,7 +657,7 @@ export default function EventsTab() {
                             <div className="flex flex-col">
                               {d.urls?.map((u) => (
                                 <a
-                                  key={u.name}
+                                  key={u.url}
                                   href={u.url}
                                   target="_blank"
                                   rel="noreferrer"

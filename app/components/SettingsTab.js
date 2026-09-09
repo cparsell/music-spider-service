@@ -141,6 +141,12 @@ const SECTIONS = [
           { value: "km", label: "Kilometers" },
         ],
       },
+      {
+        key: "includeTicketPackages",
+        label:
+          'Include VIP/hospitality package listings. Ticketmaster sells these as separate events alongside the ordinary ticket for the same show ("VIP Packages", "PACKAGE ...", "Premium Packages", "Logen-Seat", "Hospitality"), so turning this on adds an extra link per package to the show\'s card. A package is only ever hidden when the ordinary listing for that venue and night was found too.',
+        type: "checkbox",
+      },
     ],
   },
   {

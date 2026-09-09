@@ -38,6 +38,7 @@ Pick one or both sources under **Event Search > Event Search Sources**:
   - `Consumer Key` from [Ticketmaster Developer Dashboard](https://developer.ticketmaster.com/). Create an account then create an "app" - use the `Consumer Key` it gives you (not the `Consumer Secret`, which isn't needed for the Discovery API this app uses). **NOTE: Ticketmaster asks you to set a `Redirect URI` but it is unnecessary. You can set it to `http://127.0.0.1/` if required to get the key**
   - `Lat/Long` of your area can be found at [latlong.net](https://www.latlong.net/). Add more than one location by putting each on its own line.
   - `Radius` (in miles or km) - applies to every location.
+  - `Include VIP/hospitality package listings` - Ticketmaster sells VIP, hospitality and premium-seat packages, listed separately alongside the ordinary ticket for the same show ("VIP Packages", "PACKAGE ...", "Premium Packages", "Logen-Seat", "Hospitality"), so one concert can come back as four or five results. Off by default, which keeps just the ordinary listing. Turn it on to get an extra link per package on the show's card. A package is only hidden when the ordinary listing for that same venue and night was found too, so a show should not disappear entirely.
 - **Resident Advisor**: no API key needed. Just open the **Resident Advisor** subsection and use the region search box to find and add your city/country - matching events near those regions are pulled automatically. More than one region can be added.
 
 ## Notifications

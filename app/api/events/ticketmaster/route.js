@@ -37,6 +37,69 @@ const ATTRACTION_MATCH_THRESHOLD = 0.9;
 // can return nothing at all.
 const LOCALE_ALL = "*";
 
+// Ticketmaster files VIP / hospitality / premium-seat add-ons as their own
+// events, sharing the real show's attraction, venue and start time - so one
+// concert can come back as four or five results. There's no structural flag
+// to tell them apart (`type`, `classifications` and `products` are identical
+// on the add-on and the real listing; only `promoter` differs, and that's
+// market-specific), so this matches on the name, which every market tags in
+// some form: "| VIP Packages" (ES), "PACKAGE X" / "PRESTATION" (FR),
+// "| Premium Packages" / "| Logen-Seat" (DE), "| Venue Premium Packages" (NL),
+// "| Premium aitiolippu" / "| Legazy Seat Ticket" (FI), "| Hospitality" (PL),
+// "- Posti riservati Mastercard" (IT), "- Venue Premium Tickets" (GB).
+// Deliberately excludes broader words like "suite" and "lounge", which show
+// up in genuine concert titles (a classical programme, say).
+const PACKAGE_NAME_PATTERN =
+  /\bpackages?\b|\bvip\b|\bpremium\b|\bhospitality\b|\bprestation\b|\blogen\b|\baitiolippu\b|\blegazy\b|posti riservati|\bparking\b|\bparkeerkaart/i;
+
+/**
+ * Whether a Ticketmaster event is an add-on package rather than the ordinary
+ * ticket for the show.
+ * @param {string} eventName
+ * @returns {boolean}
+ */
+const isPackageListing = (eventName) =>
+  PACKAGE_NAME_PATTERN.test(eventName || "");
+
+// One night of one show, for pairing an add-on listing with the ordinary
+// listing it belongs to. Local calendar day rather than exact timestamp, to
+// stay consistent with how eventsStore.js groups dates.
+const showKey = (event) =>
+  `${(event.venue || "").trim().toLowerCase()}::${new Date(event.date).toDateString()}`;
+
+/**
+ * Applies the `includeTicketPackages` setting to a run's parsed results, and
+ * puts the ordinary listings first either way.
+ *
+ * Ordering matters because lib/eventsStore.js groups all of a show's listings
+ * onto one card and takes that card's title, image and primary link from
+ * whichever result it saw first - so without this, a Paris show could end up
+ * titled "PACKAGE PLACEBO" and linking to a hospitality page instead of the
+ * concert.
+ *
+ * When packages are excluded, one is still kept if nothing else covers that
+ * venue and night. The name test above is a heuristic, and this way a false
+ * positive costs a mislabeled link rather than a show vanishing from the list
+ * entirely.
+ * @param {array} events parsed events, each carrying `isPackage`
+ * @param {boolean} includePackages
+ * @returns {array}
+ */
+function applyPackagePolicy(events, includePackages) {
+  const showsWithOrdinaryListing = new Set(
+    events.filter((e) => !e.isPackage).map(showKey),
+  );
+  const kept = includePackages
+    ? events
+    : events.filter(
+        (e) => !e.isPackage || !showsWithOrdinaryListing.has(showKey(e)),
+      );
+  return [
+    ...kept.filter((e) => !e.isPackage),
+    ...kept.filter((e) => e.isPackage),
+  ];
+}
+
 // Event cards render at a tall aspect-6/8 with object-cover, first drop
 // anything below a minimum resolution, then prefer whichever remaining
 // image's aspect ratio is closest to the card's.
@@ -103,6 +166,7 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
   const units = resolved.units;
   const locations = parseLatLongList(resolved.latLong);
   const latlongList = locations.length > 0 ? locations : [""];
+  const includePackages = !!resolved.includeTicketPackages;
 
   let results = [];
   try {
@@ -145,6 +209,10 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
         await sleep(180);
       }
     }
+
+    // Ahead of the image lookups below, so dropped package listings don't
+    // cost a round of HEAD requests each.
+    results = applyPackagePolicy(results, includePackages);
 
     console.debug("Ticketmaster Search complete - Results:", results);
 
@@ -304,15 +372,25 @@ function parseEvents(data, artistsArr) {
     else if (start.timeTBA || start.noSpecificTime)
       date = new Date(start.localDate);
 
+    // `isPackage` is only used to sort/filter within this run (see
+    // applyPackagePolicy) - lib/eventsStore.js copies named fields only, so
+    // it never reaches the stored event.
+    const isPackage = isPackageListing(item.name);
     eventsArr.push({
       eName: item.name,
       acts,
       venue: venueName,
       city: venueCity,
       date,
-      urls: [{ name: "Ticketmaster", url }],
+      urls: [
+        {
+          name: isPackage ? "Ticketmaster (package)" : "Ticketmaster",
+          url,
+        },
+      ],
       image,
       address: `${venueAddress}, ${venueCity}, ${venueState}`,
+      isPackage,
     });
   });
   return eventsArr;
