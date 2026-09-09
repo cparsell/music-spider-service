@@ -28,6 +28,15 @@ const EVENT_PAGE_SIZE = 200;
 // stringSimilarity) to accept it as a match when there's no exact name hit.
 const ATTRACTION_MATCH_THRESHOLD = 0.9;
 
+// Ticketmaster defaults to an English-only locale, which silently drops every
+// event whose content is only published in another language - e.g. Placebo's
+// Paris dates ("PACKAGE PLACEBO", French market) are missing from an otherwise
+// identical query, while the German/Spanish/UK dates for the same attraction
+// come back fine. "*" means "all locales", falling back to whatever language
+// the event actually has. Without it a search anchored on a non-English city
+// can return nothing at all.
+const LOCALE_ALL = "*";
+
 // Event cards render at a tall aspect-6/8 with object-cover, first drop
 // anything below a minimum resolution, then prefer whichever remaining
 // image's aspect ratio is closest to the card's.
@@ -327,6 +336,7 @@ async function resolveAttractionId(artistName, apiKey) {
       apikey: apiKey,
       keyword: artistName,
       size: "20",
+      locale: LOCALE_ALL,
     });
     const response = await fetch(`${ATTRACTIONS_URL}?${params.toString()}`);
     const body = await response.json();
@@ -443,6 +453,7 @@ const fetchTMEvents = async ({
     apikey: apiKey,
     page: String(page),
     size: String(size),
+    locale: LOCALE_ALL,
   });
   if (latlong) params.set("latlong", latlong);
   if (radius) params.set("radius", radius);
