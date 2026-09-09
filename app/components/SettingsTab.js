@@ -124,7 +124,7 @@ const SECTIONS = [
       {
         key: "latLong",
         label:
-          "Lat/Long - one location per line, e.g. 34.0522,-118.2437 (comma, space, slash, or similar separators all work within a line). Multiple locations are all searched.",
+          "Lat/Long - one location per line, e.g. 34.0522,-118.2437 (comma, space, slash, or similar separators all work within a line). Multiple locations are all searched. NOTE: Dashes are reserved for negative latitudes/longitudes, so don't use them as separators.",
         type: "textarea",
       },
       {
