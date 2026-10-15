@@ -386,6 +386,9 @@ function parseEvents(data, artistsArr) {
         {
           name: isPackage ? "Ticketmaster (package)" : "Ticketmaster",
           url,
+          // dates.status.code: onsale | offsale | canceled | postponed |
+          // rescheduled. "offsale" can mean sold out or sale window ended.
+          status: item.dates?.status?.code,
         },
       ],
       image,

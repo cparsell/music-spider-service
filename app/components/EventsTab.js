@@ -21,6 +21,24 @@ function formatDate(dateValue) {
   return `${datePart}, ${timePart}`;
 }
 
+const STATUS_LABELS = {
+  offsale: "Off sale",
+  canceled: "Canceled",
+  postponed: "Postponed",
+  rescheduled: "Rescheduled",
+};
+
+// Ticketmaster's "offsale" covers both sold out and sale window ended.
+function StatusBadge({ status }) {
+  const label = STATUS_LABELS[status];
+  if (!label) return null;
+  return (
+    <span className="ml-1.5 rounded-full bg-neutral-600 text-white text-[10px] font-semibold px-1.5 py-0.5 no-underline inline-block">
+      {label}
+    </span>
+  );
+}
+
 const COLUMNS = [
   { key: "eName", label: "Event" },
   { key: "venue", label: "Venue" },
@@ -554,6 +572,7 @@ export default function EventsTab() {
                             className="text-blue-600 hover:underline"
                           >
                             {u.name}
+                            <StatusBadge status={u.status} />
                           </a>
                         )),
                       )}
@@ -664,6 +683,7 @@ export default function EventsTab() {
                                   className="text-blue-300 hover:underline"
                                 >
                                   {u.name}
+                                  <StatusBadge status={u.status} />
                                 </a>
                               ))}
                             </div>
