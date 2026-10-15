@@ -19,7 +19,7 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - **Events UI:** Peruse the discovered events in card and list views, sortable columns, per-event delete/ignore
 - **Notifications:**
   - Weekly event digest email
-  - Google Calendar sync - via a connected Google account (OAuth) or a GCP service account (no OAuth consent screen or HTTPS needed),
+  - Calendar sync - via a connected Google account (OAuth) or a GCP service account (no OAuth consent screen or HTTPS needed), or CalDAV (Nextcloud, Radicale, Baikal, iCloud, Fastmail, etc.)
   - generic JSON webhook (e.g. Discord, Home Assistant)
 - **Settings UI:**
 - **Theming:** Grayscale and Catppuccin Mocha themes
