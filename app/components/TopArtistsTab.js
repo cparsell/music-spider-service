@@ -1,35 +1,36 @@
-"use client";
-import { useState, useEffect } from "react";
-import StatusBar from "./StatusBar";
-import TabLayout from "./TabLayout";
+'use client'
+import { useState, useEffect } from 'react'
+import StatusBar from './StatusBar'
+import TabLayout from './TabLayout'
+import { BookmarkIcon, IgnoreIcon } from '../assets/SvgIcons'
 
 async function addArtist(apiPath, name) {
   const res = await fetch(apiPath, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
-  });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  })
   if (!res.ok) {
-    const data = await res.json();
-    throw new Error(data.error || "Failed to add artist");
+    const data = await res.json()
+    throw new Error(data.error || 'Failed to add artist')
   }
 }
 
 function formatCacheAge(cachedAt) {
-  if (!cachedAt) return "";
-  const minutes = Math.round((Date.now() - cachedAt) / 60000);
-  if (minutes < 1) return " (just refreshed)";
-  if (minutes < 60) return ` (cached ${minutes}m ago)`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return ` (cached ${hours}h ago)`;
-  return ` (cached ${Math.round(hours / 24)}d ago)`;
+  if (!cachedAt) return ''
+  const minutes = Math.round((Date.now() - cachedAt) / 60000)
+  if (minutes < 1) return ' (just refreshed)'
+  if (minutes < 60) return ` (cached ${minutes}m ago)`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return ` (cached ${hours}h ago)`
+  return ` (cached ${Math.round(hours / 24)}d ago)`
 }
 
 const TERM_OPTIONS = [
-  { value: "short_term", label: "Short" },
-  { value: "medium_term", label: "Medium" },
-  { value: "long_term", label: "Long" },
-];
+  { value: 'short_term', label: 'Short' },
+  { value: 'medium_term', label: 'Medium' },
+  { value: 'long_term', label: 'Long' }
+]
 
 export default function TopArtistsTab({ description }) {
   // Which term window(s) to show, in TERM_OPTIONS order regardless of click
@@ -39,244 +40,244 @@ export default function TopArtistsTab({ description }) {
   // This is the same setting Settings > Event Search Artist Terms edits
   // (eventSearchTerms) - synced from there on mount, and written back on
   // every toggle here, so either surface reflects the other.
-  const [selectedTerms, setSelectedTerms] = useState(["medium_term"]);
-  const [artists, setArtists] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [status, setStatus] = useState({});
-  const [statusMessage, setStatusMessage] = useState("");
-  const [statusError, setStatusError] = useState(false);
+  const [selectedTerms, setSelectedTerms] = useState(['medium_term'])
+  const [artists, setArtists] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [status, setStatus] = useState({})
+  const [statusMessage, setStatusMessage] = useState('')
+  const [statusError, setStatusError] = useState(false)
   // Artists already on the Custom List, so they show as "Saved" up front
   // instead of only after clicking Save this session.
-  const [customListArtists, setCustomListArtists] = useState(new Set());
+  const [customListArtists, setCustomListArtists] = useState(new Set())
 
   useEffect(() => {
-    fetch("/api/artists/manual")
-      .then((res) => res.json())
-      .then((data) => setCustomListArtists(new Set(data.artists || [])))
-      .catch(() => {});
-  }, []);
+    fetch('/api/artists/manual')
+      .then(res => res.json())
+      .then(data => setCustomListArtists(new Set(data.artists || [])))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
-    fetch("/api/settings")
-      .then((res) => res.json())
-      .then((config) => {
-        const saved = TERM_OPTIONS.map((t) => t.value).filter((t) =>
-          config.eventSearchTerms?.includes(t),
-        );
-        if (saved.length > 0) setSelectedTerms(saved);
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(config => {
+        const saved = TERM_OPTIONS.map(t => t.value).filter(t =>
+          config.eventSearchTerms?.includes(t)
+        )
+        if (saved.length > 0) setSelectedTerms(saved)
       })
-      .catch(() => {});
-  }, []);
+      .catch(() => {})
+  }, [])
 
-  const toggleTerm = (value) => {
-    if (selectedTerms.length === 1 && selectedTerms.includes(value)) return;
+  const toggleTerm = value => {
+    if (selectedTerms.length === 1 && selectedTerms.includes(value)) return
     const next = selectedTerms.includes(value)
-      ? selectedTerms.filter((t) => t !== value)
-      : TERM_OPTIONS.map((t) => t.value).filter(
-          (t) => selectedTerms.includes(t) || t === value,
-        );
-    setSelectedTerms(next);
-    fetch("/api/settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ eventSearchTerms: next }),
-    }).catch(() => {});
-  };
+      ? selectedTerms.filter(t => t !== value)
+      : TERM_OPTIONS.map(t => t.value).filter(
+          t => selectedTerms.includes(t) || t === value
+        )
+    setSelectedTerms(next)
+    fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventSearchTerms: next })
+    }).catch(() => {})
+  }
 
   const loadArtists = () => {
-    setLoading(true);
-    setStatusMessage("Loading top artists...");
-    setStatusError(false);
+    setLoading(true)
+    setStatusMessage('Loading top artists...')
+    setStatusError(false)
     // A cached response returns almost instantly; if it's still going after
     // this long, the cache was stale and the server is refreshing from
     // Spotify/Tautulli listening history before it can respond.
     const slowTimer = setTimeout(() => {
-      setStatusMessage("Refreshing listening history...");
-    }, 1200);
-    return fetch(`/api/top-artists?terms=${selectedTerms.join(",")}`)
-      .then((res) => res.json())
-      .then((data) => {
+      setStatusMessage('Refreshing listening history...')
+    }, 1200)
+    return fetch(`/api/top-artists?terms=${selectedTerms.join(',')}`)
+      .then(res => res.json())
+      .then(data => {
         if (data.error) {
-          setArtists([]);
-          setStatusMessage(data.error);
-          setStatusError(true);
-          return;
+          setArtists([])
+          setStatusMessage(data.error)
+          setStatusError(true)
+          return
         }
-        setArtists(data.artists || []);
-        const age = formatCacheAge(data.cachedAt);
-        const termsLabel = TERM_OPTIONS.filter((t) =>
-          selectedTerms.includes(t.value),
+        setArtists(data.artists || [])
+        const age = formatCacheAge(data.cachedAt)
+        const termsLabel = TERM_OPTIONS.filter(t =>
+          selectedTerms.includes(t.value)
         )
-          .map((t) => t.label)
-          .join(" + ");
+          .map(t => t.label)
+          .join(' + ')
         if (data.spotifyError) {
-          setStatusMessage(`Spotify: ${data.spotifyError}`);
-          setStatusError(true);
+          setStatusMessage(`Spotify: ${data.spotifyError}`)
+          setStatusError(true)
         } else {
           setStatusMessage(
-            `Loaded ${data.artists?.length || 0} artists (${termsLabel})${age}`,
-          );
-          setStatusError(false);
+            `Loaded ${data.artists?.length || 0} artists (${termsLabel})${age}`
+          )
+          setStatusError(false)
         }
       })
-      .catch((err) => {
-        setArtists([]);
-        setStatusMessage(err.message || "Failed to load top artists");
-        setStatusError(true);
+      .catch(err => {
+        setArtists([])
+        setStatusMessage(err.message || 'Failed to load top artists')
+        setStatusError(true)
       })
       .finally(() => {
-        clearTimeout(slowTimer);
-        setLoading(false);
-      });
-  };
+        clearTimeout(slowTimer)
+        setLoading(false)
+      })
+  }
 
   useEffect(() => {
-    loadArtists();
-  }, [selectedTerms]);
+    loadArtists()
+  }, [selectedTerms])
 
   const handleRefresh = async () => {
-    setRefreshing(true);
-    setStatusMessage("Refreshing all top artist lists...");
-    setStatusError(false);
+    setRefreshing(true)
+    setStatusMessage('Refreshing all top artist lists...')
+    setStatusError(false)
     try {
-      const res = await fetch("/api/top-artists/refresh", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Refresh failed");
-      await loadArtists();
+      const res = await fetch('/api/top-artists/refresh', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Refresh failed')
+      await loadArtists()
       if (data.errors) {
         setStatusMessage(
-          `Refreshed with some issues: ${Object.values(data.errors).join("; ")}`,
-        );
-        setStatusError(true);
+          `Refreshed with some issues: ${Object.values(data.errors).join('; ')}`
+        )
+        setStatusError(true)
       }
     } catch (err) {
-      setStatusMessage(err.message);
-      setStatusError(true);
+      setStatusMessage(err.message)
+      setStatusError(true)
     } finally {
-      setRefreshing(false);
+      setRefreshing(false)
     }
-  };
+  }
 
-  const handleSave = async (name) => {
+  const handleSave = async name => {
     try {
-      await addArtist("/api/artists/manual", name);
+      await addArtist('/api/artists/manual', name)
       // Saving now also removes it from the ignore list server-side (the two
       // lists are mutually exclusive) - clear any local "ignored" status so
       // the UI doesn't keep showing it as ignored too.
-      setCustomListArtists((s) => new Set(s).add(name));
-      setStatus((s) => ({ ...s, [name]: "unignored" }));
-      setStatusMessage(`Saved ${name} to custom artists`);
-      setStatusError(false);
+      setCustomListArtists(s => new Set(s).add(name))
+      setStatus(s => ({ ...s, [name]: 'unignored' }))
+      setStatusMessage(`Saved ${name} to custom artists`)
+      setStatusError(false)
     } catch (err) {
-      setStatusMessage(err.message);
-      setStatusError(true);
+      setStatusMessage(err.message)
+      setStatusError(true)
     }
-  };
+  }
 
-  const handleIgnore = async (name) => {
+  const handleIgnore = async name => {
     try {
-      await addArtist("/api/artists/ignored", name);
+      await addArtist('/api/artists/ignored', name)
       // Same in the other direction - ignoring removes it from the custom
       // list server-side, so drop it from the locally-tracked saved set too.
-      setStatus((s) => ({ ...s, [name]: "ignored" }));
-      setCustomListArtists((s) => {
-        const next = new Set(s);
-        next.delete(name);
-        return next;
-      });
-      setStatusMessage(`Added ${name} to ignore list`);
-      setStatusError(false);
+      setStatus(s => ({ ...s, [name]: 'ignored' }))
+      setCustomListArtists(s => {
+        const next = new Set(s)
+        next.delete(name)
+        return next
+      })
+      setStatusMessage(`Added ${name} to ignore list`)
+      setStatusError(false)
     } catch (err) {
-      setStatusMessage(err.message);
-      setStatusError(true);
+      setStatusMessage(err.message)
+      setStatusError(true)
     }
-  };
+  }
 
-  const handleUnignore = async (name) => {
-    const res = await fetch("/api/artists/ignored", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    const data = await res.json();
+  const handleUnignore = async name => {
+    const res = await fetch('/api/artists/ignored', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    })
+    const data = await res.json()
     if (!res.ok) {
-      setStatusMessage(data.error || "Failed to remove from ignore list");
-      setStatusError(true);
-      return;
+      setStatusMessage(data.error || 'Failed to remove from ignore list')
+      setStatusError(true)
+      return
     }
-    setStatus((s) => ({ ...s, [name]: "unignored" }));
-    setStatusMessage(`Removed ${name} from ignore list`);
-    setStatusError(false);
-  };
+    setStatus(s => ({ ...s, [name]: 'unignored' }))
+    setStatusMessage(`Removed ${name} from ignore list`)
+    setStatusError(false)
+  }
 
-  let rank = 0;
-  const rankedArtists = artists.map((a) => {
+  let rank = 0
+  const rankedArtists = artists.map(a => {
     const ignored =
-      status[a.artist] === "unignored"
+      status[a.artist] === 'unignored'
         ? false
-        : a.ignored || status[a.artist] === "ignored";
-    const saved = customListArtists.has(a.artist);
-    return { ...a, ignored, saved, rank: ignored ? null : ++rank };
-  });
+        : a.ignored || status[a.artist] === 'ignored'
+    const saved = customListArtists.has(a.artist)
+    return { ...a, ignored, saved, rank: ignored ? null : ++rank }
+  })
 
   return (
     <TabLayout
       description={description}
       controls={
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            {TERM_OPTIONS.map((t) => {
-              const active = selectedTerms.includes(t.value);
+        <div className='flex items-center gap-2'>
+          <div className='flex items-center gap-1.5'>
+            {TERM_OPTIONS.map(t => {
+              const active = selectedTerms.includes(t.value)
               return (
                 <button
                   key={t.value}
-                  type="button"
+                  type='button'
                   onClick={() => toggleTerm(t.value)}
                   aria-pressed={active}
                   title={
                     selectedTerms.length > 1
-                      ? `${[...selectedTerms.map((t) => t.replace("_", " "))]} are combined into one ranking`
-                      : `${[...selectedTerms.map((t) => t.replace("_", " "))]} will only be used`
+                      ? `${[...selectedTerms.map(t => t.replace('_', ' '))]} are combined into one ranking`
+                      : `${[...selectedTerms.map(t => t.replace('_', ' '))]} will only be used`
                   }
                   className={`flex items-center gap-1.5 px-3 py-0.5 rounded-2xl border cursor-pointer ${
                     active
-                      ? "bg-neutral-200 text-neutral-900  border-neutral-800"
-                      : "bg-neutral-800 text-white border-neutral-400"
+                      ? 'bg-neutral-200 text-neutral-900  border-neutral-800'
+                      : 'bg-neutral-800 text-white border-neutral-400'
                   }`}
                 >
                   <span
-                    aria-hidden="true"
+                    aria-hidden='true'
                     className={`flex items-center justify-center w-3.5 h-3.5 rounded-sm border ${
                       active
-                        ? "bg-white border-white text-neutral-800"
-                        : "border-neutral-500"
+                        ? 'bg-white border-white text-neutral-800'
+                        : 'border-neutral-500'
                     }`}
                   >
                     {active && (
-                      <svg viewBox="0 0 20 20" fill="none" className="w-3 h-3">
+                      <svg viewBox='0 0 20 20' fill='none' className='w-3 h-3'>
                         <path
-                          d="M5 10l3 3 7-7"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                          d='M5 10l3 3 7-7'
+                          stroke='currentColor'
+                          strokeWidth='2.5'
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
                         />
                       </svg>
                     )}
                   </span>
                   {t.label}
                 </button>
-              );
+              )
             })}
           </div>
-          <div className="flex-1 flex justify-end">
+          <div className='flex-1 flex justify-end'>
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="px-3 py-0.5 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50 cursor-pointer"
+              className='px-3 py-0.5 rounded-2xl bg-neutral-200 text-neutral-800 disabled:opacity-50 cursor-pointer'
             >
-              {refreshing ? "Refreshing..." : "Force Refresh"}
+              {refreshing ? 'Refreshing...' : 'Force Refresh'}
             </button>
           </div>
         </div>
@@ -284,61 +285,78 @@ export default function TopArtistsTab({ description }) {
       statusBar={<StatusBar message={statusMessage} error={statusError} />}
     >
       {!loading && (
-        <table className="w-full border-collapse">
+        <table className='w-full border-collapse'>
           <thead>
-            <tr className="text-left text-sm text-neutral-500">
-              <th className="sticky top-0 z-10 bg-black py-1 pr-4 font-normal border-b border-neutral-700">
+            <tr className='text-left text-sm text-neutral-500'>
+              <th className='sticky top-0 z-10 bg-black py-1 pr-4 font-normal border-b border-neutral-700'>
                 #
               </th>
-              <th className="sticky top-0 z-10 bg-black py-1 pr-4 font-normal border-b border-neutral-700">
+              <th className='sticky top-0 z-10 bg-black py-1 pr-4 font-normal border-b border-neutral-700'>
                 Artist
               </th>
-              <th className="sticky top-0 z-10 bg-black py-1 pr-4 font-normal border-b border-neutral-700">
+              <th className='sticky top-0 z-10 bg-black py-1  font-normal border-b border-neutral-700'>
                 Plays
               </th>
-              <th className="sticky top-0 z-10 bg-black py-1 font-normal border-b border-neutral-700">
+              <th className='sticky top-0 pl-3 z-10 bg-black py-1 font-normal border-b border-neutral-700'>
                 Actions
               </th>
             </tr>
           </thead>
           <tbody>
-            {rankedArtists.map((a) => (
+            {rankedArtists.map(a => (
               <tr
                 key={a.artist}
-                className={`border-b last:border-0 ${a.ignored ? "text-neutral-500" : "text-neutral-200"}`}
+                className={`border-b last:border-0 ${a.ignored ? 'text-neutral-500' : 'text-neutral-200'}`}
               >
-                <td className="py-1 pr-4 text-neutral-400">{a.rank ?? "–"}</td>
-                <td className="py-1 pr-4">{a.artist}</td>
-                <td className="py-1 pr-4">{a.plays ?? "–"}</td>
-                <td className="py-1">
+                <td className='py-1 pr-4 text-neutral-400'>{a.rank ?? '–'}</td>
+                <td className='py-1 pr-4'>{a.artist}</td>
+                <td className='py-1 pr-4'>{a.plays ?? '–'}</td>
+                <td className='py-1'>
                   {a.ignored ? (
                     <button
+                      title='Remove from Ignore List'
+                      aria-label='Remove from Ignore List'
                       onClick={() => handleUnignore(a.artist)}
-                      className="text-sm px-2 py-0.5 rounded text-neutral-300 hover:underline"
+                      className='text-sm px-2 py-0.5 pl-12 rounded text-neutral-300 hover:underline cursor-pointer'
                     >
-                      Unignore
+                      <IgnoreIcon
+                        ignored
+                        className='w-5 h-5 md:w-4 sm:h-4 shrink-0'
+                      />
                     </button>
                   ) : (
-                    <div className="flex gap-2">
-                      <div className="w-14">
+                    <div className='flex gap-2'>
+                      <div className='w-8'>
                         {a.saved ? (
-                          <span className="text-sm px-2 py-0.5 text-neutral-500">
-                            Saved
-                          </span>
+                          <button
+                            title='Saved'
+                            aria-label='Saved'
+                            className='text-sm px-2 py-0.5 rounded '
+                            disabled
+                          >
+                            <BookmarkIcon
+                              saved
+                              className='w-5 h-5 md:w-4 sm:h-4 shrink-0'
+                            />
+                          </button>
                         ) : (
                           <button
+                            title='Save'
+                            aria-label='Save'
                             onClick={() => handleSave(a.artist)}
-                            className="text-sm px-2 py-0.5 rounded text-blue-600 hover:underline"
+                            className='text-sm px-2 py-0.5 rounded text-blue-600 hover:underline cursor-pointer'
                           >
-                            Save
+                            <BookmarkIcon className='w-5 h-5 md:w-4 sm:h-4 shrink-0' />
                           </button>
                         )}
                       </div>
                       <button
+                        title='Add to Ignore List'
+                        aria-label='Add to Ignore List'
                         onClick={() => handleIgnore(a.artist)}
-                        className="text-sm px-2 py-0.5 rounded text-red-600 hover:underline"
+                        className='text-sm px-2 pb-1 rounded text-red-600 hover:underline cursor-pointer'
                       >
-                        Ignore
+                        <IgnoreIcon className='w-5 h-5 md:w-4 sm:h-4 shrink-0' />
                       </button>
                     </div>
                   )}
@@ -349,5 +367,5 @@ export default function TopArtistsTab({ description }) {
         </table>
       )}
     </TabLayout>
-  );
+  )
 }
