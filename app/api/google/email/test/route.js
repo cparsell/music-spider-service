@@ -1,22 +1,22 @@
-import { getResolvedConfig } from "@/lib/settings.js";
-import { sendGmailMessage } from "@/lib/gmail.js";
+import { getResolvedConfig } from '@/lib/settings.js';
+import { sendGmailMessage } from '@/lib/gmail.js';
 
 // Sends a test email, allowing a user confirm their OAuth connection
 // is wired up correctly without waiting on real event data.
 export async function POST() {
   const config = await getResolvedConfig();
-  if (!config.emailRecipient) {
+  if (!config.googleEmailRecipient) {
     return Response.json(
-      { error: "No recipient email configured in Settings" },
-      { status: 400 },
+      { error: 'No recipient email configured in Settings' },
+      { status: 400 }
     );
   }
 
   try {
     await sendGmailMessage({
-      to: config.emailRecipient,
-      subject: "Music Spider test email",
-      html: "<p>This is a test email from Music Spider. If you got this, email sending is working.</p>",
+      to: config.googleEmailRecipient,
+      subject: 'Music Spider test email',
+      html: '<p>This is a test email from Music Spider. If you got this, email sending is working.</p>'
     });
     return Response.json({ sent: true });
   } catch (err) {

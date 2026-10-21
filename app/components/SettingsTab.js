@@ -1,320 +1,320 @@
-"use client";
-import { useState, useEffect, useRef, useMemo } from "react";
-import { createPortal } from "react-dom";
-import StatusBar from "./StatusBar";
-import TabLayout from "./TabLayout";
-import { RA_REGIONS } from "@/lib/raRegions.js";
+'use client';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import StatusBar from './StatusBar';
+import TabLayout from './TabLayout';
+import { RA_REGIONS } from '@/lib/raRegions.js';
 
-const RA_REGIONS_BY_ID = new Map(RA_REGIONS.map((r) => [r.id, r.label]));
+const RA_REGIONS_BY_ID = new Map(RA_REGIONS.map(r => [r.id, r.label]));
 
 const SAVE_DEBOUNCE_MS = 600;
 
 const THEMES = [
   {
-    value: "grayscale",
-    label: "Grayscale",
-    description: "The default black/white/gray look.",
+    value: 'grayscale',
+    label: 'Grayscale',
+    description: 'The default black/white/gray look.'
   },
   {
-    value: "catppuccin-mocha",
-    label: "Catppuccin Mocha",
-    description: "Re-skins the same UI with the Catppuccin Mocha palette.",
-  },
+    value: 'catppuccin-mocha',
+    label: 'Catppuccin Mocha',
+    description: 'Re-skins the same UI with the Catppuccin Mocha palette.'
+  }
 ];
 
 const ARTIST_SOURCES = [
   {
-    value: "tautulli",
-    label: "Tautulli",
-    description: "Your Plex play history, as tracked by Tautulli.",
+    value: 'tautulli',
+    label: 'Tautulli',
+    description: 'Your Plex play history, as tracked by Tautulli.'
   },
   {
-    value: "spotify",
-    label: "Spotify",
+    value: 'spotify',
+    label: 'Spotify',
     description:
-      "Your Spotify top artists (requires connecting your account below).",
+      'Your Spotify top artists (requires connecting your account below).'
   },
   {
-    value: "both",
-    label: "Both",
+    value: 'both',
+    label: 'Both',
     description:
-      "Merges the two: Tautulli's real play counts win for any artist it knows about, and Spotify contributes any additional artists it surfaced that Tautulli didn't.",
+      "Merges the two: Tautulli's real play counts win for any artist it knows about, and Spotify contributes any additional artists it surfaced that Tautulli didn't."
   },
   {
-    value: "none",
-    label: "None",
+    value: 'none',
+    label: 'None',
     description:
-      'Don\'t fetch listening history from any APIs. Only rely on artists added manually to the "Custom List".',
-  },
+      'Don\'t fetch listening history from any APIs. Only rely on artists added manually to the "Custom List".'
+  }
 ];
 
 const EVENT_SEARCH_TERM_OPTIONS = [
-  { value: "short_term", label: "Short term (~4 weeks)" },
-  { value: "medium_term", label: "Medium term (~6 months)" },
-  { value: "long_term", label: "Long term (all time)" },
+  { value: 'short_term', label: 'Short term (~4 weeks)' },
+  { value: 'medium_term', label: 'Medium term (~6 months)' },
+  { value: 'long_term', label: 'Long term (all time)' }
 ];
 
 const EVENT_SEARCH_SOURCE_OPTIONS = [
-  { value: "ticketmaster", label: "Ticketmaster" },
-  { value: "resadvisor", label: "Resident Advisor" },
+  { value: 'ticketmaster', label: 'Ticketmaster' },
+  { value: 'resadvisor', label: 'Resident Advisor' }
 ];
 
 const DAYS_OF_WEEK = [
-  { value: 0, label: "Sunday" },
-  { value: 1, label: "Monday" },
-  { value: 2, label: "Tuesday" },
-  { value: 3, label: "Wednesday" },
-  { value: 4, label: "Thursday" },
-  { value: 5, label: "Friday" },
-  { value: 6, label: "Saturday" },
+  { value: 0, label: 'Sunday' },
+  { value: 1, label: 'Monday' },
+  { value: 2, label: 'Tuesday' },
+  { value: 3, label: 'Wednesday' },
+  { value: 4, label: 'Thursday' },
+  { value: 5, label: 'Friday' },
+  { value: 6, label: 'Saturday' }
 ];
 
 const COMBINED_MODES = [
   {
-    value: "weighted",
-    label: "Weighted score",
+    value: 'weighted',
+    label: 'Weighted score',
     description:
-      "Combines selected top artists lists (short term, long term, etc.) into one list, weighting recent plays more heavily than older ones while still including old favorites.",
+      'Combines selected top artists lists (short term, long term, etc.) into one list, weighting recent plays more heavily than older ones while still including old favorites.'
   },
   {
-    value: "union",
-    label: "Union of top lists",
+    value: 'union',
+    label: 'Union of top lists',
     description:
-      "Takes the top artists from each individual window (selected terms) and merges them into one deduplicated list.",
-  },
+      'Takes the top artists from each individual window (selected terms) and merges them into one deduplicated list.'
+  }
 ];
 
 const SECTIONS = [
   {
-    title: "Top Artists",
+    title: 'Top Artists',
     fields: [
       {
-        key: "maxTopArtistsCount",
-        label: "Max number of top artists",
-        type: "number",
-      },
-    ],
+        key: 'maxTopArtistsCount',
+        label: 'Max number of top artists',
+        type: 'number'
+      }
+    ]
   },
   {
-    title: "Tautulli API",
+    title: 'Tautulli API',
     fields: [
-      { key: "tautulliUrl", label: "URL", type: "text" },
-      { key: "tautulliApiKey", label: "API Key", type: "password" },
+      { key: 'tautulliUrl', label: 'URL', type: 'text' },
+      { key: 'tautulliApiKey', label: 'API Key', type: 'password' },
       {
-        key: "tautulliMusicSectionId",
+        key: 'tautulliMusicSectionId',
         label:
           "Music Section ID (optional, limits to a specific library - can be found in Tautulli's library settings. Tautulli > Libraries > Music, then it shows in the URL, e.g. .../library?section_id=X)",
-        type: "text",
-      },
-    ],
+        type: 'text'
+      }
+    ]
   },
   {
-    title: "Spotify API",
+    title: 'Spotify API',
     description:
       "To fetch Spotify listening history, go to the Spotify Developer Dashboard \(https://developer.spotify.com/), create up an application, and add the Redirect URI below. Save the Client ID below. Then press 'Connect'. Uses PKCE, so no Client Secret is needed.",
     fields: [
-      { key: "spotifyClientId", label: "Client ID", type: "text" },
-      { key: "spotifyRedirectUri", label: "Redirect URI", type: "text" },
-    ],
+      { key: 'spotifyClientId', label: 'Client ID', type: 'text' },
+      { key: 'spotifyRedirectUri', label: 'Redirect URI', type: 'text' }
+    ]
   },
   {
-    title: "Ticketmaster API",
+    title: 'Ticketmaster API',
     fields: [
-      { key: "ticketmasterApiKey", label: "Consumer Key", type: "password" },
+      { key: 'ticketmasterApiKey', label: 'Consumer Key', type: 'password' },
       {
-        key: "latLong",
+        key: 'latLong',
         label:
           "Lat/Long - one location per line, e.g. 34.0522,-118.2437 (comma, space, slash, or similar separators all work within a line). Multiple locations are all searched. NOTE: Dashes are reserved for negative latitudes/longitudes, so don't use them as separators.",
-        type: "textarea",
+        type: 'textarea'
       },
       {
-        key: "radius",
-        label: "Radius (applies to every location above)",
-        type: "text",
+        key: 'radius',
+        label: 'Radius (applies to every location above)',
+        type: 'text'
       },
       {
-        key: "units",
-        label: "Units",
-        type: "switch",
+        key: 'units',
+        label: 'Units',
+        type: 'switch',
         options: [
-          { value: "miles", label: "Miles" },
-          { value: "km", label: "Kilometers" },
-        ],
+          { value: 'miles', label: 'Miles' },
+          { value: 'km', label: 'Kilometers' }
+        ]
       },
       {
-        key: "includeTicketPackages",
+        key: 'includeTicketPackages',
         label:
           'Include VIP/hospitality package listings. Ticketmaster sells these as separate events alongside the ordinary ticket for the same show ("VIP Packages", "PACKAGE ...", "Premium Packages", "Logen-Seat", "Hospitality"), so turning this on adds an extra link per package to the show\'s card. A package is only ever hidden when the ordinary listing for that venue and night was found too.',
-        type: "checkbox",
-      },
-    ],
+        type: 'checkbox'
+      }
+    ]
   },
   {
-    title: "Resident Advisor API",
+    title: 'Resident Advisor API',
     fields: [
       {
-        key: "raRegion",
-        label: "Regions",
-        type: "regionPicker",
-      },
-    ],
+        key: 'raRegion',
+        label: 'Regions',
+        type: 'regionPicker'
+      }
+    ]
   },
   {
-    title: "SMTP Email",
+    title: 'SMTP Email',
     description:
       "Send a weekly event digest through your own mail provider. Use STARTTLS for the standard submission port (usually 587), or Implicit TLS (SSL) for a port that expects an encrypted connection from the start (usually 465) - check your provider's docs if unsure.",
     fields: [
-      { key: "smtpHost", label: "SMTP Host", type: "text" },
-      { key: "smtpPort", label: "Port", type: "number" },
+      { key: 'smtpHost', label: 'SMTP Host', type: 'text' },
+      { key: 'smtpPort', label: 'Port', type: 'number' },
       {
-        key: "smtpSecure",
-        label: "Encryption",
-        type: "switch",
+        key: 'smtpSecure',
+        label: 'Encryption',
+        type: 'switch',
         options: [
-          { value: false, label: "STARTTLS" },
-          { value: true, label: "Implicit TLS (SSL)" },
-        ],
+          { value: false, label: 'STARTTLS' },
+          { value: true, label: 'Implicit TLS (SSL)' }
+        ]
       },
-      { key: "smtpUser", label: "Username", type: "text" },
-      { key: "smtpPassword", label: "Password", type: "password" },
-      { key: "smtpFrom", label: "From address", type: "text" },
-      { key: "smtpRecipient", label: "Recipient email", type: "text" },
-    ],
+      { key: 'smtpUser', label: 'Username', type: 'text' },
+      { key: 'smtpPassword', label: 'Password', type: 'password' },
+      { key: 'smtpFrom', label: 'From address', type: 'text' },
+      { key: 'smtpRecipient', label: 'Recipient email', type: 'text' }
+    ]
   },
   {
-    title: "Google OAuth (Email & Calendar)",
+    title: 'Google OAuth (Email & Calendar)',
     description:
       'Lets Music Spider send event emails and/or add events to Google Calendar via a directly-connected Google account. In the Google Cloud Console, create/select a project, enable the Gmail API and/or Calendar API, then create an OAuth 2.0 Client ID (type: Web application) and add the Redirect URI below as an authorized redirect URI. Enter the Client ID/Secret below, then click "Connect Google Account." Note this requires an HTTPS connection to the redirect URI once accessed from anywhere other than 127.0.0.1/localhost.',
 
     fields: [
-      { key: "googleClientId", label: "Google Client ID", type: "text" },
+      { key: 'googleClientId', label: 'Google Client ID', type: 'text' },
       {
-        key: "googleClientSecret",
-        label: "Google Client Secret",
-        type: "password",
+        key: 'googleClientSecret',
+        label: 'Google Client Secret',
+        type: 'password'
       },
       {
-        key: "googleRedirectUri",
-        label: "Google Redirect URI",
-        type: "text",
+        key: 'googleRedirectUri',
+        label: 'Google Redirect URI',
+        type: 'text'
       },
-      { key: "emailRecipient", label: "Recipient email", type: "text" },
+      { key: 'googleEmailRecipient', label: 'Recipient email', type: 'text' },
       {
-        key: "calendarId",
-        label: "Calendar ID (blank = primary calendar)",
-        type: "text",
-      },
-    ],
+        key: 'calendarId',
+        label: 'Calendar ID (blank = primary calendar)',
+        type: 'text'
+      }
+    ]
   },
   {
-    title: "Google Service Account (Calendar)",
+    title: 'Google Service Account (Calendar)',
     description:
       'Add events to a Google Calendar using a GCP service account - no consent screen, redirect URI, or HTTPS needed. Create a service account in the Google Cloud Console, download its JSON key, then share the calendar you want with the service account\'s email address, giving it "Make changes to events" (see Setup-GoogleCalendarAccess.md in the repo for the full walkthrough). This only covers calendar events - email still uses SMTP or the Google option above. While enabled, it takes precedence over the OAuth method for calendar events.',
     fields: [
       {
-        key: "googleServiceAccountEnabled",
-        label: "Use a service account for Google Calendar events",
-        type: "checkbox",
+        key: 'googleServiceAccountEnabled',
+        label: 'Use a service account for Google Calendar events',
+        type: 'checkbox'
       },
       {
-        key: "googleServiceAccountJson",
+        key: 'googleServiceAccountJson',
         label:
           "Service account key - paste the whole JSON key file, or the path to it on disk (e.g. /config/service-account.json if you'd rather mount it)",
-        type: "serviceAccountKey",
+        type: 'serviceAccountKey'
       },
       {
-        key: "googleServiceAccountCalendarId",
+        key: 'googleServiceAccountCalendarId',
         label:
           "Calendar ID - the calendar you shared with the service account (for your main calendar, this is your Gmail address). Required: a blank/primary calendar would write to the service account's own hidden calendar.",
-        type: "text",
-      },
-    ],
+        type: 'text'
+      }
+    ]
   },
   {
-    title: "CalDAV (Calendar)",
+    title: 'CalDAV (Calendar)',
     description:
       "Add events to any CalDAV calendar - Nextcloud, Radicale, Baikal, iCloud, Fastmail, or another CalDAV-compatible server. Independent of the Google options above; both can be enabled at once if you want events synced to two calendars. Enter the specific calendar's collection URL (not just the server root) and, if the server requires it, a username/password (an app-specific password if your provider supports one, rather than your main account password).",
     fields: [
       {
-        key: "caldavEnabled",
-        label: "Use CalDAV for calendar events",
-        type: "checkbox",
+        key: 'caldavEnabled',
+        label: 'Use CalDAV for calendar events',
+        type: 'checkbox'
       },
-      { key: "caldavUrl", label: "Calendar URL", type: "text" },
-      { key: "caldavUsername", label: "Username", type: "text" },
-      { key: "caldavPassword", label: "Password", type: "password" },
-    ],
+      { key: 'caldavUrl', label: 'Calendar URL', type: 'text' },
+      { key: 'caldavUsername', label: 'Username', type: 'text' },
+      { key: 'caldavPassword', label: 'Password', type: 'password' }
+    ]
   },
   {
-    title: "Webhook",
+    title: 'Webhook',
     description:
       'Sends a weekly POST request with the JSON body defined below to any URL that accepts an incoming webhook - e.g. a Discord channel webhook, or a Home Assistant automation using a "Webhook" trigger (which accepts any JSON shape you send and lets you build the notification yourself from there). Use {{subject}}, {{summary}}, and {{count}} as placeholders - each is JSON-escaped automatically, so it\'s safe to drop inside a quoted string like "content": "{{summary}}". The result must be valid JSON once the placeholders are filled in. Note some services (e.g. Discord) cap message length around 2000 characters. Bold formatting and bullet list below only affect the {{summary}} placeholder - Slack and Discord use different markup for bold (*text* vs **text**), so neither is filled in by default.',
     fields: [
-      { key: "webhookUrl", label: "Webhook URL", type: "text" },
+      { key: 'webhookUrl', label: 'Webhook URL', type: 'text' },
       {
-        key: "webhookBoldFormat",
+        key: 'webhookBoldFormat',
         label:
-          "Bold formatting (wraps event/act names in {{summary}} - e.g. ** for Discord, * for Slack. Blank = no bold)",
-        type: "text",
+          'Bold formatting (wraps event/act names in {{summary}} - e.g. ** for Discord, * for Slack. Blank = no bold)',
+        type: 'text'
       },
       {
-        key: "webhookBulletFormat",
+        key: 'webhookBulletFormat',
         label:
-          "Bullet list (prefixes each event line in {{summary}}. Blank = • )",
-        type: "text",
+          'Bullet list (prefixes each event line in {{summary}}. Blank = • )',
+        type: 'text'
       },
       {
-        key: "webhookTemplate",
-        label: "Body template (JSON)",
-        type: "textarea",
-      },
-    ],
-  },
+        key: 'webhookTemplate',
+        label: 'Body template (JSON)',
+        type: 'textarea'
+      }
+    ]
+  }
 ];
 
 // Wraps a settings section in a bordered box with a clickable header.
 // Collapsed, only the header (title + chevron) remains visible
 function SettingsSection({ title, open, onToggle, children }) {
   return (
-    <div className="break-inside-avoid mb-6 border border-neutral-700 rounded-lg bg-neutral-800 ">
+    <div className='break-inside-avoid mb-6 border border-neutral-700 rounded-lg bg-neutral-800 '>
       <button
-        type="button"
+        type='button'
         onClick={onToggle}
         aria-expanded={open}
-        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left cursor-pointer"
+        className='w-full flex items-center justify-between gap-2 px-4 py-3 text-left cursor-pointer'
       >
         <h2
           className={
             open
-              ? "font-bold text-white  border-neutral-700 w-full border-b"
-              : "font-bold text-white  border-neutral-700 w-full"
+              ? 'font-bold text-white  border-neutral-700 w-full border-b'
+              : 'font-bold text-white  border-neutral-700 w-full'
           }
         >
           {title}
         </h2>
         <svg
-          viewBox="0 0 20 20"
-          fill="none"
+          viewBox='0 0 20 20'
+          fill='none'
           className={`w-4 h-4 shrink-0 text-neutral-500 transition-transform duration-150 ${
-            open ? "" : "-rotate-90"
+            open ? '' : '-rotate-90'
           }`}
         >
           <path
-            d="M5 8l5 5 5-5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            d='M5 8l5 5 5-5'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
           />
         </svg>
       </button>
       <div
         className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
         }`}
       >
-        <div className="overflow-hidden min-h-0">
-          <div className="px-4 pb-4">{children}</div>
+        <div className='overflow-hidden min-h-0'>
+          <div className='px-4 pb-4'>{children}</div>
         </div>
       </div>
     </div>
@@ -326,50 +326,50 @@ function SettingsSubsection({
   title,
   defaultOpen = false,
   children,
-  disabled = false,
+  disabled = false
 }) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-t border-neutral-700 first:border-t-0 pt-3 mt-3 first:mt-0 first:pt-0">
+    <div className='border-t border-neutral-700 first:border-t-0 pt-3 mt-3 first:mt-0 first:pt-0'>
       <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
+        type='button'
+        onClick={() => setOpen(o => !o)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between gap-2 text-left cursor-pointer"
+        className='w-full flex items-center justify-between gap-2 text-left cursor-pointer'
       >
         <h3
           className={
             disabled
-              ? "font-bold text-gray-600"
-              : "font-bold text-base text-neutral-200"
+              ? 'font-bold text-gray-600'
+              : 'font-bold text-base text-neutral-200'
           }
         >
           {title}
         </h3>
         <svg
-          viewBox="0 0 20 20"
-          fill="none"
+          viewBox='0 0 20 20'
+          fill='none'
           className={`w-3.5 h-3.5 shrink-0 text-neutral-500 transition-transform duration-150 ${
-            open ? "" : "-rotate-90"
+            open ? '' : '-rotate-90'
           }`}
         >
           <path
-            d="M5 8l5 5 5-5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            d='M5 8l5 5 5-5'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
           />
         </svg>
       </button>
       <div
         className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
         }`}
       >
-        <div className="overflow-hidden min-h-0">
-          <div className="pt-3">{children}</div>
+        <div className='overflow-hidden min-h-0'>
+          <div className='pt-3'>{children}</div>
         </div>
       </div>
     </div>
@@ -378,33 +378,33 @@ function SettingsSubsection({
 
 function SpotifyConnection({ redirectUri }) {
   const [connected, setConnected] = useState(null);
-  const [statusMessage, setStatusMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState('');
 
   const loadStatus = () => {
-    fetch("/api/spotify/status")
-      .then((res) => res.json())
-      .then((data) => setConnected(data.connected));
+    fetch('/api/spotify/status')
+      .then(res => res.json())
+      .then(data => setConnected(data.connected));
   };
 
   useEffect(() => {
     loadStatus();
 
     const params = new URLSearchParams(window.location.search);
-    const spotifyParam = params.get("spotify");
+    const spotifyParam = params.get('spotify');
     if (spotifyParam) {
       setStatusMessage(spotifyParam);
-      params.delete("spotify");
-      params.delete("tab");
+      params.delete('spotify');
+      params.delete('tab');
       const rest = params.toString();
       window.history.replaceState(
         null,
-        "",
-        rest ? `?${rest}` : window.location.pathname,
+        '',
+        rest ? `?${rest}` : window.location.pathname
       );
     }
 
-    const onMessage = (event) => {
-      if (event.data?.source !== "spotify-oauth") return;
+    const onMessage = event => {
+      if (event.data?.source !== 'spotify-oauth') return;
       // The popup finishes on whatever host the Spotify redirect URI uses,
       // which may differ from the host this tab is on (e.g. this tab is on
       // a LAN hostname but the redirect URI is 127.0.0.1) even though it's
@@ -418,12 +418,12 @@ function SpotifyConnection({ redirectUri }) {
       setStatusMessage(event.data.message);
       loadStatus();
     };
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
   }, [redirectUri]);
 
   const disconnect = async () => {
-    await fetch("/api/spotify/status", { method: "DELETE" });
+    await fetch('/api/spotify/status', { method: 'DELETE' });
     setConnected(false);
   };
 
@@ -432,42 +432,42 @@ function SpotifyConnection({ redirectUri }) {
     // 127.0.0.1) rather than inheriting this tab's host (e.g. localhost) -
     // otherwise the state cookie gets set on the wrong host and never makes
     // it back on the callback request.
-    let base = "";
+    let base = '';
     try {
       base = new URL(redirectUri).origin;
     } catch {
-      base = "";
+      base = '';
     }
-    window.open(`${base}/api/spotify`, "spotify-auth", "width=500,height=700");
+    window.open(`${base}/api/spotify`, 'spotify-auth', 'width=500,height=700');
   };
 
   return (
-    <div className="mt-2 flex items-center gap-3">
+    <div className='mt-2 flex items-center gap-3'>
       {connected === null ? null : connected ? (
         <>
-          <span className="text-sm text-green-700">Connected</span>
+          <span className='text-sm text-green-700'>Connected</span>
           <button
-            type="button"
+            type='button'
             onClick={disconnect}
-            className="text-sm text-red-600 hover:underline"
+            className='text-sm text-red-600 hover:underline'
           >
             Disconnect
           </button>
         </>
       ) : (
         <>
-          <span className="text-sm text-neutral-500">Not connected</span>
+          <span className='text-sm text-neutral-500'>Not connected</span>
           <button
-            type="button"
+            type='button'
             onClick={connect}
-            className="text-sm px-2 py-0.5 rounded bg-green-600 text-white"
+            className='text-sm px-2 py-0.5 rounded bg-green-600 text-white'
           >
             Connect Spotify Account
           </button>
         </>
       )}
       {statusMessage && (
-        <span className="text-sm text-neutral-600">({statusMessage})</span>
+        <span className='text-sm text-neutral-600'>({statusMessage})</span>
       )}
     </div>
   );
@@ -475,11 +475,11 @@ function SpotifyConnection({ redirectUri }) {
 
 function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
   const [status, setStatus] = useState(null); // { connected, scope }
-  const [statusMessage, setStatusMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState('');
 
   const loadStatus = () => {
-    fetch("/api/google/status")
-      .then((res) => res.json())
+    fetch('/api/google/status')
+      .then(res => res.json())
       .then(setStatus);
   };
 
@@ -487,21 +487,21 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
     loadStatus();
 
     const params = new URLSearchParams(window.location.search);
-    const googleParam = params.get("google");
+    const googleParam = params.get('google');
     if (googleParam) {
       setStatusMessage(googleParam);
-      params.delete("google");
-      params.delete("tab");
+      params.delete('google');
+      params.delete('tab');
       const rest = params.toString();
       window.history.replaceState(
         null,
-        "",
-        rest ? `?${rest}` : window.location.pathname,
+        '',
+        rest ? `?${rest}` : window.location.pathname
       );
     }
 
-    const onMessage = (event) => {
-      if (event.data?.source !== "google-oauth") return;
+    const onMessage = event => {
+      if (event.data?.source !== 'google-oauth') return;
       // Same redirect-URI-origin caveat as the Spotify popup - see there for
       // why.
       try {
@@ -512,33 +512,33 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
       setStatusMessage(event.data.message);
       loadStatus();
     };
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
   }, [redirectUri]);
 
   const disconnect = async () => {
-    await fetch("/api/google/status", { method: "DELETE" });
-    setStatus({ connected: false, scope: "" });
+    await fetch('/api/google/status', { method: 'DELETE' });
+    setStatus({ connected: false, scope: '' });
   };
 
   const connect = () => {
-    let base = "";
+    let base = '';
     try {
       base = new URL(redirectUri).origin;
     } catch {
-      base = "";
+      base = '';
     }
-    window.open(`${base}/api/google`, "google-auth", "width=500,height=700");
+    window.open(`${base}/api/google`, 'google-auth', 'width=500,height=700');
   };
 
   const needsCalendarReauth =
     calendarSyncEnabled &&
     status?.connected &&
-    !status.scope?.includes("calendar.events");
+    !status.scope?.includes('calendar.events');
 
   return (
-    <div className="mt-2 flex flex-col gap-1">
-      <p className="text-sm text-amber-200   border border-amber-200 rounded p-2 mb-3">
+    <div className='mt-2 flex flex-col gap-1'>
+      <p className='text-sm text-amber-200   border border-amber-200 rounded p-2 mb-3'>
         ⚠️ Connecting a Google account via OAuth grants this app permission to
         send email as you (Gmail's "gmail.send" scope, send-only) and, if
         Calendar sync is enabled below, to create events on your calendar
@@ -548,44 +548,44 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
         that access.
       </p>
 
-      <div className="flex items-center gap-3">
+      <div className='flex items-center gap-3'>
         {status === null ? null : status.connected ? (
           <>
-            <span className="text-sm text-green-700">Connected</span>
+            <span className='text-sm text-green-700'>Connected</span>
             <button
-              type="button"
+              type='button'
               onClick={disconnect}
-              className="text-sm text-red-600 hover:underline"
+              className='text-sm text-red-600 hover:underline'
             >
               Disconnect
             </button>
           </>
         ) : (
           <>
-            <span className="text-sm text-neutral-500">Not connected</span>
+            <span className='text-sm text-neutral-500'>Not connected</span>
             <button
-              type="button"
+              type='button'
               onClick={connect}
-              className="text-sm px-2 py-0.5 rounded bg-green-600 text-white"
+              className='text-sm px-2 py-0.5 rounded bg-green-600 text-white'
             >
               Connect Google Account
             </button>
           </>
         )}
         {statusMessage && (
-          <span className="text-sm text-neutral-600">({statusMessage})</span>
+          <span className='text-sm text-neutral-600'>({statusMessage})</span>
         )}
       </div>
       {needsCalendarReauth && (
-        <div className="text-sm text-amber-800 flex items-center gap-2">
+        <div className='text-sm text-amber-800 flex items-center gap-2'>
           <span>
             ⚠️ Calendar sync is enabled, but this connection doesn&apos;t have
             Calendar access yet.
           </span>
           <button
-            type="button"
+            type='button'
             onClick={connect}
-            className="underline shrink-0"
+            className='underline shrink-0'
           >
             Reconnect
           </button>
@@ -597,17 +597,17 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
 
 function WebhookTest() {
   const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
 
   const sendTest = async () => {
     setSending(true);
-    setMessage("Sending...");
+    setMessage('Sending...');
     setError(false);
     try {
-      const res = await fetch("/api/events/webhook", { method: "POST" });
+      const res = await fetch('/api/events/webhook', { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send webhook");
+      if (!res.ok) throw new Error(data.error || 'Failed to send webhook');
       setMessage(`Sent with ${data.count} upcoming events.`);
       setError(false);
     } catch (err) {
@@ -619,18 +619,18 @@ function WebhookTest() {
   };
 
   return (
-    <div className="mt-2 flex items-center gap-3">
+    <div className='mt-2 flex items-center gap-3'>
       <button
-        type="button"
+        type='button'
         onClick={sendTest}
         disabled={sending}
-        className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50"
+        className='text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50'
       >
-        {sending ? "Sending..." : "Send Test Webhook"}
+        {sending ? 'Sending...' : 'Send Test Webhook'}
       </button>
       {message && (
         <span
-          className={`text-sm ${error ? "text-red-600" : "text-neutral-600"}`}
+          className={`text-sm ${error ? 'text-red-600' : 'text-neutral-600'}`}
         >
           {message}
         </span>
@@ -641,17 +641,17 @@ function WebhookTest() {
 
 function SmtpTest() {
   const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
 
   const sendTest = async () => {
     setSending(true);
-    setMessage("Sending...");
+    setMessage('Sending...');
     setError(false);
     try {
-      const res = await fetch("/api/events/smtp", { method: "POST" });
+      const res = await fetch('/api/events/smtp', { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send email");
+      if (!res.ok) throw new Error(data.error || 'Failed to send email');
       setMessage(`Sent with ${data.count} upcoming events.`);
       setError(false);
     } catch (err) {
@@ -663,18 +663,18 @@ function SmtpTest() {
   };
 
   return (
-    <div className="mt-2 flex items-center gap-3">
+    <div className='mt-2 flex items-center gap-3'>
       <button
-        type="button"
+        type='button'
         onClick={sendTest}
         disabled={sending}
-        className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50"
+        className='text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50'
       >
-        {sending ? "Sending..." : "Send Test SMTP Email"}
+        {sending ? 'Sending...' : 'Send Test SMTP Email'}
       </button>
       {message && (
         <span
-          className={`text-sm ${error ? "text-red-600" : "text-neutral-600"}`}
+          className={`text-sm ${error ? 'text-red-600' : 'text-neutral-600'}`}
         >
           {message}
         </span>
@@ -684,37 +684,37 @@ function SmtpTest() {
 }
 
 function GoogleActionsTest() {
-  const [busy, setBusy] = useState(""); // "" | "email" | "calendar"
-  const [message, setStatusMessage] = useState("");
+  const [busy, setBusy] = useState(''); // "" | "email" | "calendar"
+  const [message, setStatusMessage] = useState('');
   const [error, setError] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
 
   const run = async (kind, path, successMessage) => {
     setBusy(kind);
-    setStatusMessage("Sending...");
+    setStatusMessage('Sending...');
     setError(false);
     try {
-      const res = await fetch(path, { method: "POST" });
+      const res = await fetch(path, { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Request failed");
+      if (!res.ok) throw new Error(data.error || 'Request failed');
       setStatusMessage(successMessage);
       setError(false);
     } catch (err) {
       setStatusMessage(err.message);
       setError(true);
     } finally {
-      setBusy("");
+      setBusy('');
     }
   };
 
   const sendEmail = async () => {
     setSendingEmail(true);
-    setStatusMessage("Sending email...");
+    setStatusMessage('Sending email...');
     setError(false);
     try {
-      const res = await fetch("/api/events/email", { method: "POST" });
+      const res = await fetch('/api/events/email', { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send email");
+      if (!res.ok) throw new Error(data.error || 'Failed to send email');
       setStatusMessage(`Email sent with ${data.count} upcoming events.`);
       setError(false);
     } catch (err) {
@@ -727,46 +727,46 @@ function GoogleActionsTest() {
 
   return (
     <div>
-      <div className="mt-2 flex items-center gap-3 flex-wrap">
+      <div className='mt-2 flex items-center gap-3 flex-wrap'>
         <button
-          type="button"
+          type='button'
           onClick={() =>
-            run("email", "/api/google/email/test", "Test email sent.")
+            run('email', '/api/google/email/test', 'Test email sent.')
           }
           disabled={!!busy}
-          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
+          className='text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer'
         >
-          {busy === "email" ? "Sending..." : "Send Test Email"}
+          {busy === 'email' ? 'Sending...' : 'Send Test Email'}
         </button>
         <button
-          type="button"
+          type='button'
           onClick={() =>
             run(
-              "calendar",
-              "/api/google/calendar/test",
-              "Test event created (tomorrow, same time) - delete it from your calendar when done.",
+              'calendar',
+              '/api/google/calendar/test',
+              'Test event created (tomorrow, same time) - delete it from your calendar when done.'
             )
           }
           disabled={!!busy}
-          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
+          className='text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer'
         >
-          {busy === "calendar" ? "Creating..." : "Create Test Calendar Event"}
+          {busy === 'calendar' ? 'Creating...' : 'Create Test Calendar Event'}
         </button>
 
-        <div className="">
+        <div className=''>
           <button
             onClick={sendEmail}
             disabled={sendingEmail}
-            className="px-2 py-0.5 text-sm rounded-2xl bg-neutral-300 text-gray-800 disabled:opacity-50 cursor-pointer"
+            className='px-2 py-0.5 text-sm rounded-2xl bg-neutral-300 text-gray-800 disabled:opacity-50 cursor-pointer'
           >
-            {sendingEmail ? "Sending..." : "Send Event Summary Email"}
+            {sendingEmail ? 'Sending...' : 'Send Event Summary Email'}
           </button>
         </div>
       </div>
       {
-        <div className="mt-2 mb-0">
+        <div className='mt-2 mb-0'>
           <span
-            className={`text-sm ${error ? "text-red-600" : "text-neutral-500"}`}
+            className={`text-sm ${error ? 'text-red-600' : 'text-neutral-500'}`}
           >
             {message}
           </span>
@@ -781,25 +781,25 @@ function GoogleActionsTest() {
 function ServiceAccountKeyInput({ value, onChange }) {
   const [editing, setEditing] = useState(false);
   const saved = !!value.trim();
-  const isPath = saved && !value.trim().startsWith("{");
+  const isPath = saved && !value.trim().startsWith('{');
 
   if (saved && !editing) {
     return (
-      <div className="flex items-center gap-3 border border-neutral-300 rounded px-2 py-1">
-        <span className="text-neutral-300 truncate">
-          {isPath ? value : "A key is saved (hidden)"}
+      <div className='flex items-center gap-3 border border-neutral-300 rounded px-2 py-1'>
+        <span className='text-neutral-300 truncate'>
+          {isPath ? value : 'A key is saved (hidden)'}
         </span>
         <button
-          type="button"
+          type='button'
           onClick={() => setEditing(true)}
-          className="ml-auto shrink-0 text-neutral-300 hover:underline cursor-pointer"
+          className='ml-auto shrink-0 text-neutral-300 hover:underline cursor-pointer'
         >
           Replace
         </button>
         <button
-          type="button"
-          onClick={() => onChange("")}
-          className="shrink-0 text-red-600 hover:underline cursor-pointer"
+          type='button'
+          onClick={() => onChange('')}
+          className='shrink-0 text-red-600 hover:underline cursor-pointer'
         >
           Clear
         </button>
@@ -808,20 +808,20 @@ function ServiceAccountKeyInput({ value, onChange }) {
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className='flex flex-col gap-1'>
       <textarea
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={e => onChange(e.target.value)}
         rows={5}
         spellCheck={false}
         placeholder={'{\n  "type": "service_account",\n  ...\n}'}
-        className="border border-neutral-300 rounded px-2 py-1 font-mono text-xs"
+        className='border border-neutral-300 rounded px-2 py-1 font-mono text-xs'
       />
       {saved && (
         <button
-          type="button"
+          type='button'
           onClick={() => setEditing(false)}
-          className="self-start text-xs text-neutral-400 hover:underline cursor-pointer"
+          className='self-start text-xs text-neutral-400 hover:underline cursor-pointer'
         >
           Hide key
         </button>
@@ -832,8 +832,8 @@ function ServiceAccountKeyInput({ value, onChange }) {
 
 function ServiceAccountConnection({ keyValue, calendarId, enabled }) {
   const [status, setStatus] = useState(null); // { configured, clientEmail, error }
-  const [busy, setBusy] = useState(""); // "" | "verify" | "test"
-  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(''); // "" | "verify" | "test"
+  const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -843,9 +843,9 @@ function ServiceAccountConnection({ keyValue, calendarId, enabled }) {
   useEffect(() => {
     let canceled = false;
     const timer = setTimeout(() => {
-      fetch("/api/google/service-account")
-        .then((res) => res.json())
-        .then((data) => {
+      fetch('/api/google/service-account')
+        .then(res => res.json())
+        .then(data => {
           if (!canceled) setStatus(data);
         })
         .catch(() => {});
@@ -858,19 +858,19 @@ function ServiceAccountConnection({ keyValue, calendarId, enabled }) {
 
   const run = async (kind, path, describe) => {
     setBusy(kind);
-    setMessage("Working...");
+    setMessage('Working...');
     setError(false);
     try {
-      const res = await fetch(path, { method: "POST" });
+      const res = await fetch(path, { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Request failed");
+      if (!res.ok) throw new Error(data.error || 'Request failed');
       setMessage(describe(data));
       setError(false);
     } catch (err) {
       setMessage(err.message);
       setError(true);
     } finally {
-      setBusy("");
+      setBusy('');
     }
   };
 
@@ -886,68 +886,68 @@ function ServiceAccountConnection({ keyValue, calendarId, enabled }) {
   };
 
   return (
-    <div className="mt-3 flex flex-col gap-2">
+    <div className='mt-3 flex flex-col gap-2'>
       {status?.configured ? (
-        <div className="text-sm text-neutral-300">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-green-700">Key loaded</span>
-            <code className="text-xs bg-neutral-900 rounded px-1 py-0.5 break-all">
+        <div className='text-sm text-neutral-300'>
+          <div className='flex items-center gap-2 flex-wrap'>
+            <span className='text-green-700'>Key loaded</span>
+            <code className='text-xs bg-neutral-900 rounded px-1 py-0.5 break-all'>
               {status.clientEmail}
             </code>
             <button
-              type="button"
+              type='button'
               onClick={copyEmail}
-              className="text-xs text-neutral-400 hover:underline cursor-pointer"
+              className='text-xs text-neutral-400 hover:underline cursor-pointer'
             >
-              {copied ? "Copied" : "Copy"}
+              {copied ? 'Copied' : 'Copy'}
             </button>
           </div>
-          <p className="text-neutral-500 mt-1">
+          <p className='text-neutral-500 mt-1'>
             Share the calendar above with this address in Google Calendar
             (Settings and sharing → Share with specific people → Make changes to
             events).
           </p>
         </div>
       ) : status?.error ? (
-        <p className="text-sm text-red-600">{status.error}</p>
+        <p className='text-sm text-red-600'>{status.error}</p>
       ) : (
-        <p className="text-sm text-neutral-500">No key saved yet.</p>
+        <p className='text-sm text-neutral-500'>No key saved yet.</p>
       )}
 
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className='flex items-center gap-3 flex-wrap'>
         <button
-          type="button"
+          type='button'
           onClick={() =>
             run(
-              "verify",
-              "/api/google/service-account",
-              (data) => `Access confirmed for ${data.calendarId}.`,
+              'verify',
+              '/api/google/service-account',
+              data => `Access confirmed for ${data.calendarId}.`
             )
           }
           disabled={!!busy || !enabled}
-          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
+          className='text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer'
         >
-          {busy === "verify" ? "Checking..." : "Verify Calendar Access"}
+          {busy === 'verify' ? 'Checking...' : 'Verify Calendar Access'}
         </button>
         <button
-          type="button"
+          type='button'
           onClick={() =>
             run(
-              "test",
-              "/api/google/calendar/test",
+              'test',
+              '/api/google/calendar/test',
               () =>
-                "Test event created (tomorrow, same time) - delete it from your calendar when done.",
+                'Test event created (tomorrow, same time) - delete it from your calendar when done.'
             )
           }
           disabled={!!busy || !enabled}
-          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
+          className='text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer'
         >
-          {busy === "test" ? "Creating..." : "Create Test Calendar Event"}
+          {busy === 'test' ? 'Creating...' : 'Create Test Calendar Event'}
         </button>
       </div>
       {message && (
         <span
-          className={`text-sm ${error ? "text-red-600" : "text-neutral-500"}`}
+          className={`text-sm ${error ? 'text-red-600' : 'text-neutral-500'}`}
         >
           {message}
         </span>
@@ -958,8 +958,8 @@ function ServiceAccountConnection({ keyValue, calendarId, enabled }) {
 
 function CalDavConnection({ url, username, password, enabled }) {
   const [status, setStatus] = useState(null); // { configured, url }
-  const [busy, setBusy] = useState(""); // "" | "verify" | "test"
-  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(''); // "" | "verify" | "test"
+  const [message, setMessage] = useState('');
   const [error, setError] = useState(false);
 
   // Reloads whenever the connection details change, waiting out the
@@ -967,9 +967,9 @@ function CalDavConnection({ url, username, password, enabled }) {
   useEffect(() => {
     let canceled = false;
     const timer = setTimeout(() => {
-      fetch("/api/caldav")
-        .then((res) => res.json())
-        .then((data) => {
+      fetch('/api/caldav')
+        .then(res => res.json())
+        .then(data => {
           if (!canceled) setStatus(data);
         })
         .catch(() => {});
@@ -982,62 +982,62 @@ function CalDavConnection({ url, username, password, enabled }) {
 
   const run = async (kind, path, describe) => {
     setBusy(kind);
-    setMessage("Working...");
+    setMessage('Working...');
     setError(false);
     try {
-      const res = await fetch(path, { method: "POST" });
+      const res = await fetch(path, { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Request failed");
+      if (!res.ok) throw new Error(data.error || 'Request failed');
       setMessage(describe(data));
       setError(false);
     } catch (err) {
       setMessage(err.message);
       setError(true);
     } finally {
-      setBusy("");
+      setBusy('');
     }
   };
 
   return (
-    <div className="mt-3 flex flex-col gap-2">
+    <div className='mt-3 flex flex-col gap-2'>
       {status?.configured ? (
-        <p className="text-sm text-green-700">Configured - {status.url}</p>
+        <p className='text-sm text-green-700'>Configured - {status.url}</p>
       ) : (
-        <p className="text-sm text-neutral-500">
+        <p className='text-sm text-neutral-500'>
           Not configured - enable it and add a calendar URL above.
         </p>
       )}
 
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className='flex items-center gap-3 flex-wrap'>
         <button
-          type="button"
+          type='button'
           onClick={() =>
-            run("verify", "/api/caldav", () => "Connection confirmed.")
+            run('verify', '/api/caldav', () => 'Connection confirmed.')
           }
           disabled={!!busy || !enabled}
-          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
+          className='text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer'
         >
-          {busy === "verify" ? "Checking..." : "Verify Calendar Access"}
+          {busy === 'verify' ? 'Checking...' : 'Verify Calendar Access'}
         </button>
         <button
-          type="button"
+          type='button'
           onClick={() =>
             run(
-              "test",
-              "/api/caldav/test",
+              'test',
+              '/api/caldav/test',
               () =>
-                "Test event created - delete it from your calendar when done.",
+                'Test event created - delete it from your calendar when done.'
             )
           }
           disabled={!!busy || !enabled}
-          className="text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer"
+          className='text-sm px-2 py-0.5 rounded-2xl bg-neutral-300 text-neutral-800 disabled:opacity-50 cursor-pointer'
         >
-          {busy === "test" ? "Creating..." : "Create Test Calendar Event"}
+          {busy === 'test' ? 'Creating...' : 'Create Test Calendar Event'}
         </button>
       </div>
       {message && (
         <span
-          className={`text-sm ${error ? "text-red-600" : "text-neutral-500"}`}
+          className={`text-sm ${error ? 'text-red-600' : 'text-neutral-500'}`}
         >
           {message}
         </span>
@@ -1047,26 +1047,25 @@ function CalDavConnection({ url, username, password, enabled }) {
 }
 
 function RegionPicker({ value, onChange }) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const inputRef = useRef(null);
   const [menuRect, setMenuRect] = useState(null);
 
   const selectedIds = useMemo(
     () =>
-      (value || "")
-        .split(",")
-        .map((s) => s.trim())
+      (value || '')
+        .split(',')
+        .map(s => s.trim())
         .filter(Boolean)
-        .map((s) => parseInt(s, 10)),
-    [value],
+        .map(s => parseInt(s, 10)),
+    [value]
   );
 
   const matches = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return [];
     return RA_REGIONS.filter(
-      (r) =>
-        !selectedIds.includes(r.id) && r.label.toLowerCase().includes(term),
+      r => !selectedIds.includes(r.id) && r.label.toLowerCase().includes(term)
     ).slice(0, 20);
   }, [search, selectedIds]);
 
@@ -1084,41 +1083,41 @@ function RegionPicker({ value, onChange }) {
         setMenuRect({
           top: rect.bottom + 4,
           left: rect.left,
-          width: rect.width,
+          width: rect.width
         });
     };
     updateRect();
-    window.addEventListener("scroll", updateRect, true);
-    window.addEventListener("resize", updateRect);
+    window.addEventListener('scroll', updateRect, true);
+    window.addEventListener('resize', updateRect);
     return () => {
-      window.removeEventListener("scroll", updateRect, true);
-      window.removeEventListener("resize", updateRect);
+      window.removeEventListener('scroll', updateRect, true);
+      window.removeEventListener('resize', updateRect);
     };
   }, [matches.length]);
 
-  const addRegion = (id) => {
-    onChange([...selectedIds, id].join(","));
-    setSearch("");
+  const addRegion = id => {
+    onChange([...selectedIds, id].join(','));
+    setSearch('');
   };
 
-  const removeRegion = (id) => {
-    onChange(selectedIds.filter((existing) => existing !== id).join(","));
+  const removeRegion = id => {
+    onChange(selectedIds.filter(existing => existing !== id).join(','));
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className='flex flex-col gap-2'>
       {selectedIds.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {selectedIds.map((id) => (
+        <div className='flex flex-wrap gap-2'>
+          {selectedIds.map(id => (
             <span
               key={id}
-              className="flex items-center gap-1 bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-sm"
+              className='flex items-center gap-1 bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-sm'
             >
               {RA_REGIONS_BY_ID.get(id) || `Unknown region (${id})`}
               <button
-                type="button"
+                type='button'
                 onClick={() => removeRegion(id)}
-                className="text-neutral-200 hover:text-red-600"
+                className='text-neutral-200 hover:text-red-600'
                 aria-label={`Remove ${RA_REGIONS_BY_ID.get(id) || id}`}
               >
                 ×
@@ -1127,39 +1126,39 @@ function RegionPicker({ value, onChange }) {
           ))}
         </div>
       )}
-      <div className="relative">
+      <div className='relative'>
         <input
           ref={inputRef}
-          type="text"
+          type='text'
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search for a city or country to add..."
-          className="border border-neutral-300 rounded px-2 py-1 text-sm w-full"
+          onChange={e => setSearch(e.target.value)}
+          placeholder='Search for a city or country to add...'
+          className='border border-neutral-300 rounded px-2 py-1 text-sm w-full'
         />
         {menuRect &&
           matches.length > 0 &&
           createPortal(
             <ul
-              className="fixed z-50 max-h-56 overflow-auto border border-neutral-500 rounded bg-white shadow"
+              className='fixed z-50 max-h-56 overflow-auto border border-neutral-500 rounded bg-white shadow'
               style={{
                 top: menuRect.top,
                 left: menuRect.left,
-                width: menuRect.width,
+                width: menuRect.width
               }}
             >
-              {matches.map((r) => (
+              {matches.map(r => (
                 <li key={r.id}>
                   <button
-                    type="button"
+                    type='button'
                     onClick={() => addRegion(r.id)}
-                    className="w-full text-left px-2 py-1 text-sm bg-neutral-700 text-neutral-200 hover:bg-neutral-300 hover:text-neutral-800"
+                    className='w-full text-left px-2 py-1 text-sm bg-neutral-700 text-neutral-200 hover:bg-neutral-300 hover:text-neutral-800'
                   >
                     {r.label}
                   </button>
                 </li>
               ))}
             </ul>,
-            document.body,
+            document.body
           )}
       </div>
     </div>
@@ -1168,12 +1167,12 @@ function RegionPicker({ value, onChange }) {
 
 export default function SettingsTab({ isConfigured }) {
   const [form, setForm] = useState(null);
-  const [saveState, setSaveState] = useState("idle"); // idle | pending | saving | saved | error
+  const [saveState, setSaveState] = useState('idle'); // idle | pending | saving | saved | error
   // Which top-level SettingsSection is currently open
   // null when all are collapsed.
   const [openSection, setOpenSection] = useState(null);
-  const toggleSection = (title) =>
-    setOpenSection((current) => (current === title ? null : title));
+  const toggleSection = title =>
+    setOpenSection(current => (current === title ? null : title));
   const skipNextSave = useRef(true);
   const debounceRef = useRef(null);
   const pendingSaveRef = useRef(false);
@@ -1184,24 +1183,24 @@ export default function SettingsTab({ isConfigured }) {
   }, [form]);
 
   useEffect(() => {
-    fetch("/api/settings")
-      .then((res) => res.json())
+    fetch('/api/settings')
+      .then(res => res.json())
       .then(setForm);
   }, []);
 
   const saveNow = async () => {
     pendingSaveRef.current = false;
-    setSaveState("saving");
+    setSaveState('saving');
     try {
-      const res = await fetch("/api/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formRef.current),
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formRef.current)
       });
-      if (!res.ok) throw new Error("Failed to save settings");
-      setSaveState("saved");
+      if (!res.ok) throw new Error('Failed to save settings');
+      setSaveState('saved');
     } catch {
-      setSaveState("error");
+      setSaveState('error');
     }
   };
 
@@ -1215,7 +1214,7 @@ export default function SettingsTab({ isConfigured }) {
       return;
     }
 
-    setSaveState("pending");
+    setSaveState('pending');
     pendingSaveRef.current = true;
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(saveNow, SAVE_DEBOUNCE_MS);
@@ -1241,13 +1240,13 @@ export default function SettingsTab({ isConfigured }) {
   }, [form?.theme]);
 
   const updateField = (key, value, type) => {
-    setForm((f) => {
-      const next = { ...f, [key]: type === "number" ? Number(value) : value };
+    setForm(f => {
+      const next = { ...f, [key]: type === 'number' ? Number(value) : value };
       // Implicit TLS and STARTTLS live on different standard ports, and
       // mismatching them fails with an opaque OpenSSL "wrong version number"
       // error - so move the port along with the toggle. Only when it's still
       // the other mode's default, so a deliberate custom port survives.
-      if (key === "smtpSecure") {
+      if (key === 'smtpSecure') {
         if (value === true && Number(f.smtpPort) === 587) next.smtpPort = 465;
         if (value === false && Number(f.smtpPort) === 465) next.smtpPort = 587;
       }
@@ -1256,28 +1255,28 @@ export default function SettingsTab({ isConfigured }) {
   };
 
   const toggleEventSearchTerm = (term, checked) => {
-    setForm((f) => {
+    setForm(f => {
       const current = f.eventSearchTerms || [];
       if (checked) {
         return current.includes(term)
           ? f
           : { ...f, eventSearchTerms: [...current, term] };
       }
-      const next = current.filter((t) => t !== term);
+      const next = current.filter(t => t !== term);
       if (next.length === 0) return f; // always keep at least one selected
       return { ...f, eventSearchTerms: next };
     });
   };
 
   const toggleEventSearchSource = (source, checked) => {
-    setForm((f) => {
+    setForm(f => {
       const current = f.eventSearchSources || [];
       if (checked) {
         return current.includes(source)
           ? f
           : { ...f, eventSearchSources: [...current, source] };
       }
-      const next = current.filter((s) => s !== source);
+      const next = current.filter(s => s !== source);
       if (next.length === 0) return f; // always keep at least one selected
       return { ...f, eventSearchSources: next };
     });
@@ -1286,7 +1285,7 @@ export default function SettingsTab({ isConfigured }) {
   if (!form) return <p>Loading...</p>;
 
   const sectionByTitle = Object.fromEntries(
-    SECTIONS.map((section) => [section.title, section]),
+    SECTIONS.map(section => [section.title, section])
   );
 
   // Mirrors the precedence in lib/googleCalendar.js: an enabled, configured
@@ -1295,15 +1294,15 @@ export default function SettingsTab({ isConfigured }) {
   // actually live when both have been configured (they can be
   // independently "set up" without being the one actually used).
   const serviceAccountConfigured = !!(
-    form.googleServiceAccountJson || ""
+    form.googleServiceAccountJson || ''
   ).trim();
   const activeCalendarMethod =
     form.googleServiceAccountEnabled && serviceAccountConfigured
-      ? "serviceAccount"
-      : "oauth";
+      ? 'serviceAccount'
+      : 'oauth';
   const CALENDAR_METHOD_LABELS = {
-    serviceAccount: "GCP Service Account",
-    oauth: "Google OAuth",
+    serviceAccount: 'GCP Service Account',
+    oauth: 'Google OAuth'
   };
 
   // Renders a SECTIONS entry's description/warning/fields, plus whatever
@@ -1313,42 +1312,42 @@ export default function SettingsTab({ isConfigured }) {
   // thing out and blocks interaction
   const renderSectionFields = (section, disabled = false) => (
     <div
-      className={disabled ? "opacity-40 pointer-events-none" : undefined}
+      className={disabled ? 'opacity-40 pointer-events-none' : undefined}
       aria-disabled={disabled}
     >
       {section.description && (
-        <p className="text-sm text-neutral-400 mb-2">{section.description}</p>
+        <p className='text-sm text-neutral-400 mb-2'>{section.description}</p>
       )}
       {section.warning && (
-        <p className="text-sm text-amber-200   border border-amber-200 rounded p-2 mb-3">
+        <p className='text-sm text-amber-200   border border-amber-200 rounded p-2 mb-3'>
           ⚠️ {section.warning}
         </p>
       )}
-      <div className="flex flex-col gap-3 ">
+      <div className='flex flex-col gap-3 '>
         {section.fields
-          .filter((f) => (f.showIf ? f.showIf(form) : true))
-          .map((f) =>
-            f.type === "regionPicker" ? (
-              <div key={f.key} className="flex flex-col gap-1 text-sm">
+          .filter(f => (f.showIf ? f.showIf(form) : true))
+          .map(f =>
+            f.type === 'regionPicker' ? (
+              <div key={f.key} className='flex flex-col gap-1 text-sm'>
                 {f.label}
                 <RegionPicker
                   value={form[f.key]}
-                  onChange={(v) => updateField(f.key, v)}
+                  onChange={v => updateField(f.key, v)}
                 />
               </div>
-            ) : f.type === "switch" ? (
-              <div key={f.key} className="flex flex-col gap-1 text-sm">
+            ) : f.type === 'switch' ? (
+              <div key={f.key} className='flex flex-col gap-1 text-sm'>
                 {f.label}
-                <div className="flex rounded-2xl overflow-hidden border border-neutral-400 w-fit">
-                  {f.options.map((o) => (
+                <div className='flex rounded-2xl overflow-hidden border border-neutral-400 w-fit'>
+                  {f.options.map(o => (
                     <button
                       key={o.value}
-                      type="button"
+                      type='button'
                       onClick={() => updateField(f.key, o.value)}
                       className={`px-3 py-0.5 ${
                         form[f.key] === o.value
-                          ? "bg-neutral-200 text-neutral-900"
-                          : "bg-neutral-800 text-white  cursor-pointer"
+                          ? 'bg-neutral-200 text-neutral-900'
+                          : 'bg-neutral-800 text-white  cursor-pointer'
                       }`}
                     >
                       {o.label}
@@ -1356,80 +1355,80 @@ export default function SettingsTab({ isConfigured }) {
                   ))}
                 </div>
               </div>
-            ) : f.type === "checkbox" ? (
-              <label key={f.key} className="flex items-start gap-2 text-sm">
+            ) : f.type === 'checkbox' ? (
+              <label key={f.key} className='flex items-start gap-2 text-sm'>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={!!form[f.key]}
-                  onChange={(e) => updateField(f.key, e.target.checked)}
-                  className="mt-1"
+                  onChange={e => updateField(f.key, e.target.checked)}
+                  className='mt-1'
                 />
                 {f.label}
               </label>
-            ) : f.type === "serviceAccountKey" ? (
-              <div key={f.key} className="flex flex-col gap-1 text-sm">
+            ) : f.type === 'serviceAccountKey' ? (
+              <div key={f.key} className='flex flex-col gap-1 text-sm'>
                 {f.label}
                 <ServiceAccountKeyInput
-                  value={form[f.key] ?? ""}
-                  onChange={(v) => updateField(f.key, v)}
+                  value={form[f.key] ?? ''}
+                  onChange={v => updateField(f.key, v)}
                 />
               </div>
-            ) : f.type === "textarea" ? (
-              <label key={f.key} className="flex flex-col gap-1 text-sm">
+            ) : f.type === 'textarea' ? (
+              <label key={f.key} className='flex flex-col gap-1 text-sm'>
                 {f.label}
                 <textarea
-                  value={form[f.key] ?? ""}
-                  onChange={(e) => updateField(f.key, e.target.value)}
+                  value={form[f.key] ?? ''}
+                  onChange={e => updateField(f.key, e.target.value)}
                   rows={5}
-                  className="border border-neutral-400 rounded px-2 py-1 font-mono text-xs"
+                  className='border border-neutral-400 rounded px-2 py-1 font-mono text-xs'
                 />
               </label>
             ) : (
-              <label key={f.key} className="flex flex-col gap-1 text-sm">
+              <label key={f.key} className='flex flex-col gap-1 text-sm'>
                 {f.label}
                 <input
                   type={f.type}
-                  value={form[f.key] ?? ""}
-                  onChange={(e) => updateField(f.key, e.target.value, f.type)}
-                  className="border border-neutral-400 rounded px-2 py-1"
+                  value={form[f.key] ?? ''}
+                  onChange={e => updateField(f.key, e.target.value, f.type)}
+                  className='border border-neutral-400 rounded px-2 py-1'
                 />
               </label>
-            ),
+            )
           )}
       </div>
-      {section.title === "Top Artists" && (
+      {section.title === 'Top Artists' && (
         <div>
-          <div className="flex items-center gap-2 mt-3 text-sm">
+          <div className='flex items-center gap-2 mt-3 text-sm'>
             <span>Automatically refresh every </span>
             <input
-              type="number"
-              min="1"
+              type='number'
+              min='1'
               value={form.topArtistsAutoRefreshDays ?? 1}
-              onChange={(e) =>
+              onChange={e =>
                 updateField(
-                  "topArtistsAutoRefreshDays",
+                  'topArtistsAutoRefreshDays',
                   e.target.value,
-                  "number",
+                  'number'
                 )
               }
-              className="border rounded px-2 py-1 w-16"
+              className='border rounded px-2 py-1 w-16'
             />
             <span>day(s)</span>
           </div>
           <br />
-          <h3 className="font-semibold">History Depth</h3>
-          <p className="text-sm text-neutral-500 mb-2">
+          <h3 className='font-semibold'>History Depth</h3>
+          <p className='text-sm text-neutral-500 mb-2'>
             Which top-artists window(s) to pull from when building the artist
             list used for event searches. Selecting more than one combines them
             using the Top Artist Combination Mode below.
           </p>
-          <div className="flex flex-col gap-2">
-            {EVENT_SEARCH_TERM_OPTIONS.map((t) => (
-              <label key={t.value} className="flex items-center gap-2 text-sm">
+          <div className='flex flex-col gap-2'>
+            {EVENT_SEARCH_TERM_OPTIONS.map(t => (
+              <label key={t.value} className='flex items-center gap-2 text-sm'>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={form.eventSearchTerms?.includes(t.value) ?? false}
-                  onChange={(e) =>
+                  onChange={e =>
                     toggleEventSearchTerm(t.value, e.target.checked)
                   }
                 />
@@ -1438,52 +1437,62 @@ export default function SettingsTab({ isConfigured }) {
             ))}
           </div>
           <br />
-          <h3 className="font-semibold">Combination Mode</h3>
-          <div className="flex flex-col gap-3">
-            {COMBINED_MODES.map((m) => (
+          <h3 className='font-semibold'>Combination Mode</h3>
+          <div className='flex flex-col gap-3'>
+            {COMBINED_MODES.map(m => (
               <label
                 key={m.value}
-                className="flex items-start gap-3 border border-neutral-700 rounded p-3 cursor-pointer"
+                className='flex items-start gap-3 border border-neutral-700 rounded p-3 cursor-pointer'
               >
                 <input
-                  type="radio"
-                  name="combinedTopArtistsMode"
+                  type='radio'
+                  name='combinedTopArtistsMode'
                   checked={form.combinedTopArtistsMode === m.value}
                   onChange={() =>
-                    updateField("combinedTopArtistsMode", m.value)
+                    updateField('combinedTopArtistsMode', m.value)
                   }
-                  className="mt-1"
+                  className='mt-1'
                 />
                 <div>
-                  <p className="font-medium">{m.label}</p>
-                  <p className="text-sm text-neutral-500">{m.description}</p>
+                  <p className='font-medium'>{m.label}</p>
+                  <p className='text-sm text-neutral-500'>{m.description}</p>
                 </div>
               </label>
             ))}
           </div>
         </div>
       )}
-      {section.title === "Spotify API" && (
+      {section.title === 'Spotify API' && (
         <SpotifyConnection redirectUri={form.spotifyRedirectUri} />
       )}
-      {section.title === "SMTP Email" && (
+      {section.title === 'SMTP Email' && (
         <>
-          <label className="flex items-center gap-2 text-sm mt-1">
+          <label className='flex items-center gap-2 text-sm mt-1'>
             <input
-              type="checkbox"
-              checked={form.smtpEnabled}
-              onChange={(e) => updateField("smtpEnabled", e.target.checked)}
+              type='checkbox'
+              checked={form.smtpWeeklyEnabled}
+              onChange={e => updateField('smtpWeeklyEnabled', e.target.checked)}
             />
             Send a weekly email digest via SMTP
+          </label>
+          <label className='flex items-center gap-2 text-sm mt-1'>
+            <input
+              type='checkbox'
+              checked={form.smtpNewEventsEnabled}
+              onChange={e =>
+                updateField('smtpNewEventsEnabled', e.target.checked)
+              }
+            />
+            Send an email via SMTP when new events are found
           </label>
           <SmtpTest />
         </>
       )}
-      {section.title === "Google OAuth (Email & Calendar)" && (
+      {section.title === 'Google OAuth (Email & Calendar)' && (
         <>
-          {activeCalendarMethod === "serviceAccount" && (
-            <p className="text-sm text-amber-200 border border-amber-200 rounded p-2 mb-3">
-              ⚠️ Calendar events currently go through the{" "}
+          {activeCalendarMethod === 'serviceAccount' && (
+            <p className='text-sm text-amber-200 border border-amber-200 rounded p-2 mb-3'>
+              ⚠️ Calendar events currently go through the{' '}
               <strong>GCP Service Account</strong> below, not this section's
               OAuth connection. This section still handles Email either way.
               Uncheck "Use a service account for Google Calendar events" below
@@ -1494,27 +1503,37 @@ export default function SettingsTab({ isConfigured }) {
             redirectUri={form.googleRedirectUri}
             calendarSyncEnabled={form.googleCalendarSyncEnabled}
           />
-          <label className="flex items-center gap-2 text-sm mt-3">
+          <label className='flex items-center gap-2 text-sm mt-3'>
             <input
-              type="checkbox"
-              checked={form.weeklyEmailEnabled}
-              onChange={(e) =>
-                updateField("weeklyEmailEnabled", e.target.checked)
+              type='checkbox'
+              checked={form.googleWeeklyEmailEnabled}
+              onChange={e =>
+                updateField('googleWeeklyEmailEnabled', e.target.checked)
               }
             />
             Send a weekly email digest of upcoming events
           </label>
-          {form.weeklyEmailEnabled && (
-            <div className="flex items-center gap-2 mt-2 ml-6 text-sm text-neutral-200">
+          <label className='flex items-center gap-2 text-sm mt-3'>
+            <input
+              type='checkbox'
+              checked={form.googleNewEventsEmailEnabled}
+              onChange={e =>
+                updateField('googleNewEventsEmailEnabled', e.target.checked)
+              }
+            />
+            Send an email regarding new events when they are found
+          </label>
+          {form.googleWeeklyEmailEnabled && (
+            <div className='flex items-center gap-2 mt-2 ml-6 text-sm text-neutral-200'>
               <span>Every</span>
               <select
                 value={form.weeklyEmailDayOfWeek ?? 1}
-                onChange={(e) =>
-                  updateField("weeklyEmailDayOfWeek", e.target.value, "number")
+                onChange={e =>
+                  updateField('weeklyEmailDayOfWeek', e.target.value, 'number')
                 }
-                className="border border-neutral-600 rounded px-2 py-1 text-neutral-100"
+                className='border border-neutral-600 rounded px-2 py-1 text-neutral-100'
               >
-                {DAYS_OF_WEEK.map((d) => (
+                {DAYS_OF_WEEK.map(d => (
                   <option key={d.value} value={d.value}>
                     {d.label}
                   </option>
@@ -1522,21 +1541,21 @@ export default function SettingsTab({ isConfigured }) {
               </select>
               <span>at</span>
               <input
-                type="time"
-                value={form.weeklyEmailTimeOfDay ?? "09:00"}
-                onChange={(e) =>
-                  updateField("weeklyEmailTimeOfDay", e.target.value)
+                type='time'
+                value={form.weeklyEmailTimeOfDay ?? '09:00'}
+                onChange={e =>
+                  updateField('weeklyEmailTimeOfDay', e.target.value)
                 }
-                className="border border-neutral-600 rounded px-2 py-1 text-neutral-100"
+                className='border border-neutral-600 rounded px-2 py-1 text-neutral-100'
               />
             </div>
           )}
-          <label className="flex items-center gap-2 text-sm mt-1">
+          <label className='flex items-center gap-2 text-sm mt-1'>
             <input
-              type="checkbox"
+              type='checkbox'
               checked={form.googleCalendarSyncEnabled}
-              onChange={(e) =>
-                updateField("googleCalendarSyncEnabled", e.target.checked)
+              onChange={e =>
+                updateField('googleCalendarSyncEnabled', e.target.checked)
               }
             />
             Add all events to Google Calendar (if unchecked, events can be added
@@ -1545,45 +1564,45 @@ export default function SettingsTab({ isConfigured }) {
           <GoogleActionsTest />
         </>
       )}
-      {section.title === "Google Service Account (Calendar)" && (
+      {section.title === 'Google Service Account (Calendar)' && (
         <>
-          {activeCalendarMethod === "serviceAccount" ? (
-            <p className="text-sm text-green-700 border border-green-700/50 rounded p-2 mb-3">
+          {activeCalendarMethod === 'serviceAccount' ? (
+            <p className='text-sm text-green-700 border border-green-700/50 rounded p-2 mb-3'>
               ✓ This is the active method for Calendar events.
             </p>
           ) : form.googleServiceAccountEnabled ? (
-            <p className="text-sm text-amber-200 border border-amber-200 rounded p-2 mb-3">
+            <p className='text-sm text-amber-200 border border-amber-200 rounded p-2 mb-3'>
               ⚠️ Enabled, but no key is saved yet - Calendar events are still
               using {CALENDAR_METHOD_LABELS[activeCalendarMethod]} (Google OAuth
               (Email &amp; Calendar) section) until one is added.
             </p>
           ) : (
-            <p className="text-sm text-neutral-400 border border-neutral-700 rounded p-2 mb-3">
-              Not active - Calendar events currently use{" "}
+            <p className='text-sm text-neutral-400 border border-neutral-700 rounded p-2 mb-3'>
+              Not active - Calendar events currently use{' '}
               {CALENDAR_METHOD_LABELS[activeCalendarMethod]} (Google OAuth
               (Email &amp; Calendar) section above). Check the box below to
               switch.
             </p>
           )}
           <ServiceAccountConnection
-            keyValue={form.googleServiceAccountJson || ""}
-            calendarId={form.googleServiceAccountCalendarId || ""}
+            keyValue={form.googleServiceAccountJson || ''}
+            calendarId={form.googleServiceAccountCalendarId || ''}
             enabled={!!form.googleServiceAccountEnabled}
           />
-          <label className="flex items-start gap-2 text-sm mt-3">
+          <label className='flex items-start gap-2 text-sm mt-3'>
             <input
-              type="checkbox"
+              type='checkbox'
               checked={form.googleCalendarSyncEnabled}
-              onChange={(e) =>
-                updateField("googleCalendarSyncEnabled", e.target.checked)
+              onChange={e =>
+                updateField('googleCalendarSyncEnabled', e.target.checked)
               }
-              className="mt-1"
+              className='mt-1'
             />
             <span>
               Add all events to Google Calendar (if unchecked, events can be
               added individually instead from Events Tab)
-              <span className="text-neutral-500">
-                {" "}
+              <span className='text-neutral-500'>
+                {' '}
                 - same setting as in the Google OAuth (Email &amp; Calendar)
                 section.
               </span>
@@ -1591,40 +1610,38 @@ export default function SettingsTab({ isConfigured }) {
           </label>
         </>
       )}
-      {section.title === "CalDAV (Calendar)" && (
+      {section.title === 'CalDAV (Calendar)' && (
         <>
           <CalDavConnection
-            url={form.caldavUrl || ""}
-            username={form.caldavUsername || ""}
-            password={form.caldavPassword || ""}
+            url={form.caldavUrl || ''}
+            username={form.caldavUsername || ''}
+            password={form.caldavPassword || ''}
             enabled={!!form.caldavEnabled}
           />
-          <label className="flex items-start gap-2 text-sm mt-3">
+          <label className='flex items-start gap-2 text-sm mt-3'>
             <input
-              type="checkbox"
+              type='checkbox'
               checked={form.caldavSyncEnabled}
-              onChange={(e) =>
-                updateField("caldavSyncEnabled", e.target.checked)
-              }
-              className="mt-1"
+              onChange={e => updateField('caldavSyncEnabled', e.target.checked)}
+              className='mt-1'
             />
             <span>
               Add all newly found events to the CalDAV calendar automatically
-              <span className="text-neutral-500">
-                {" "}
+              <span className='text-neutral-500'>
+                {' '}
                 - runs alongside Google Calendar sync if that's also enabled.
               </span>
             </span>
           </label>
         </>
       )}
-      {section.title === "Webhook" && (
+      {section.title === 'Webhook' && (
         <>
-          <label className="flex items-center gap-2 text-sm mt-1">
+          <label className='flex items-center gap-2 text-sm mt-1'>
             <input
-              type="checkbox"
+              type='checkbox'
               checked={form.webhookEnabled}
-              onChange={(e) => updateField("webhookEnabled", e.target.checked)}
+              onChange={e => updateField('webhookEnabled', e.target.checked)}
             />
             Send a weekly webhook digest of upcoming events
           </label>
@@ -1635,42 +1652,42 @@ export default function SettingsTab({ isConfigured }) {
   );
 
   const statusText =
-    saveState === "pending" || saveState === "saving"
-      ? "Saving..."
-      : saveState === "saved"
-        ? "All changes saved"
-        : saveState === "error"
-          ? "Failed to save changes"
-          : "";
+    saveState === 'pending' || saveState === 'saving'
+      ? 'Saving...'
+      : saveState === 'saved'
+        ? 'All changes saved'
+        : saveState === 'error'
+          ? 'Failed to save changes'
+          : '';
 
   return (
     <TabLayout
       statusBar={
-        <StatusBar message={statusText} error={saveState === "error"} />
+        <StatusBar message={statusText} error={saveState === 'error'} />
       }
     >
-      <div className="columns-1 mt-6 pl-2 pr-6 gap-12 w-full lg:w-3xl max-w-[1800px]">
+      <div className='columns-1 mt-6 pl-2 pr-6 gap-12 w-full lg:w-3xl max-w-[1800px]'>
         <SettingsSection
-          title="Appearance"
-          open={openSection === "Appearance"}
-          onToggle={() => toggleSection("Appearance")}
+          title='Appearance'
+          open={openSection === 'Appearance'}
+          onToggle={() => toggleSection('Appearance')}
         >
-          <div className="flex flex-col gap-3">
-            {THEMES.map((t) => (
+          <div className='flex flex-col gap-3'>
+            {THEMES.map(t => (
               <label
                 key={t.value}
-                className="flex items-start gap-3 border border-neutral-700 rounded p-3 cursor-pointer"
+                className='flex items-start gap-3 border border-neutral-700 rounded p-3 cursor-pointer'
               >
                 <input
-                  type="radio"
-                  name="theme"
+                  type='radio'
+                  name='theme'
                   checked={form.theme === t.value}
-                  onChange={() => updateField("theme", t.value)}
-                  className="mt-1"
+                  onChange={() => updateField('theme', t.value)}
+                  className='mt-1'
                 />
                 <div>
-                  <p className="font-medium">{t.label}</p>
-                  <p className="text-sm text-neutral-500">{t.description}</p>
+                  <p className='font-medium'>{t.label}</p>
+                  <p className='text-sm text-neutral-500'>{t.description}</p>
                 </div>
               </label>
             ))}
@@ -1678,95 +1695,95 @@ export default function SettingsTab({ isConfigured }) {
         </SettingsSection>
 
         <SettingsSection
-          title="Artists"
-          open={openSection === "Artists"}
-          onToggle={() => toggleSection("Artists")}
+          title='Artists'
+          open={openSection === 'Artists'}
+          onToggle={() => toggleSection('Artists')}
         >
           <SettingsSubsection
-            title="Artist Sources"
+            title='Artist Sources'
             defaultOpen={!isConfigured}
           >
-            <div className="flex flex-col gap-2">
-              <div className="flex rounded-2xl overflow-hidden border border-neutral-400  w-fit">
-                {ARTIST_SOURCES.map((s) => (
+            <div className='flex flex-col gap-2'>
+              <div className='flex rounded-2xl overflow-hidden border border-neutral-400  w-fit'>
+                {ARTIST_SOURCES.map(s => (
                   <button
                     key={s.value}
-                    type="button"
-                    onClick={() => updateField("artistSource", s.value)}
+                    type='button'
+                    onClick={() => updateField('artistSource', s.value)}
                     className={`px-3 py-0.5 ${
                       form.artistSource === s.value
-                        ? "bg-neutral-200 text-neutral-900 "
-                        : s.value === "none"
-                          ? "bg-neutral-800 text-white cursor-pointer"
-                          : "bg-neutral-800 text-white cursor-pointer border-r-2 border-r-neutral-500/70"
+                        ? 'bg-neutral-200 text-neutral-900 '
+                        : s.value === 'none'
+                          ? 'bg-neutral-800 text-white cursor-pointer'
+                          : 'bg-neutral-800 text-white cursor-pointer border-r-2 border-r-neutral-500/70'
                     }`}
                   >
                     {s.label}
                   </button>
                 ))}
               </div>
-              <p className="text-sm text-neutral-500">
+              <p className='text-sm text-neutral-500'>
                 {
-                  ARTIST_SOURCES.find((s) => s.value === form.artistSource)
+                  ARTIST_SOURCES.find(s => s.value === form.artistSource)
                     ?.description
                 }
               </p>
             </div>
           </SettingsSubsection>
 
-          <SettingsSubsection title="Top Artists">
-            {renderSectionFields(sectionByTitle["Top Artists"])}
+          <SettingsSubsection title='Top Artists'>
+            {renderSectionFields(sectionByTitle['Top Artists'])}
           </SettingsSubsection>
 
           <SettingsSubsection
-            title="Tautulli API"
+            title='Tautulli API'
             defaultOpen={!isConfigured}
-            disabled={["spotify", "none"].includes(form.artistSource)}
+            disabled={['spotify', 'none'].includes(form.artistSource)}
           >
             {renderSectionFields(
-              sectionByTitle["Tautulli API"],
-              ["spotify", "none"].includes(form.artistSource),
+              sectionByTitle['Tautulli API'],
+              ['spotify', 'none'].includes(form.artistSource)
             )}
           </SettingsSubsection>
 
           <SettingsSubsection
-            title="Spotify API"
+            title='Spotify API'
             defaultOpen={!isConfigured}
-            disabled={["tautulli", "none"].includes(form.artistSource)}
+            disabled={['tautulli', 'none'].includes(form.artistSource)}
           >
             {renderSectionFields(
-              sectionByTitle["Spotify API"],
-              ["tautulli", "none"].includes(form.artistSource),
+              sectionByTitle['Spotify API'],
+              ['tautulli', 'none'].includes(form.artistSource)
             )}
           </SettingsSubsection>
         </SettingsSection>
 
         <SettingsSection
-          title="Event Search"
-          open={openSection === "Event Search"}
-          onToggle={() => toggleSection("Event Search")}
+          title='Event Search'
+          open={openSection === 'Event Search'}
+          onToggle={() => toggleSection('Event Search')}
         >
           <SettingsSubsection
-            title="Event Search Sources"
+            title='Event Search Sources'
             defaultOpen={!isConfigured}
           >
-            <p className="text-sm text-neutral-500 mb-2">
+            <p className='text-sm text-neutral-500 mb-2'>
               Which APIs to query when running an event search. Disabling one
               skips it entirely (no API calls made) rather than just hiding its
               results.
             </p>
-            <div className="flex flex-col gap-2">
-              {EVENT_SEARCH_SOURCE_OPTIONS.map((s) => (
+            <div className='flex flex-col gap-2'>
+              {EVENT_SEARCH_SOURCE_OPTIONS.map(s => (
                 <label
                   key={s.value}
-                  className="flex items-center gap-2 text-sm"
+                  className='flex items-center gap-2 text-sm'
                 >
                   <input
-                    type="checkbox"
+                    type='checkbox'
                     checked={
                       form.eventSearchSources?.includes(s.value) ?? false
                     }
-                    onChange={(e) =>
+                    onChange={e =>
                       toggleEventSearchSource(s.value, e.target.checked)
                     }
                   />
@@ -1774,86 +1791,86 @@ export default function SettingsTab({ isConfigured }) {
                 </label>
               ))}
             </div>
-            <div className="flex items-center gap-2 mt-3 text-sm">
-              <label className="flex items-center gap-2">
+            <div className='flex items-center gap-2 mt-3 text-sm'>
+              <label className='flex items-center gap-2'>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={form.eventSearchAutoRefreshEnabled}
-                  onChange={(e) =>
+                  onChange={e =>
                     updateField(
-                      "eventSearchAutoRefreshEnabled",
-                      e.target.checked,
+                      'eventSearchAutoRefreshEnabled',
+                      e.target.checked
                     )
                   }
                 />
                 Automatically search every
               </label>
               <input
-                type="number"
-                min="1"
+                type='number'
+                min='1'
                 value={form.eventSearchAutoRefreshDays ?? 7}
-                onChange={(e) =>
+                onChange={e =>
                   updateField(
-                    "eventSearchAutoRefreshDays",
+                    'eventSearchAutoRefreshDays',
                     e.target.value,
-                    "number",
+                    'number'
                   )
                 }
-                className="border rounded px-2 py-1 w-16"
+                className='border rounded px-2 py-1 w-16'
               />
               <span>day(s)</span>
             </div>
           </SettingsSubsection>
 
           <SettingsSubsection
-            title="Ticketmaster API"
+            title='Ticketmaster API'
             defaultOpen={!isConfigured}
-            disabled={!(form.eventSearchSources || []).includes("ticketmaster")}
+            disabled={!(form.eventSearchSources || []).includes('ticketmaster')}
           >
             {renderSectionFields(
-              sectionByTitle["Ticketmaster API"],
-              !(form.eventSearchSources || []).includes("ticketmaster"),
+              sectionByTitle['Ticketmaster API'],
+              !(form.eventSearchSources || []).includes('ticketmaster')
             )}
           </SettingsSubsection>
 
           <SettingsSubsection
-            title="Resident Advisor API"
+            title='Resident Advisor API'
             defaultOpen={!isConfigured}
-            disabled={!(form.eventSearchSources || []).includes("resadvisor")}
+            disabled={!(form.eventSearchSources || []).includes('resadvisor')}
           >
             {renderSectionFields(
-              sectionByTitle["Resident Advisor API"],
-              !(form.eventSearchSources || []).includes("resadvisor"),
+              sectionByTitle['Resident Advisor API'],
+              !(form.eventSearchSources || []).includes('resadvisor')
             )}
           </SettingsSubsection>
         </SettingsSection>
 
         <SettingsSection
-          title="Notification"
-          open={openSection === "Notification"}
-          onToggle={() => toggleSection("Notification")}
+          title='Notification'
+          open={openSection === 'Notification'}
+          onToggle={() => toggleSection('Notification')}
         >
-          <SettingsSubsection title="SMTP Email">
-            {renderSectionFields(sectionByTitle["SMTP Email"])}
+          <SettingsSubsection title='SMTP Email'>
+            {renderSectionFields(sectionByTitle['SMTP Email'])}
           </SettingsSubsection>
-          <SettingsSubsection title="Google OAuth (Email & Calendar)">
+          <SettingsSubsection title='Google OAuth (Email & Calendar)'>
             {renderSectionFields(
-              sectionByTitle["Google OAuth (Email & Calendar)"],
+              sectionByTitle['Google OAuth (Email & Calendar)']
             )}
           </SettingsSubsection>
 
-          <SettingsSubsection title="Google Service Account (Calendar)">
+          <SettingsSubsection title='Google Service Account (Calendar)'>
             {renderSectionFields(
-              sectionByTitle["Google Service Account (Calendar)"],
+              sectionByTitle['Google Service Account (Calendar)']
             )}
           </SettingsSubsection>
 
-          <SettingsSubsection title="CalDAV (Calendar)">
-            {renderSectionFields(sectionByTitle["CalDAV (Calendar)"])}
+          <SettingsSubsection title='CalDAV (Calendar)'>
+            {renderSectionFields(sectionByTitle['CalDAV (Calendar)'])}
           </SettingsSubsection>
 
-          <SettingsSubsection title="Webhook">
-            {renderSectionFields(sectionByTitle["Webhook"])}
+          <SettingsSubsection title='Webhook'>
+            {renderSectionFields(sectionByTitle['Webhook'])}
           </SettingsSubsection>
         </SettingsSection>
       </div>
