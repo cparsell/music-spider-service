@@ -33,8 +33,21 @@ const STATUS_LABELS = {
 function StatusBadge({ status }) {
   const label = STATUS_LABELS[status]
   if (!label) return null
+  let labelBg = 'bg-neutral-600 text-white '
+  switch (label) {
+    case 'Canceled':
+    case 'Off sale':
+      labelBg = 'bg-red-300 text-black text-shadow-xs'
+      break
+    case 'Postponed':
+    case 'Rescheduled':
+    default:
+      labelBg = 'bg-neutral-600 text-white text-shadow-xs'
+  }
   return (
-    <span className='ml-1.5 rounded-full bg-neutral-600 text-white text-[10px] font-semibold px-1.5 py-0.5 no-underline inline-block'>
+    <span
+      className={`ml-1.5 rounded-full ${labelBg} text-[10px] font-semibold px-1.5 py-0.5 no-underline inline-block`}
+    >
       {label}
     </span>
   )
