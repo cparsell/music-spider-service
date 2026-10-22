@@ -24,6 +24,7 @@ function formatDate(dateValue) {
 const STATUS_LABELS = {
   offsale: 'Off sale',
   canceled: 'Canceled',
+  cancelled: 'Canceled',
   postponed: 'Postponed',
   rescheduled: 'Rescheduled'
 }
