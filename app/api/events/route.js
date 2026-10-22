@@ -1,30 +1,30 @@
-import { attachIsNew, getEvents, removeEvent } from "@/lib/eventsStore.js";
-import { ignoredEvents } from "@/lib/ignoredEvents.js";
-import { attachActsDisplay } from "@/lib/formatActs.js";
+import { attachIsNew, getEvents, removeEvent } from '@/lib/eventsStore.js'
+import { ignoredEvents } from '@/lib/ignoredEvents.js'
+import { attachActsDisplay } from '@/lib/formatActs.js'
 
 export async function GET() {
   return Response.json({
-    events: attachIsNew(await attachActsDisplay(await getEvents())),
-  });
+    events: attachIsNew(await attachActsDisplay(await getEvents()))
+  })
 }
 
 export async function DELETE(req) {
   try {
-    const { id, ignore } = await req.json();
+    const { id, ignore } = await req.json()
     if (ignore) {
-      const event = (await getEvents()).find((e) => e.id === id);
+      const event = (await getEvents()).find(e => e.id === id)
       if (event) {
         await ignoredEvents.addDates(
           event,
-          (event.dates || []).map((d) => d.date),
-        );
+          (event.dates || []).map(d => d.date)
+        )
       }
     }
-    const events = await removeEvent(id);
+    const events = await removeEvent(id)
     return Response.json({
-      events: attachIsNew(await attachActsDisplay(events)),
-    });
+      events: attachIsNew(await attachActsDisplay(events))
+    })
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 400 });
+    return Response.json({ error: err.message }, { status: 400 })
   }
 }

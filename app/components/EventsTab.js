@@ -1,24 +1,24 @@
-'use client';
-import { useState, useEffect, useRef } from 'react';
-import StatusBar from './StatusBar';
-import TabLayout from './TabLayout';
+'use client'
+import { useState, useEffect, useRef } from 'react'
+import StatusBar from './StatusBar'
+import TabLayout from './TabLayout'
 
 function formatDate(dateValue) {
-  const d = new Date(dateValue);
-  if (isNaN(d)) return String(dateValue);
+  const d = new Date(dateValue)
+  if (isNaN(d)) return String(dateValue)
   const datePart = new Intl.DateTimeFormat('en-US', {
     // timeZone: "America/Los_Angeles",
     // year: "numeric",
     weekday: 'short',
     month: 'numeric',
     day: 'numeric'
-  }).format(d);
+  }).format(d)
 
   const timePart = d
     .toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
     .replace(':00', '')
-    .replace(' ', '');
-  return `${datePart}, ${timePart}`;
+    .replace(' ', '')
+  return `${datePart}, ${timePart}`
 }
 
 const STATUS_LABELS = {
@@ -26,17 +26,17 @@ const STATUS_LABELS = {
   canceled: 'Canceled',
   postponed: 'Postponed',
   rescheduled: 'Rescheduled'
-};
+}
 
 // Ticketmaster's "offsale" covers both sold out and sale window ended.
 function StatusBadge({ status }) {
-  const label = STATUS_LABELS[status];
-  if (!label) return null;
+  const label = STATUS_LABELS[status]
+  if (!label) return null
   return (
     <span className='ml-1.5 rounded-full bg-neutral-600 text-white text-[10px] font-semibold px-1.5 py-0.5 no-underline inline-block'>
       {label}
     </span>
-  );
+  )
 }
 
 const COLUMNS = [
@@ -44,7 +44,7 @@ const COLUMNS = [
   { key: 'venue', label: 'Venue' },
   { key: 'acts', label: 'Acts' },
   { key: 'date', label: 'Date' }
-];
+]
 
 // Google Calendar and CalDAV are independent targets - a date can be synced
 // to either, both, or neither, identified by separate `calendarEventId` /
@@ -62,17 +62,17 @@ function CalendarButton({
   const pending = [
     googleAvailable && !googleAdded && 'Google Calendar',
     caldavAvailable && !caldavAdded && 'CalDAV'
-  ].filter(Boolean);
+  ].filter(Boolean)
   const added = [
     googleAvailable && googleAdded && 'Google Calendar',
     caldavAvailable && caldavAdded && 'CalDAV'
-  ].filter(Boolean);
+  ].filter(Boolean)
 
-  const done = pending.length === 0;
+  const done = pending.length === 0
   const title = done
     ? `Already added to ${added.join(' and ')}`
     : `Add to ${pending.join(' and ')}` +
-      (added.length ? ` (already on ${added.join(' and ')})` : '');
+      (added.length ? ` (already on ${added.join(' and ')})` : '')
 
   return (
     <button
@@ -96,54 +96,54 @@ function CalendarButton({
         {done && <path d='M8 14l2.5 2.5L16 11' />}
       </svg>
     </button>
-  );
+  )
 }
 
 function getSortValue(event, key) {
   switch (key) {
     case 'eName':
-      return (event.eName || '').toLowerCase();
+      return (event.eName || '').toLowerCase()
     case 'venue':
-      return (event.venue || '').toLowerCase();
+      return (event.venue || '').toLowerCase()
     case 'acts':
       return (
         event.actsDisplay ||
         (event.acts || []).join(', ') ||
         ''
-      ).toLowerCase();
+      ).toLowerCase()
     case 'date': {
-      const t = new Date(event.dates?.[0]?.date).getTime();
-      return isNaN(t) ? Infinity : t;
+      const t = new Date(event.dates?.[0]?.date).getTime()
+      return isNaN(t) ? Infinity : t
     }
     default:
-      return '';
+      return ''
   }
 }
 
 function buildSearchResultMessage(result) {
   const foundPhrase = `found ${result.found} matching events${
     result.newFound != null ? ` (${result.newFound} new)` : ''
-  }`;
+  }`
   let message = result.canceled
     ? `Search canceled. Searched ${result.artistsSearched} artists, ${foundPhrase} before stopping.`
-    : `Searched ${result.artistsSearched} artists, ${foundPhrase}.`;
+    : `Searched ${result.artistsSearched} artists, ${foundPhrase}.`
   if (result.calendarSynced > 0) {
-    message += ` Added ${result.calendarSynced} to Google Calendar.`;
+    message += ` Added ${result.calendarSynced} to Google Calendar.`
   }
   if (result.calendarError) {
-    message += ` Calendar sync issue: ${result.calendarError}`;
+    message += ` Calendar sync issue: ${result.calendarError}`
   }
   if (result.caldavSynced > 0) {
-    message += ` Added ${result.caldavSynced} to CalDAV calendar.`;
+    message += ` Added ${result.caldavSynced} to CalDAV calendar.`
   }
   if (result.caldavError) {
-    message += ` CalDAV sync issue: ${result.caldavError}`;
+    message += ` CalDAV sync issue: ${result.caldavError}`
   }
-  return message;
+  return message
 }
 
 function renderActs(actsList, fallback) {
-  if (!actsList?.items?.length) return fallback;
+  if (!actsList?.items?.length) return fallback
   return (
     <>
       {actsList.items.map((act, i) => (
@@ -158,57 +158,57 @@ function renderActs(actsList, fallback) {
       ))}
       {actsList.truncated && '...'}
     </>
-  );
+  )
 }
 
 export default function EventsTab() {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searching, setSearching] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('');
-  const [statusError, setStatusError] = useState(false);
-  const [progress, setProgress] = useState(null);
+  const [events, setEvents] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searching, setSearching] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('')
+  const [statusError, setStatusError] = useState(false)
+  const [progress, setProgress] = useState(null)
   // Remembered across reloads/tab switches (localStorage, not server state -
   // purely a per-browser display preference)
-  const [viewMode, setViewMode] = useState('card');
+  const [viewMode, setViewMode] = useState('card')
   const [sortConfig, setSortConfig] = useState({
     key: 'date',
     direction: 'asc'
-  });
-  const [syncingDates, setSyncingDates] = useState(() => new Set());
-  const [calendarAvailable, setCalendarAvailable] = useState(false);
-  const [caldavAvailable, setCaldavAvailable] = useState(false);
+  })
+  const [syncingDates, setSyncingDates] = useState(() => new Set())
+  const [calendarAvailable, setCalendarAvailable] = useState(false)
+  const [caldavAvailable, setCaldavAvailable] = useState(false)
 
   // A search runs server-side independent of this component's lifecycle -
   // switching tabs unmounts it, but the search keeps going. These track the
   // poll loop and whether we've actually observed it running
-  const pollRef = useRef(null);
-  const sawRunningRef = useRef(false);
+  const pollRef = useRef(null)
+  const sawRunningRef = useRef(false)
 
   const loadEvents = () => {
-    setLoading(true);
-    setStatusMessage('Loading events...');
-    setStatusError(false);
+    setLoading(true)
+    setStatusMessage('Loading events...')
+    setStatusError(false)
     fetch('/api/events')
       .then(res => res.json())
       .then(data => {
-        setEvents(data.events || []);
-        setStatusMessage(`Loaded ${data.events?.length || 0} events`);
-        setStatusError(false);
+        setEvents(data.events || [])
+        setStatusMessage(`Loaded ${data.events?.length || 0} events`)
+        setStatusError(false)
       })
       .catch(err => {
-        setStatusMessage(err.message || 'Failed to load events');
-        setStatusError(true);
+        setStatusMessage(err.message || 'Failed to load events')
+        setStatusError(true)
       })
-      .finally(() => setLoading(false));
-  };
+      .finally(() => setLoading(false))
+  }
 
   const applyRunningState = data => {
-    if (data.phase) setStatusMessage(data.phase);
+    if (data.phase) setStatusMessage(data.phase)
     setProgress(
       data.total > 0 ? { completed: data.completed, total: data.total } : null
-    );
-  };
+    )
+  }
 
   // Refreshes just the events list, without loadEvents()'s own
   // "Loading events..." / "Loaded N events" status messages
@@ -216,194 +216,194 @@ export default function EventsTab() {
     fetch('/api/events')
       .then(res => res.json())
       .then(data => setEvents(data.events || []))
-      .catch(() => {});
-  };
+      .catch(() => {})
+  }
 
   // Polls the server's shared search-progress state (rather than relying on
   // one request's own response) so a search that was started, then this tab
   // was switched away and back to, still shows up correctly here.
   const watchProgress = () => {
-    clearInterval(pollRef.current);
-    setSearching(true);
-    setStatusError(false);
+    clearInterval(pollRef.current)
+    setSearching(true)
+    setStatusError(false)
 
     pollRef.current = setInterval(async () => {
       try {
-        const res = await fetch('/api/events/search/progress');
-        const data = await res.json();
+        const res = await fetch('/api/events/search/progress')
+        const data = await res.json()
 
         if (data.running) {
-          sawRunningRef.current = true;
-          applyRunningState(data);
-          return;
+          sawRunningRef.current = true
+          applyRunningState(data)
+          return
         }
 
-        if (!sawRunningRef.current) return;
+        if (!sawRunningRef.current) return
 
-        clearInterval(pollRef.current);
-        sawRunningRef.current = false;
-        setSearching(false);
-        setProgress(null);
-        refreshEventsSilently();
+        clearInterval(pollRef.current)
+        sawRunningRef.current = false
+        setSearching(false)
+        setProgress(null)
+        refreshEventsSilently()
         if (data.result) {
-          setStatusMessage(buildSearchResultMessage(data.result));
+          setStatusMessage(buildSearchResultMessage(data.result))
           setStatusError(
             !!(data.result.calendarError || data.result.caldavError)
-          );
+          )
         }
       } catch {
         // ignore transient poll errors, next tick will retry
       }
-    }, 1000);
-  };
+    }, 1000)
+  }
 
   useEffect(() => {
-    const storedViewMode = localStorage.getItem('eventsViewMode');
-    if (storedViewMode) setViewMode(storedViewMode);
+    const storedViewMode = localStorage.getItem('eventsViewMode')
+    if (storedViewMode) setViewMode(storedViewMode)
 
-    loadEvents();
+    loadEvents()
 
     // show up a search already in progress (e.g. started before this tab
     // was switched away and back)
     fetch('/api/events/search/progress')
       .then(res => res.json())
       .then(data => {
-        if (!data.running) return;
-        sawRunningRef.current = true;
-        applyRunningState(data);
-        watchProgress();
+        if (!data.running) return
+        sawRunningRef.current = true
+        applyRunningState(data)
+        watchProgress()
       })
-      .catch(() => {});
+      .catch(() => {})
 
     // check if Google Calendar is connected
     fetch('/api/google/status')
       .then(res => res.json())
       .then(data => {
-        setCalendarAvailable(data.calendarAvailable);
+        setCalendarAvailable(data.calendarAvailable)
       })
-      .catch(() => {});
+      .catch(() => {})
 
     // check if CalDAV is configured
     fetch('/api/caldav')
       .then(res => res.json())
       .then(data => {
-        setCaldavAvailable(data.configured);
+        setCaldavAvailable(data.configured)
       })
-      .catch(() => {});
+      .catch(() => {})
 
-    return () => clearInterval(pollRef.current);
-  }, []);
+    return () => clearInterval(pollRef.current)
+  }, [])
 
   const runSearch = () => {
-    setStatusMessage('Starting search...');
-    setStatusError(false);
-    setProgress(null);
-    watchProgress();
+    setStatusMessage('Starting search...')
+    setStatusError(false)
+    setProgress(null)
+    watchProgress()
 
     fetch('/api/events/search', { method: 'POST' })
       .then(async res => {
         if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || 'Search failed');
+          const data = await res.json().catch(() => ({}))
+          throw new Error(data.error || 'Search failed')
         }
       })
       .catch(err => {
         // Only reachable if the request never made it to/through the
         // server at all - once it's genuinely running, completion is
         // reported via watchProgress's poll instead.
-        clearInterval(pollRef.current);
-        sawRunningRef.current = false;
-        setSearching(false);
-        setProgress(null);
-        setStatusMessage(err.message);
-        setStatusError(true);
-      });
-  };
+        clearInterval(pollRef.current)
+        sawRunningRef.current = false
+        setSearching(false)
+        setProgress(null)
+        setStatusMessage(err.message)
+        setStatusError(true)
+      })
+  }
 
   const cancelSearch = async () => {
-    setStatusMessage('Canceling search...');
-    await fetch('/api/events/search/cancel', { method: 'POST' });
-  };
+    setStatusMessage('Canceling search...')
+    await fetch('/api/events/search/cancel', { method: 'POST' })
+  }
 
   const deleteEvent = async (id, { ignore = false } = {}) => {
     const res = await fetch('/api/events', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, ignore })
-    });
-    const data = await res.json();
+    })
+    const data = await res.json()
     if (!res.ok) {
-      setStatusMessage(data.error || 'Failed to delete event');
-      setStatusError(true);
-      return;
+      setStatusMessage(data.error || 'Failed to delete event')
+      setStatusError(true)
+      return
     }
-    setEvents(data.events || []);
-    setStatusMessage(ignore ? 'Event deleted and ignored' : 'Event deleted');
-    setStatusError(false);
-  };
+    setEvents(data.events || [])
+    setStatusMessage(ignore ? 'Event deleted and ignored' : 'Event deleted')
+    setStatusError(false)
+  }
 
   const addEventToCalendar = async (eventId, date) => {
-    const key = `${eventId}:${date}`;
-    setSyncingDates(prev => new Set([...prev, key]));
+    const key = `${eventId}:${date}`
+    setSyncingDates(prev => new Set([...prev, key]))
 
     try {
       const res = await fetch(`/api/events/${eventId}/calendar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date })
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (!res.ok) {
-        setEvents(data.events || events);
-        setStatusMessage(data.error || 'Failed to add to Calendar');
-        setStatusError(true);
-        return;
+        setEvents(data.events || events)
+        setStatusMessage(data.error || 'Failed to add to Calendar')
+        setStatusError(true)
+        return
       }
-      setEvents(data.events || []);
+      setEvents(data.events || [])
       const addedPhrase = data.addedTo?.length
         ? `Added to ${data.addedTo.join(' and ')}.`
-        : 'Nothing to add - already synced.';
+        : 'Nothing to add - already synced.'
       setStatusMessage(
         data.warning ? `${addedPhrase} ${data.warning}` : addedPhrase
-      );
-      setStatusError(!!data.warning);
+      )
+      setStatusError(!!data.warning)
     } catch (err) {
-      setStatusMessage(err.message || 'Failed to add event to calendar');
-      setStatusError(true);
+      setStatusMessage(err.message || 'Failed to add event to calendar')
+      setStatusError(true)
     } finally {
       setSyncingDates(prev => {
-        const next = new Set(prev);
-        next.delete(key);
-        return next;
-      });
+        const next = new Set(prev)
+        next.delete(key)
+        return next
+      })
     }
-  };
+  }
 
   const sortedEvents = [...events].sort(
     (a, b) => new Date(a.dates?.[0]?.date) - new Date(b.dates?.[0]?.date)
-  );
+  )
 
-  const direction = sortConfig.direction === 'asc' ? 1 : -1;
+  const direction = sortConfig.direction === 'asc' ? 1 : -1
   const listEvents = [...events].sort((a, b) => {
-    const av = getSortValue(a, sortConfig.key);
-    const bv = getSortValue(b, sortConfig.key);
-    if (av < bv) return -1 * direction;
-    if (av > bv) return 1 * direction;
-    return 0;
-  });
+    const av = getSortValue(a, sortConfig.key)
+    const bv = getSortValue(b, sortConfig.key)
+    if (av < bv) return -1 * direction
+    if (av > bv) return 1 * direction
+    return 0
+  })
 
   const handleSetViewMode = mode => {
-    setViewMode(mode);
-    localStorage.setItem('eventsViewMode', mode);
-  };
+    setViewMode(mode)
+    localStorage.setItem('eventsViewMode', mode)
+  }
 
   const handleSort = key => {
     setSortConfig(prev =>
       prev.key === key
         ? { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
         : { key, direction: 'asc' }
-    );
-  };
+    )
+  }
 
   return (
     <TabLayout
@@ -718,5 +718,5 @@ export default function EventsTab() {
           </ul>
         ))}
     </TabLayout>
-  );
+  )
 }

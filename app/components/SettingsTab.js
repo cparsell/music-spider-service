@@ -1,13 +1,13 @@
-'use client';
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import StatusBar from './StatusBar';
-import TabLayout from './TabLayout';
-import { RA_REGIONS } from '@/lib/raRegions.js';
+'use client'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { createPortal } from 'react-dom'
+import StatusBar from './StatusBar'
+import TabLayout from './TabLayout'
+import { RA_REGIONS } from '@/lib/raRegions.js'
 
-const RA_REGIONS_BY_ID = new Map(RA_REGIONS.map(r => [r.id, r.label]));
+const RA_REGIONS_BY_ID = new Map(RA_REGIONS.map(r => [r.id, r.label]))
 
-const SAVE_DEBOUNCE_MS = 600;
+const SAVE_DEBOUNCE_MS = 600
 
 const THEMES = [
   {
@@ -20,7 +20,7 @@ const THEMES = [
     label: 'Catppuccin Mocha',
     description: 'Re-skins the same UI with the Catppuccin Mocha palette.'
   }
-];
+]
 
 const ARTIST_SOURCES = [
   {
@@ -46,18 +46,18 @@ const ARTIST_SOURCES = [
     description:
       'Don\'t fetch listening history from any APIs. Only rely on artists added manually to the "Custom List".'
   }
-];
+]
 
 const EVENT_SEARCH_TERM_OPTIONS = [
   { value: 'short_term', label: 'Short term (~4 weeks)' },
   { value: 'medium_term', label: 'Medium term (~6 months)' },
   { value: 'long_term', label: 'Long term (all time)' }
-];
+]
 
 const EVENT_SEARCH_SOURCE_OPTIONS = [
   { value: 'ticketmaster', label: 'Ticketmaster' },
   { value: 'resadvisor', label: 'Resident Advisor' }
-];
+]
 
 const DAYS_OF_WEEK = [
   { value: 0, label: 'Sunday' },
@@ -67,7 +67,7 @@ const DAYS_OF_WEEK = [
   { value: 4, label: 'Thursday' },
   { value: 5, label: 'Friday' },
   { value: 6, label: 'Saturday' }
-];
+]
 
 const COMBINED_MODES = [
   {
@@ -82,7 +82,7 @@ const COMBINED_MODES = [
     description:
       'Takes the top artists from each individual window (selected terms) and merges them into one deduplicated list.'
   }
-];
+]
 
 const SECTIONS = [
   {
@@ -270,7 +270,7 @@ const SECTIONS = [
       }
     ]
   }
-];
+]
 
 // Wraps a settings section in a bordered box with a clickable header.
 // Collapsed, only the header (title + chevron) remains visible
@@ -318,7 +318,7 @@ function SettingsSection({ title, open, onToggle, children }) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // Nested inside a SettingsSection - also collapses
@@ -328,7 +328,7 @@ function SettingsSubsection({
   children,
   disabled = false
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = useState(defaultOpen)
 
   return (
     <div className='border-t border-neutral-700 first:border-t-0 pt-3 mt-3 first:mt-0 first:pt-0'>
@@ -373,73 +373,73 @@ function SettingsSubsection({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function SpotifyConnection({ redirectUri }) {
-  const [connected, setConnected] = useState(null);
-  const [statusMessage, setStatusMessage] = useState('');
+  const [connected, setConnected] = useState(null)
+  const [statusMessage, setStatusMessage] = useState('')
 
   const loadStatus = () => {
     fetch('/api/spotify/status')
       .then(res => res.json())
-      .then(data => setConnected(data.connected));
-  };
+      .then(data => setConnected(data.connected))
+  }
 
   useEffect(() => {
-    loadStatus();
+    loadStatus()
 
-    const params = new URLSearchParams(window.location.search);
-    const spotifyParam = params.get('spotify');
+    const params = new URLSearchParams(window.location.search)
+    const spotifyParam = params.get('spotify')
     if (spotifyParam) {
-      setStatusMessage(spotifyParam);
-      params.delete('spotify');
-      params.delete('tab');
-      const rest = params.toString();
+      setStatusMessage(spotifyParam)
+      params.delete('spotify')
+      params.delete('tab')
+      const rest = params.toString()
       window.history.replaceState(
         null,
         '',
         rest ? `?${rest}` : window.location.pathname
-      );
+      )
     }
 
     const onMessage = event => {
-      if (event.data?.source !== 'spotify-oauth') return;
+      if (event.data?.source !== 'spotify-oauth') return
       // The popup finishes on whatever host the Spotify redirect URI uses,
       // which may differ from the host this tab is on (e.g. this tab is on
       // a LAN hostname but the redirect URI is 127.0.0.1) even though it's
       // the same app - so compare against the configured redirect URI's
       // origin rather than assuming loopback.
       try {
-        if (event.origin !== new URL(redirectUri).origin) return;
+        if (event.origin !== new URL(redirectUri).origin) return
       } catch {
-        return;
+        return
       }
-      setStatusMessage(event.data.message);
-      loadStatus();
-    };
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, [redirectUri]);
+      setStatusMessage(event.data.message)
+      loadStatus()
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [redirectUri])
 
   const disconnect = async () => {
-    await fetch('/api/spotify/status', { method: 'DELETE' });
-    setConnected(false);
-  };
+    await fetch('/api/spotify/status', { method: 'DELETE' })
+    setConnected(false)
+  }
 
   const connect = () => {
     // Start the popup on the same host the redirect URI uses (e.g.
     // 127.0.0.1) rather than inheriting this tab's host (e.g. localhost) -
     // otherwise the state cookie gets set on the wrong host and never makes
     // it back on the callback request.
-    let base = '';
+    let base = ''
     try {
-      base = new URL(redirectUri).origin;
+      base = new URL(redirectUri).origin
     } catch {
-      base = '';
+      base = ''
     }
-    window.open(`${base}/api/spotify`, 'spotify-auth', 'width=500,height=700');
-  };
+    window.open(`${base}/api/spotify`, 'spotify-auth', 'width=500,height=700')
+  }
 
   return (
     <div className='mt-2 flex items-center gap-3'>
@@ -470,71 +470,71 @@ function SpotifyConnection({ redirectUri }) {
         <span className='text-sm text-neutral-600'>({statusMessage})</span>
       )}
     </div>
-  );
+  )
 }
 
 function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
-  const [status, setStatus] = useState(null); // { connected, scope }
-  const [statusMessage, setStatusMessage] = useState('');
+  const [status, setStatus] = useState(null) // { connected, scope }
+  const [statusMessage, setStatusMessage] = useState('')
 
   const loadStatus = () => {
     fetch('/api/google/status')
       .then(res => res.json())
-      .then(setStatus);
-  };
+      .then(setStatus)
+  }
 
   useEffect(() => {
-    loadStatus();
+    loadStatus()
 
-    const params = new URLSearchParams(window.location.search);
-    const googleParam = params.get('google');
+    const params = new URLSearchParams(window.location.search)
+    const googleParam = params.get('google')
     if (googleParam) {
-      setStatusMessage(googleParam);
-      params.delete('google');
-      params.delete('tab');
-      const rest = params.toString();
+      setStatusMessage(googleParam)
+      params.delete('google')
+      params.delete('tab')
+      const rest = params.toString()
       window.history.replaceState(
         null,
         '',
         rest ? `?${rest}` : window.location.pathname
-      );
+      )
     }
 
     const onMessage = event => {
-      if (event.data?.source !== 'google-oauth') return;
+      if (event.data?.source !== 'google-oauth') return
       // Same redirect-URI-origin caveat as the Spotify popup - see there for
       // why.
       try {
-        if (event.origin !== new URL(redirectUri).origin) return;
+        if (event.origin !== new URL(redirectUri).origin) return
       } catch {
-        return;
+        return
       }
-      setStatusMessage(event.data.message);
-      loadStatus();
-    };
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, [redirectUri]);
+      setStatusMessage(event.data.message)
+      loadStatus()
+    }
+    window.addEventListener('message', onMessage)
+    return () => window.removeEventListener('message', onMessage)
+  }, [redirectUri])
 
   const disconnect = async () => {
-    await fetch('/api/google/status', { method: 'DELETE' });
-    setStatus({ connected: false, scope: '' });
-  };
+    await fetch('/api/google/status', { method: 'DELETE' })
+    setStatus({ connected: false, scope: '' })
+  }
 
   const connect = () => {
-    let base = '';
+    let base = ''
     try {
-      base = new URL(redirectUri).origin;
+      base = new URL(redirectUri).origin
     } catch {
-      base = '';
+      base = ''
     }
-    window.open(`${base}/api/google`, 'google-auth', 'width=500,height=700');
-  };
+    window.open(`${base}/api/google`, 'google-auth', 'width=500,height=700')
+  }
 
   const needsCalendarReauth =
     calendarSyncEnabled &&
     status?.connected &&
-    !status.scope?.includes('calendar.events');
+    !status.scope?.includes('calendar.events')
 
   return (
     <div className='mt-2 flex flex-col gap-1'>
@@ -592,31 +592,31 @@ function GoogleConnection({ redirectUri, calendarSyncEnabled }) {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function WebhookTest() {
-  const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState(false);
+  const [sending, setSending] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState(false)
 
   const sendTest = async () => {
-    setSending(true);
-    setMessage('Sending...');
-    setError(false);
+    setSending(true)
+    setMessage('Sending...')
+    setError(false)
     try {
-      const res = await fetch('/api/events/webhook', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to send webhook');
-      setMessage(`Sent with ${data.count} upcoming events.`);
-      setError(false);
+      const res = await fetch('/api/events/webhook', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to send webhook')
+      setMessage(`Sent with ${data.count} upcoming events.`)
+      setError(false)
     } catch (err) {
-      setMessage(err.message);
-      setError(true);
+      setMessage(err.message)
+      setError(true)
     } finally {
-      setSending(false);
+      setSending(false)
     }
-  };
+  }
 
   return (
     <div className='mt-2 flex items-center gap-3'>
@@ -636,31 +636,31 @@ function WebhookTest() {
         </span>
       )}
     </div>
-  );
+  )
 }
 
 function SmtpTest() {
-  const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState(false);
+  const [sending, setSending] = useState(false)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState(false)
 
   const sendTest = async () => {
-    setSending(true);
-    setMessage('Sending...');
-    setError(false);
+    setSending(true)
+    setMessage('Sending...')
+    setError(false)
     try {
-      const res = await fetch('/api/events/smtp', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to send email');
-      setMessage(`Sent with ${data.count} upcoming events.`);
-      setError(false);
+      const res = await fetch('/api/events/smtp', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to send email')
+      setMessage(`Sent with ${data.count} upcoming events.`)
+      setError(false)
     } catch (err) {
-      setMessage(err.message);
-      setError(true);
+      setMessage(err.message)
+      setError(true)
     } finally {
-      setSending(false);
+      setSending(false)
     }
-  };
+  }
 
   return (
     <div className='mt-2 flex items-center gap-3'>
@@ -680,50 +680,50 @@ function SmtpTest() {
         </span>
       )}
     </div>
-  );
+  )
 }
 
 function GoogleActionsTest() {
-  const [busy, setBusy] = useState(''); // "" | "email" | "calendar"
-  const [message, setStatusMessage] = useState('');
-  const [error, setError] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState(false);
+  const [busy, setBusy] = useState('') // "" | "email" | "calendar"
+  const [message, setStatusMessage] = useState('')
+  const [error, setError] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState(false)
 
   const run = async (kind, path, successMessage) => {
-    setBusy(kind);
-    setStatusMessage('Sending...');
-    setError(false);
+    setBusy(kind)
+    setStatusMessage('Sending...')
+    setError(false)
     try {
-      const res = await fetch(path, { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Request failed');
-      setStatusMessage(successMessage);
-      setError(false);
+      const res = await fetch(path, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Request failed')
+      setStatusMessage(successMessage)
+      setError(false)
     } catch (err) {
-      setStatusMessage(err.message);
-      setError(true);
+      setStatusMessage(err.message)
+      setError(true)
     } finally {
-      setBusy('');
+      setBusy('')
     }
-  };
+  }
 
   const sendEmail = async () => {
-    setSendingEmail(true);
-    setStatusMessage('Sending email...');
-    setError(false);
+    setSendingEmail(true)
+    setStatusMessage('Sending email...')
+    setError(false)
     try {
-      const res = await fetch('/api/events/email', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to send email');
-      setStatusMessage(`Email sent with ${data.count} upcoming events.`);
-      setError(false);
+      const res = await fetch('/api/events/email', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to send email')
+      setStatusMessage(`Email sent with ${data.count} upcoming events.`)
+      setError(false)
     } catch (err) {
-      setStatusMessage(err.message);
-      setError(true);
+      setStatusMessage(err.message)
+      setError(true)
     } finally {
-      setSendingEmail(false);
+      setSendingEmail(false)
     }
-  };
+  }
 
   return (
     <div>
@@ -773,15 +773,15 @@ function GoogleActionsTest() {
         </div>
       }
     </div>
-  );
+  )
 }
 
 // A service account key is a private key, so it isn't left sitting on
 // screen once one is saved - the textarea only comes back on request.
 function ServiceAccountKeyInput({ value, onChange }) {
-  const [editing, setEditing] = useState(false);
-  const saved = !!value.trim();
-  const isPath = saved && !value.trim().startsWith('{');
+  const [editing, setEditing] = useState(false)
+  const saved = !!value.trim()
+  const isPath = saved && !value.trim().startsWith('{')
 
   if (saved && !editing) {
     return (
@@ -804,7 +804,7 @@ function ServiceAccountKeyInput({ value, onChange }) {
           Clear
         </button>
       </div>
-    );
+    )
   }
 
   return (
@@ -827,63 +827,63 @@ function ServiceAccountKeyInput({ value, onChange }) {
         </button>
       )}
     </div>
-  );
+  )
 }
 
 function ServiceAccountConnection({ keyValue, calendarId, enabled }) {
-  const [status, setStatus] = useState(null); // { configured, clientEmail, error }
-  const [busy, setBusy] = useState(''); // "" | "verify" | "test"
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState(null) // { configured, clientEmail, error }
+  const [busy, setBusy] = useState('') // "" | "verify" | "test"
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   // Reloads whenever the key or calendar changes, so the service account
   // address updates as soon as a new key is pasted in. Waits out the
   // settings auto-save debounce first, since this reads what's on disk.
   useEffect(() => {
-    let canceled = false;
+    let canceled = false
     const timer = setTimeout(() => {
       fetch('/api/google/service-account')
         .then(res => res.json())
         .then(data => {
-          if (!canceled) setStatus(data);
+          if (!canceled) setStatus(data)
         })
-        .catch(() => {});
-    }, SAVE_DEBOUNCE_MS + 300);
+        .catch(() => {})
+    }, SAVE_DEBOUNCE_MS + 300)
     return () => {
-      canceled = true;
-      clearTimeout(timer);
-    };
-  }, [keyValue, calendarId, enabled]);
+      canceled = true
+      clearTimeout(timer)
+    }
+  }, [keyValue, calendarId, enabled])
 
   const run = async (kind, path, describe) => {
-    setBusy(kind);
-    setMessage('Working...');
-    setError(false);
+    setBusy(kind)
+    setMessage('Working...')
+    setError(false)
     try {
-      const res = await fetch(path, { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Request failed');
-      setMessage(describe(data));
-      setError(false);
+      const res = await fetch(path, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Request failed')
+      setMessage(describe(data))
+      setError(false)
     } catch (err) {
-      setMessage(err.message);
-      setError(true);
+      setMessage(err.message)
+      setError(true)
     } finally {
-      setBusy('');
+      setBusy('')
     }
-  };
+  }
 
   const copyEmail = async () => {
     try {
-      await navigator.clipboard.writeText(status.clientEmail);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(status.clientEmail)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     } catch {
       // clipboard blocked (e.g. non-HTTPS origin) - the address is on
       // screen anyway, so there's nothing to recover from
     }
-  };
+  }
 
   return (
     <div className='mt-3 flex flex-col gap-2'>
@@ -953,50 +953,50 @@ function ServiceAccountConnection({ keyValue, calendarId, enabled }) {
         </span>
       )}
     </div>
-  );
+  )
 }
 
 function CalDavConnection({ url, username, password, enabled }) {
-  const [status, setStatus] = useState(null); // { configured, url }
-  const [busy, setBusy] = useState(''); // "" | "verify" | "test"
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState(false);
+  const [status, setStatus] = useState(null) // { configured, url }
+  const [busy, setBusy] = useState('') // "" | "verify" | "test"
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState(false)
 
   // Reloads whenever the connection details change, waiting out the
   // settings auto-save debounce first, since this reads what's on disk.
   useEffect(() => {
-    let canceled = false;
+    let canceled = false
     const timer = setTimeout(() => {
       fetch('/api/caldav')
         .then(res => res.json())
         .then(data => {
-          if (!canceled) setStatus(data);
+          if (!canceled) setStatus(data)
         })
-        .catch(() => {});
-    }, SAVE_DEBOUNCE_MS + 300);
+        .catch(() => {})
+    }, SAVE_DEBOUNCE_MS + 300)
     return () => {
-      canceled = true;
-      clearTimeout(timer);
-    };
-  }, [url, username, password, enabled]);
+      canceled = true
+      clearTimeout(timer)
+    }
+  }, [url, username, password, enabled])
 
   const run = async (kind, path, describe) => {
-    setBusy(kind);
-    setMessage('Working...');
-    setError(false);
+    setBusy(kind)
+    setMessage('Working...')
+    setError(false)
     try {
-      const res = await fetch(path, { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Request failed');
-      setMessage(describe(data));
-      setError(false);
+      const res = await fetch(path, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Request failed')
+      setMessage(describe(data))
+      setError(false)
     } catch (err) {
-      setMessage(err.message);
-      setError(true);
+      setMessage(err.message)
+      setError(true)
     } finally {
-      setBusy('');
+      setBusy('')
     }
-  };
+  }
 
   return (
     <div className='mt-3 flex flex-col gap-2'>
@@ -1043,13 +1043,13 @@ function CalDavConnection({ url, username, password, enabled }) {
         </span>
       )}
     </div>
-  );
+  )
 }
 
 function RegionPicker({ value, onChange }) {
-  const [search, setSearch] = useState('');
-  const inputRef = useRef(null);
-  const [menuRect, setMenuRect] = useState(null);
+  const [search, setSearch] = useState('')
+  const inputRef = useRef(null)
+  const [menuRect, setMenuRect] = useState(null)
 
   const selectedIds = useMemo(
     () =>
@@ -1059,50 +1059,50 @@ function RegionPicker({ value, onChange }) {
         .filter(Boolean)
         .map(s => parseInt(s, 10)),
     [value]
-  );
+  )
 
   const matches = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return [];
+    const term = search.trim().toLowerCase()
+    if (!term) return []
     return RA_REGIONS.filter(
       r => !selectedIds.includes(r.id) && r.label.toLowerCase().includes(term)
-    ).slice(0, 20);
-  }, [search, selectedIds]);
+    ).slice(0, 20)
+  }, [search, selectedIds])
 
   // Positions the suggestions list in a portal so it isn't clipped by the
   // overflow-hidden accordion wrappers (SettingsSection/SettingsSubsection)
   // this input is nested inside.
   useEffect(() => {
     if (matches.length === 0) {
-      setMenuRect(null);
-      return;
+      setMenuRect(null)
+      return
     }
     const updateRect = () => {
-      const rect = inputRef.current?.getBoundingClientRect();
+      const rect = inputRef.current?.getBoundingClientRect()
       if (rect)
         setMenuRect({
           top: rect.bottom + 4,
           left: rect.left,
           width: rect.width
-        });
-    };
-    updateRect();
-    window.addEventListener('scroll', updateRect, true);
-    window.addEventListener('resize', updateRect);
+        })
+    }
+    updateRect()
+    window.addEventListener('scroll', updateRect, true)
+    window.addEventListener('resize', updateRect)
     return () => {
-      window.removeEventListener('scroll', updateRect, true);
-      window.removeEventListener('resize', updateRect);
-    };
-  }, [matches.length]);
+      window.removeEventListener('scroll', updateRect, true)
+      window.removeEventListener('resize', updateRect)
+    }
+  }, [matches.length])
 
   const addRegion = id => {
-    onChange([...selectedIds, id].join(','));
-    setSearch('');
-  };
+    onChange([...selectedIds, id].join(','))
+    setSearch('')
+  }
 
   const removeRegion = id => {
-    onChange(selectedIds.filter(existing => existing !== id).join(','));
-  };
+    onChange(selectedIds.filter(existing => existing !== id).join(','))
+  }
 
   return (
     <div className='flex flex-col gap-2'>
@@ -1162,65 +1162,65 @@ function RegionPicker({ value, onChange }) {
           )}
       </div>
     </div>
-  );
+  )
 }
 
 export default function SettingsTab({ isConfigured }) {
-  const [form, setForm] = useState(null);
-  const [saveState, setSaveState] = useState('idle'); // idle | pending | saving | saved | error
+  const [form, setForm] = useState(null)
+  const [saveState, setSaveState] = useState('idle') // idle | pending | saving | saved | error
   // Which top-level SettingsSection is currently open
   // null when all are collapsed.
-  const [openSection, setOpenSection] = useState(null);
+  const [openSection, setOpenSection] = useState(null)
   const toggleSection = title =>
-    setOpenSection(current => (current === title ? null : title));
-  const skipNextSave = useRef(true);
-  const debounceRef = useRef(null);
-  const pendingSaveRef = useRef(false);
-  const formRef = useRef(null);
+    setOpenSection(current => (current === title ? null : title))
+  const skipNextSave = useRef(true)
+  const debounceRef = useRef(null)
+  const pendingSaveRef = useRef(false)
+  const formRef = useRef(null)
 
   useEffect(() => {
-    formRef.current = form;
-  }, [form]);
+    formRef.current = form
+  }, [form])
 
   useEffect(() => {
     fetch('/api/settings')
       .then(res => res.json())
-      .then(setForm);
-  }, []);
+      .then(setForm)
+  }, [])
 
   const saveNow = async () => {
-    pendingSaveRef.current = false;
-    setSaveState('saving');
+    pendingSaveRef.current = false
+    setSaveState('saving')
     try {
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formRef.current)
-      });
-      if (!res.ok) throw new Error('Failed to save settings');
-      setSaveState('saved');
+      })
+      if (!res.ok) throw new Error('Failed to save settings')
+      setSaveState('saved')
     } catch {
-      setSaveState('error');
+      setSaveState('error')
     }
-  };
+  }
 
   // Auto-save - any change to form is persisted a
   // short beat after the user stops changing things
   useEffect(() => {
-    if (!form) return;
+    if (!form) return
     if (skipNextSave.current) {
       // Don't save immediately after the initial GET populates the form
-      skipNextSave.current = false;
-      return;
+      skipNextSave.current = false
+      return
     }
 
-    setSaveState('pending');
-    pendingSaveRef.current = true;
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(saveNow, SAVE_DEBOUNCE_MS);
+    setSaveState('pending')
+    pendingSaveRef.current = true
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(saveNow, SAVE_DEBOUNCE_MS)
 
-    return () => clearTimeout(debounceRef.current);
-  }, [form]);
+    return () => clearTimeout(debounceRef.current)
+  }, [form])
 
   // Without this, a save waiting out its debounce window gets dropped
   // instead of ever reaching settings.json.
@@ -1228,65 +1228,65 @@ export default function SettingsTab({ isConfigured }) {
   useEffect(() => {
     return () => {
       if (pendingSaveRef.current) {
-        clearTimeout(debounceRef.current);
-        saveNow();
+        clearTimeout(debounceRef.current)
+        saveNow()
       }
-    };
-  }, []);
+    }
+  }, [])
 
   // Apply the theme to the document immediately on change
   useEffect(() => {
-    if (form?.theme) document.documentElement.dataset.theme = form.theme;
-  }, [form?.theme]);
+    if (form?.theme) document.documentElement.dataset.theme = form.theme
+  }, [form?.theme])
 
   const updateField = (key, value, type) => {
     setForm(f => {
-      const next = { ...f, [key]: type === 'number' ? Number(value) : value };
+      const next = { ...f, [key]: type === 'number' ? Number(value) : value }
       // Implicit TLS and STARTTLS live on different standard ports, and
       // mismatching them fails with an opaque OpenSSL "wrong version number"
       // error - so move the port along with the toggle. Only when it's still
       // the other mode's default, so a deliberate custom port survives.
       if (key === 'smtpSecure') {
-        if (value === true && Number(f.smtpPort) === 587) next.smtpPort = 465;
-        if (value === false && Number(f.smtpPort) === 465) next.smtpPort = 587;
+        if (value === true && Number(f.smtpPort) === 587) next.smtpPort = 465
+        if (value === false && Number(f.smtpPort) === 465) next.smtpPort = 587
       }
-      return next;
-    });
-  };
+      return next
+    })
+  }
 
   const toggleEventSearchTerm = (term, checked) => {
     setForm(f => {
-      const current = f.eventSearchTerms || [];
+      const current = f.eventSearchTerms || []
       if (checked) {
         return current.includes(term)
           ? f
-          : { ...f, eventSearchTerms: [...current, term] };
+          : { ...f, eventSearchTerms: [...current, term] }
       }
-      const next = current.filter(t => t !== term);
-      if (next.length === 0) return f; // always keep at least one selected
-      return { ...f, eventSearchTerms: next };
-    });
-  };
+      const next = current.filter(t => t !== term)
+      if (next.length === 0) return f // always keep at least one selected
+      return { ...f, eventSearchTerms: next }
+    })
+  }
 
   const toggleEventSearchSource = (source, checked) => {
     setForm(f => {
-      const current = f.eventSearchSources || [];
+      const current = f.eventSearchSources || []
       if (checked) {
         return current.includes(source)
           ? f
-          : { ...f, eventSearchSources: [...current, source] };
+          : { ...f, eventSearchSources: [...current, source] }
       }
-      const next = current.filter(s => s !== source);
-      if (next.length === 0) return f; // always keep at least one selected
-      return { ...f, eventSearchSources: next };
-    });
-  };
+      const next = current.filter(s => s !== source)
+      if (next.length === 0) return f // always keep at least one selected
+      return { ...f, eventSearchSources: next }
+    })
+  }
 
-  if (!form) return <p>Loading...</p>;
+  if (!form) return <p>Loading...</p>
 
   const sectionByTitle = Object.fromEntries(
     SECTIONS.map(section => [section.title, section])
-  );
+  )
 
   // Mirrors the precedence in lib/googleCalendar.js: an enabled, configured
   // service account wins for Calendar events; otherwise OAuth is used.
@@ -1295,15 +1295,15 @@ export default function SettingsTab({ isConfigured }) {
   // independently "set up" without being the one actually used).
   const serviceAccountConfigured = !!(
     form.googleServiceAccountJson || ''
-  ).trim();
+  ).trim()
   const activeCalendarMethod =
     form.googleServiceAccountEnabled && serviceAccountConfigured
       ? 'serviceAccount'
-      : 'oauth';
+      : 'oauth'
   const CALENDAR_METHOD_LABELS = {
     serviceAccount: 'GCP Service Account',
     oauth: 'Google OAuth'
-  };
+  }
 
   // Renders a SECTIONS entry's description/warning/fields, plus whatever
   // extra section-specific controls (connection status, test buttons,
@@ -1649,7 +1649,7 @@ export default function SettingsTab({ isConfigured }) {
         </>
       )}
     </div>
-  );
+  )
 
   const statusText =
     saveState === 'pending' || saveState === 'saving'
@@ -1658,7 +1658,7 @@ export default function SettingsTab({ isConfigured }) {
         ? 'All changes saved'
         : saveState === 'error'
           ? 'Failed to save changes'
-          : '';
+          : ''
 
   return (
     <TabLayout
@@ -1875,5 +1875,5 @@ export default function SettingsTab({ isConfigured }) {
         </SettingsSection>
       </div>
     </TabLayout>
-  );
+  )
 }

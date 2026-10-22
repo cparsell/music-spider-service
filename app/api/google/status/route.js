@@ -1,16 +1,16 @@
-import { getStoredTokens, clearTokens } from "@/lib/googleTokens.js";
-import { isGoogleCalendarAvailable } from "@/lib/googleCalendar.js";
+import { getStoredTokens, clearTokens } from '@/lib/googleTokens.js'
+import { isGoogleCalendarAvailable } from '@/lib/googleCalendar.js'
 
 export async function GET() {
-  const tokens = await getStoredTokens();
+  const tokens = await getStoredTokens()
   return Response.json({
     connected: !!tokens,
-    scope: tokens?.scope || "",
-    calendarAvailable: await isGoogleCalendarAvailable(),
-  });
+    scope: tokens?.scope || '',
+    calendarAvailable: await isGoogleCalendarAvailable()
+  })
 }
 
 export async function DELETE() {
-  await clearTokens();
-  return Response.json({ connected: false });
+  await clearTokens()
+  return Response.json({ connected: false })
 }

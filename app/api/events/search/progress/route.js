@@ -1,5 +1,5 @@
-import { getProgress } from "@/lib/searchProgress.js";
+import { getProgress } from '@/lib/searchProgress.js'
 
 export async function GET() {
-  return Response.json(getProgress());
+  return Response.json(getProgress())
 }

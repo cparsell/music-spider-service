@@ -1,5 +1,5 @@
-"use client";
-import { useEffect, useRef } from "react";
+'use client'
+import { useEffect, useRef } from 'react'
 
 // Shared shell for the list-style tabs: keeps `controls` (term/action
 // buttons) pinned at the top and `statusBar` pinned at the bottom, while
@@ -9,44 +9,44 @@ export default function TabLayout({
   controls,
   statusBar,
   children,
-  description,
+  description
 }) {
-  const scrollRef = useRef(null);
+  const scrollRef = useRef(null)
 
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
+    const el = scrollRef.current
+    if (!el) return
 
     // Force scrolling to work regardless of cursor position as long as the
     // window has focus.
-    const onWheel = (e) => {
-      if (el.contains(e.target)) return;
-      el.scrollBy({ top: e.deltaY, left: e.deltaX });
-    };
+    const onWheel = e => {
+      if (el.contains(e.target)) return
+      el.scrollBy({ top: e.deltaY, left: e.deltaX })
+    }
 
-    window.addEventListener("wheel", onWheel, { passive: true });
-    return () => window.removeEventListener("wheel", onWheel);
-  }, []);
+    window.addEventListener('wheel', onWheel, { passive: true })
+    return () => window.removeEventListener('wheel', onWheel)
+  }, [])
 
   return (
-    <div className="h-full flex flex-col ">
+    <div className='h-full flex flex-col '>
       {description && (
-        <div className="shrink-0 pt-5 pb-3 -mx-6 px-6 py-2 text-sm text-neutral-300 bg-neutral-900 ">
+        <div className='shrink-0 pt-5 pb-3 -mx-6 px-6 py-2 text-sm text-neutral-300 bg-neutral-900 '>
           {description}
         </div>
       )}
       {controls && (
-        <div className="shrink-0  -mx-3 px-3 py-2 bg-neutral-900 lg:-mx-6 lg:px-6 border-b border-neutral-700 lg:pt-3">
+        <div className='shrink-0  -mx-3 px-3 py-2 bg-neutral-900 lg:-mx-6 lg:px-6 border-b border-neutral-700 lg:pt-3'>
           {controls}
         </div>
       )}
       <div
         ref={scrollRef}
-        className="flex-1 min-h-0 overflow-y-auto -mx-3 px-3 pb-2 lg:-mx-6 lg:px-6"
+        className='flex-1 min-h-0 overflow-y-auto -mx-3 px-3 pb-2 lg:-mx-6 lg:px-6'
       >
         {children}
       </div>
-      <div className="shrink-0">{statusBar}</div>
+      <div className='shrink-0'>{statusBar}</div>
     </div>
-  );
+  )
 }

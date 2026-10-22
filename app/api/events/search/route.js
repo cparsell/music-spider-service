@@ -1,10 +1,10 @@
-import { runEventSearch } from "@/lib/eventsSearch.js";
+import { runEventSearch } from '@/lib/eventsSearch.js'
 
 export async function POST() {
   try {
-    const result = await runEventSearch();
-    return Response.json(result);
+    const result = await runEventSearch()
+    return Response.json(result)
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    return Response.json({ error: err.message }, { status: 500 })
   }
 }

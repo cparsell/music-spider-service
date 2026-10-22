@@ -1,5 +1,5 @@
-import { getResolvedConfig } from "@/lib/settings.js";
-import { saveTokens } from "@/lib/spotifyTokens.js";
+import { getResolvedConfig } from '@/lib/settings.js'
+import { saveTokens } from '@/lib/spotifyTokens.js'
 
 // This runs inside the popup window opened by the "Connect Spotify Account"
 // button. If it has an opener (the popup case), it reports back via
@@ -19,57 +19,60 @@ function finish(status, message) {
   }
 </script>
 ${message}
-</body></html>`;
+</body></html>`
 
-  const headers = new Headers({ "Content-Type": "text/html" });
-  headers.append("Set-Cookie", "spotify_oauth_state=; Path=/; Max-Age=0");
-  headers.append("Set-Cookie", "spotify_pkce_verifier=; Path=/; Max-Age=0");
+  const headers = new Headers({ 'Content-Type': 'text/html' })
+  headers.append('Set-Cookie', 'spotify_oauth_state=; Path=/; Max-Age=0')
+  headers.append('Set-Cookie', 'spotify_pkce_verifier=; Path=/; Max-Age=0')
 
-  return new Response(html, { status: 200, headers });
+  return new Response(html, { status: 200, headers })
 }
 
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get("code");
-  const state = searchParams.get("state");
-  const error = searchParams.get("error");
-  const cookieState = request.cookies.get("spotify_oauth_state")?.value;
-  const codeVerifier = request.cookies.get("spotify_pkce_verifier")?.value;
+  const { searchParams } = new URL(request.url)
+  const code = searchParams.get('code')
+  const state = searchParams.get('state')
+  const error = searchParams.get('error')
+  const cookieState = request.cookies.get('spotify_oauth_state')?.value
+  const codeVerifier = request.cookies.get('spotify_pkce_verifier')?.value
 
   if (error) {
-    return finish("error", `Spotify authorization failed: ${error}`);
+    return finish('error', `Spotify authorization failed: ${error}`)
   }
   if (!code || !state || state !== cookieState || !codeVerifier) {
-    return finish("error", "Spotify authorization failed: invalid state");
+    return finish('error', 'Spotify authorization failed: invalid state')
   }
 
-  const config = await getResolvedConfig();
+  const config = await getResolvedConfig()
   try {
-    const res = await fetch("https://accounts.spotify.com/api/token", {
-      method: "POST",
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: new URLSearchParams({
-        grant_type: "authorization_code",
+        grant_type: 'authorization_code',
         code,
         redirect_uri: config.spotifyRedirectUri,
         client_id: config.spotifyClientId,
-        code_verifier: codeVerifier,
-      }),
-    });
+        code_verifier: codeVerifier
+      })
+    })
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body?.error_description || `Spotify token exchange failed: ${res.status}`);
+      const body = await res.json().catch(() => ({}))
+      throw new Error(
+        body?.error_description ||
+          `Spotify token exchange failed: ${res.status}`
+      )
     }
-    const data = await res.json();
+    const data = await res.json()
     await saveTokens({
       access_token: data.access_token,
       refresh_token: data.refresh_token,
-      expires_at: Date.now() + data.expires_in * 1000,
-    });
-    return finish("success", "connected");
+      expires_at: Date.now() + data.expires_in * 1000
+    })
+    return finish('success', 'connected')
   } catch (err) {
-    return finish("error", `Spotify connection error: ${err.message}`);
+    return finish('error', `Spotify connection error: ${err.message}`)
   }
 }

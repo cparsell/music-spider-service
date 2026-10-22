@@ -4,45 +4,45 @@
 // infra, so a simple in-process interval is enough for a single-instance,
 // personal-use deployment.
 export async function register() {
-  if (process.env.NEXT_RUNTIME !== 'nodejs') return;
+  if (process.env.NEXT_RUNTIME !== 'nodejs') return
 
   const { checkAndSendWeeklyEmail } =
-    await import('./lib/emailSchedulerGoogle.js');
+    await import('./lib/emailSchedulerGoogle.js')
   const { checkAndSendWeeklyWebhook } =
-    await import('./lib/webhookScheduler.js');
+    await import('./lib/webhookScheduler.js')
   const { checkAndSendWeeklySmtpEmail } =
-    await import('./lib/emailSchedulerSmtp.js');
+    await import('./lib/emailSchedulerSmtp.js')
   const { checkAndRefreshTopArtists } =
-    await import('./lib/topArtistsRefreshScheduler.js');
+    await import('./lib/topArtistsRefreshScheduler.js')
   const { checkAndRunEventSearch } =
-    await import('./lib/eventsSearchScheduler.js');
-  const { pruneAndSaveExpiredEvents } = await import('./lib/eventsStore.js');
-  const CHECK_INTERVAL_MS = 60 * 60 * 1000; // hourly
+    await import('./lib/eventsSearchScheduler.js')
+  const { pruneAndSaveExpiredEvents } = await import('./lib/eventsStore.js')
+  const CHECK_INTERVAL_MS = 60 * 60 * 1000 // hourly
 
   const runChecks = () => {
     checkAndSendWeeklyEmail().catch(err =>
       console.error('Weekly email scheduler error:', err)
-    );
+    )
     checkAndSendWeeklyWebhook().catch(err =>
       console.error('Weekly webhook scheduler error:', err)
-    );
+    )
     checkAndSendWeeklySmtpEmail().catch(err =>
       console.error('Weekly SMTP email scheduler error:', err)
-    );
+    )
     checkAndRefreshTopArtists().catch(err =>
       console.error('Top artists refresh scheduler error:', err)
-    );
+    )
     checkAndRunEventSearch().catch(err =>
       console.error('Events auto-search scheduler error:', err)
-    );
+    )
     pruneAndSaveExpiredEvents().catch(err =>
       console.error('Prune expired events error:', err)
-    );
-  };
+    )
+  }
 
-  setInterval(runChecks, CHECK_INTERVAL_MS);
+  setInterval(runChecks, CHECK_INTERVAL_MS)
 
   // Also check shortly after startup, in case the interval elapsed while
   // the server was down and the next hourly check would otherwise be a while.
-  runChecks();
+  runChecks()
 }
