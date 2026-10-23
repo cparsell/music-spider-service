@@ -69,3 +69,7 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 ## License
 
 [MIT](LICENSE)
+
+## Support
+
+[Buy me a coffee](https://buymeacoffee.com/netsurgem)

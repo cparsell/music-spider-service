@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   /* Not pure/near-black on purpose: values below ~16 (limited-range HDMI
@@ -84,13 +84,12 @@ body {
   transform: translateX(-50%);
   width: 35px;
   height: 80px;
-
-  background-color: var(--color-white) !important;
-  mask: url("ms-logo-string.svg") no-repeat top center / contain;
-  -webkit-mask: url("ms-logo-string.svg") no-repeat top center / contain;
+  background-color: var(--color-neutral-200) !important;
+  mask: url('ms-logo-string.svg') no-repeat top center / contain;
+  -webkit-mask: url('ms-logo-string.svg') no-repeat top center / contain;
 }
 
-[data-theme="grayscale"] {
+[data-theme='grayscale'] {
   --color-yellow-300: var(
     --color-neutral-400
   ) !important; /* What shows as yellow in other themes is turned grayscale */
@@ -106,7 +105,7 @@ body {
    hand-extended within the same hue to cover the extra Tailwind steps this
    app uses (e.g. red-800 for a "delete" link, amber-800/green-600 needing
    enough contrast to sit on their own light chip/button backgrounds). */
-[data-theme="catppuccin-mocha"] {
+[data-theme='catppuccin-mocha'] {
   --background: #11111b !important; /* Crust */
   --foreground: #cdd6f4 !important; /* Text */
   --color-white: var(--foreground) !important;

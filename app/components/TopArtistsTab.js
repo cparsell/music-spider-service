@@ -341,8 +341,8 @@ export default function TopArtistsTab({ description }) {
                           </button>
                         ) : (
                           <button
-                            title='Save'
-                            aria-label='Save'
+                            title='Save to Custom List'
+                            aria-label='Save to Custom List'
                             onClick={() => handleSave(a.artist)}
                             className='text-sm px-2 py-0.5 rounded text-blue-600 hover:underline cursor-pointer'
                           >

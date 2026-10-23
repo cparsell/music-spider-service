@@ -9,7 +9,8 @@ import {
   CogIcon,
   BookmarkIcon,
   ChartBarIcon,
-  IgnoreIcon
+  IgnoreIcon,
+  HeartIcon
 } from '../assets/SvgIcons'
 
 const TABS = [
@@ -27,26 +28,37 @@ export default function HomeClient({ defaultTab, isConfigured }) {
     return params.get('tab') || defaultTab
   })
 
+  const supportLink = (
+    <a
+      href='https://buymeacoffee.com/netsurgem'
+      target='_blank'
+      rel='noreferrer'
+      aria-label='Buy me a coffee'
+      title='Buy me a coffee'
+      className='text-neutral-400 hover:text-neutral-100 lg:pr-2'
+    >
+      <HeartIcon className='w-6 h-6' />
+    </a>
+  )
   return (
     // Below lg: logo/tabs stacked above content. At lg+, there's enough room
     // to move logo/tabs into a left sidebar instead and let content use the
     // full remaining width, so each tab's scrollbar hugs the browser edge.
     <main className='h-screen bg-neutral-800 overflow-hidden flex flex-col items-center lg:flex-row lg:items-stretch'>
-      <div className='w-full max-w-5xl shrink-0 pt-6 lg:w-56 lg:max-w-none lg:shrink-0 lg:flex lg:flex-col lg:border-r lg:border-neutral-500 lg:pl-2'>
-        <div className='gap-2 pb-3 mb-2 ml-2 mt-1 lg:pl-6 lg:mt-0 lg:ml-0'>
+      <div className='w-full max-w-5xl shrink-0 pt-4 lg:w-56 lg:max-w-none lg:shrink-0 lg:flex lg:flex-col lg:border-r lg:border-neutral-500 lg:pl-2'>
+        <div className='gap-2 pb-4 mb-2 ml-2 mt-1 lg:pl-6 lg:mt-0 lg:ml-0 flex '>
           <a
             href='https://github.com/cparsell/music-spider-service'
             target='_blank'
-            className='flex flex-row gap-0.5'
+            className='flex flex-row gap-0.5 text-neutral-200'
           >
-            <h1 className=' text-logo  font-bold text-neutral-200'>Music</h1>
-            <span className='imglogo-slot '>
-              <span className='imglogo '></span>
+            <h1 className='text-logo  font-bold'>Music</h1>
+            <span className='imglogo-slot'>
+              <span className='imglogo'></span>
             </span>
-            <h1 className=' text-logo sm:text-logo-small font-bold text-neutral-200 '>
-              Spider
-            </h1>
+            <h1 className=' text-logo sm:text-logo-small font-bold'>Spider</h1>
           </a>
+          <div className='lg:hidden ml-auto mr-9 mt-1'>{supportLink}</div>
         </div>
         <div className='flex gap-1 mb-0  border-neutral-200 border-b-2 bg-neutral-800 md:bg-neutral-800 lg:flex-col lg:gap-0.5 lg:border-b-0 lg:mb-0'>
           {TABS.map(t => {
@@ -59,7 +71,7 @@ export default function HomeClient({ defaultTab, isConfigured }) {
                 className={`flex flex-1 items-center justify-center gap-2 px-3 py-2 -mb-0.5 border-b-2 lg:flex-none lg:justify-start lg:mb-0 lg:border-b-0 lg:pl-6 lg:text-left  ${
                   tab === t.id
                     ? 'border-neutral-900 bg-neutral-200 text-neutral-900'
-                    : 'border-b-transparent border-r-neutral-800 border-r text-neutral-400 cursor-pointer '
+                    : 'border-b-transparent border-r-neutral-800 border-r text-neutral-400 cursor-pointer hover:text-neutral-100'
                 }`}
               >
                 <Icon className='w-6 h-6 md:w-5 sm:h-5 shrink-0' />
@@ -67,6 +79,9 @@ export default function HomeClient({ defaultTab, isConfigured }) {
               </button>
             )
           })}
+        </div>
+        <div className='hidden text-neutral-400 lg:mt-auto lg:mb-5 lg:flex lg:pl-6 lg:pt-1 lg:flex-none lg:justify-start lg:text-left '>
+          {supportLink} <span className='hidden md:inline'></span>
         </div>
       </div>
 

@@ -163,6 +163,8 @@ export default function ArtistListManager({ apiPath, addLabel, description }) {
                   <td className='py-1'>
                     <button
                       onClick={() => removeArtist(name)}
+                      title='Remove'
+                      aria-label='Remove'
                       className='text-sm text-red-600 hover:underline cursor-pointer'
                     >
                       <RemoveIcon className='w-5 h-5 md:w-4 sm:h-4 shrink-0' />
