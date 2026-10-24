@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import StatusBar from './StatusBar'
 import TabLayout from './TabLayout'
+import { getSalePhase } from '../../lib/salePhase'
 
 function formatDate(dateValue) {
   const d = new Date(dateValue)
@@ -22,31 +23,39 @@ function formatDate(dateValue) {
 }
 
 const STATUS_LABELS = {
-  offsale: 'Off sale',
   canceled: 'Canceled',
   cancelled: 'Canceled',
   postponed: 'Postponed',
   rescheduled: 'Rescheduled'
 }
 
-// Ticketmaster's "offsale" covers both sold out and sale window ended.
-function StatusBadge({ status }) {
-  const label = STATUS_LABELS[status]
-  if (!label) return null
-  let labelBg = 'bg-neutral-600 text-white '
-  switch (label) {
-    case 'Canceled':
-    case 'Off sale':
-      labelBg = 'bg-red-300 text-black text-shadow-xs'
-      break
-    case 'Postponed':
-    case 'Rescheduled':
-    default:
-      labelBg = 'bg-neutral-600 text-white text-shadow-xs'
+const PHASE_STYLES = {
+  onsale: 'bg-green-300 text-black',
+  presale: 'bg-green-300 text-black',
+  'presale-upcoming': 'bg-blue-300 text-black',
+  upcoming: 'bg-blue-300 text-black',
+  tba: 'bg-amber-300 text-black',
+  ended: 'bg-red-300 text-black',
+  unknown: 'bg-neutral-400 text-black'
+}
+
+// Ticketmaster's "offsale" is ambiguous (not yet on sale, sold out, or sale
+// window ended), so sale state is derived from the sale windows instead.
+function StatusBadge({ status, sales }) {
+  let label = STATUS_LABELS[status]
+  let style = 'bg-neutral-600 text-white'
+  if (label === 'Canceled') style = 'bg-red-300 text-black'
+  else if (!label) {
+    const sale = getSalePhase({ status, sales })
+    // Plain "onsale" is the normal case, so don't badge it.
+    if (!sale.label || (sale.phase === 'onsale' && status !== 'offsale'))
+      return null
+    label = sale.label
+    style = PHASE_STYLES[sale.phase]
   }
   return (
     <span
-      className={`ml-1.5 rounded-full ${labelBg} text-[10px] font-semibold px-1.5 py-0.5 no-underline inline-block`}
+      className={`ml-1.5 rounded-full ${style} text-[10px] font-semibold px-1.5 py-0.5 text-shadow-xs no-underline inline-block`}
     >
       {label}
     </span>
@@ -586,7 +595,7 @@ export default function EventsTab() {
                             className='text-blue-600 hover:underline'
                           >
                             {u.name}
-                            <StatusBadge status={u.status} />
+                            <StatusBadge status={u.status} sales={u.sales} />
                           </a>
                         ))
                       )}
@@ -697,7 +706,7 @@ export default function EventsTab() {
                                   className='text-blue-300 hover:underline'
                                 >
                                   {u.name}
-                                  <StatusBadge status={u.status} />
+                                  <StatusBadge status={u.status} sales={u.sales} />
                                 </a>
                               ))}
                             </div>

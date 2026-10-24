@@ -379,7 +379,8 @@ function parseEvents(data, artistsArr) {
           url,
           // dates.status.code: onsale | offsale | cancelled | postponed |
           // rescheduled. "offsale" can mean sold out or sale window ended.
-          status: item.dates?.status?.code
+          status: item.dates?.status?.code,
+          sales: pickSales(item.sales)
         }
       ],
       image,
@@ -388,6 +389,31 @@ function parseEvents(data, artistsArr) {
     })
   })
   return eventsArr
+}
+
+/**
+ * ----------------------------------------------------------------------------------------------------------------
+ * Keeps only the sale-window fields that lib/salePhase.js reads.
+ * @param {object} sales Ticketmaster `sales` object
+ * @returns {object|undefined}
+ */
+function pickSales(sales) {
+  if (!sales) return undefined
+  const pub = sales.public || {}
+  return {
+    public: {
+      startDateTime: pub.startDateTime,
+      endDateTime: pub.endDateTime,
+      startTBD: pub.startTBD,
+      startTBA: pub.startTBA
+    },
+    presales: (sales.presales || []).map(p => ({
+      name: p.name,
+      startDateTime: p.startDateTime,
+      endDateTime: p.endDateTime,
+      url: p.url
+    }))
+  }
 }
 
 /**
