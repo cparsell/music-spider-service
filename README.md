@@ -16,9 +16,10 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - **Custom list:** manually pin artists to always include
 - **Ignore list:** exclude specific artists from top-artists and event search entirely (e.g. artists who are not alive, not touring, or you're just not going to see them live)
 - **Event search:** Ticketmaster and/or Resident Advisor matched against your list of artists - schedule weekly event searches to update the list or start the search manually
-- **Events UI:** Peruse the discovered events in card and list views, sortable columns, per-event delete/ignore
+- **Events UI:** Peruse the discovered events in card and list views, sortable columns, per-event delete/ignore. Status of events is included if tickets are listed as `offsale`, `canceled`, `postponed`, or `rescheduled`). Dates of a presale are included as well.
 - **Notifications:**
   - Weekly event digest email
+  - Email when new events are discovered
   - Calendar sync - via a connected Google account (OAuth) or a GCP service account (no OAuth consent screen or HTTPS needed), or CalDAV (Nextcloud, Radicale, Baikal, iCloud, Fastmail, etc.)
   - generic JSON webhook (e.g. Discord, Home Assistant)
 - **Settings UI:**
