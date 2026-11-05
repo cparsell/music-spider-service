@@ -341,12 +341,21 @@ function parseEvents(data, artistsArr) {
     const url = item.url
     const image = item.images
     const attractions = item?._embedded?.attractions || []
+    let acts = attractions.map(act => act.name)
     const isNameInList = attractions.some(attraction =>
       artistsArr.includes(attraction.name)
     )
-    if (!isNameInList) return
-
-    const acts = attractions.map(act => act.name)
+    if (!isNameInList) {
+      // Some events (e.g. a small-venue show) have no attractions listed at
+      // all, so the check above can never match even though the keyword
+      // search found them. Only for those, fall back to the event title -
+      // and only when it's the artist's name on its own or leading the title
+      // ("UNKLE", "UNKLE - Live"), not just contained somewhere in it.
+      const titleArtist =
+        attractions.length === 0 && findArtistInTitle(item.name, artistsArr)
+      if (!titleArtist) return
+      acts = [titleArtist]
+    }
     let venueName, venueAddress, venueCity, venueState
     item?._embedded?.venues?.forEach(venue => {
       venueName = venue.name
@@ -389,6 +398,33 @@ function parseEvents(data, artistsArr) {
     })
   })
   return eventsArr
+}
+
+/**
+ * ----------------------------------------------------------------------------------------------------------------
+ * Finds which artist an event title is about, for events with no attractions.
+ * Matches only when the title equals the artist name, or starts with it
+ * followed by a separator (space-dash, colon, pipe, parenthesis, comma).
+ * @param {string} title event name
+ * @param {string[]} artistsArr
+ * @returns {string|null} the matching artist, as spelled in artistsArr
+ */
+function findArtistInTitle(title, artistsArr) {
+  const t = (title || '').trim().toLowerCase()
+  if (!t) return null
+  let best = null
+  for (const artist of artistsArr) {
+    const a = artist.trim().toLowerCase()
+    if (!a || !t.startsWith(a)) continue
+    const rest = t.slice(a.length)
+    if (
+      rest === '' ||
+      /^(\s*[-–—:|,(]|\s+(live|in concert|with|w\/|presents|tour)\b)/.test(rest)
+    ) {
+      if (!best || artist.length > best.length) best = artist
+    }
+  }
+  return best
 }
 
 /**
