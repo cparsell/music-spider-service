@@ -56,7 +56,8 @@ const EVENT_SEARCH_TERM_OPTIONS = [
 
 const EVENT_SEARCH_SOURCE_OPTIONS = [
   { value: 'ticketmaster', label: 'Ticketmaster' },
-  { value: 'resadvisor', label: 'Resident Advisor' }
+  { value: 'resadvisor', label: 'Resident Advisor' },
+  { value: 'jambase', label: 'JamBase' }
 ]
 
 const DAYS_OF_WEEK = [
@@ -146,6 +147,19 @@ const SECTIONS = [
         label:
           'Include VIP/hospitality package listings. Ticketmaster sells these as separate events alongside the ordinary ticket for the same show ("VIP Packages", "PACKAGE ...", "Premium Packages", "Logen-Seat", "Hospitality"), so turning this on adds an extra link per package to the show\'s card. A package is only ever hidden when the ordinary listing for that venue and night was found too.',
         type: 'checkbox'
+      }
+    ]
+  },
+  {
+    title: 'JamBase API',
+    description:
+      'Disabled by default. Uses the Lat/Long, Radius and Units set under Ticketmaster API above. Artists are searched 25 per request, so a full run costs about (artists / 25) calls per location. The free Developer plan allows 1,000 calls/month, for non-commercial use with attribution to JamBase.',
+    fields: [
+      { key: 'jambaseApiKey', label: 'API Key', type: 'password' },
+      {
+        key: 'jambaseMaxCallsPerSearch',
+        label: 'Max API calls per search (safety limit)',
+        type: 'number'
       }
     ]
   },
@@ -1830,6 +1844,17 @@ export default function SettingsTab({ isConfigured }) {
             {renderSectionFields(
               sectionByTitle['Ticketmaster API'],
               !(form.eventSearchSources || []).includes('ticketmaster')
+            )}
+          </SettingsSubsection>
+
+          <SettingsSubsection
+            title='JamBase API'
+            defaultOpen={false}
+            disabled={!(form.eventSearchSources || []).includes('jambase')}
+          >
+            {renderSectionFields(
+              sectionByTitle['JamBase API'],
+              !(form.eventSearchSources || []).includes('jambase')
             )}
           </SettingsSubsection>
 

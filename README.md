@@ -15,7 +15,7 @@ The only two ticket APIs (currently) free and available ot use are Ticketmaster 
 - **Top Artists tracking:** from Tautulli, Spotify, both, or manual-only (no API fetching); ranks your top artists in short term, medium term, and long-term windows; optional scheduled auto-refresh
 - **Custom list:** manually pin artists to always include
 - **Ignore list:** exclude specific artists from top-artists and event search entirely (e.g. artists who are not alive, not touring, or you're just not going to see them live)
-- **Event search:** Ticketmaster and/or Resident Advisor matched against your list of artists - schedule weekly event searches to update the list or start the search manually
+- **Event search:** Ticketmaster, Resident Advisor and/or JamBase matched against your list of artists - schedule weekly event searches to update the list or start the search manually
 - **Events UI:** Peruse the discovered events in card and list views, sortable columns, per-event delete/ignore. Status of events is included if tickets are listed as `offsale`, `canceled`, `postponed`, or `rescheduled`). Dates of a presale are included as well.
 - **Notifications:**
   - Weekly event digest email

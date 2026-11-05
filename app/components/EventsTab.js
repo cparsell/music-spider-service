@@ -672,49 +672,54 @@ export default function EventsTab() {
                         {renderActs(event.actsList, event.actsDisplay)}
                       </p>
                     )}
-                    <div className='flex flex-col gap-1 mt-1'>
+                    <div className='flex flex-col gap-2 mt-1'>
                       {event.dates?.map(d => (
                         <div
                           key={d.date}
-                          className='flex gap-2 text-sm items-center'
+                          className='flex flex-col gap-0.5 text-sm '
                         >
-                          <span className='text-neutral-300 shrink-0 flex items-center gap-1.5'>
-                            {formatDate(d.date)}
-                            {(calendarAvailable || caldavAvailable) && (
-                              <CalendarButton
-                                googleAvailable={calendarAvailable}
-                                googleAdded={!!d.calendarEventId}
-                                caldavAvailable={caldavAvailable}
-                                caldavAdded={!!d.caldavEventId}
-                                syncing={syncingDates.has(
-                                  `${event.id}:${d.date}`
-                                )}
-                                onClick={() =>
-                                  addEventToCalendar(event.id, d.date)
-                                }
-                              />
-                            )}
-                          </span>
-                          <div className='flex items-center gap-1'>
-                            <div className='flex flex-col'>
-                              {d.urls?.map(u => (
-                                <a
-                                  key={u.url}
-                                  href={u.url}
-                                  target='_blank'
-                                  rel='noreferrer'
-                                  className='text-blue-300 hover:underline'
-                                >
-                                  {u.name}
-                                  <StatusBadge status={u.status} sales={u.sales} />
-                                </a>
-                              ))}
-                            </div>
+                          {/* Row 1: date, calendar button, "New" badge */}
+                          <div className='flex items-center gap-1.5'>
+                            <span className='text-neutral-100 shrink-0 flex items-center gap-1.5'>
+                              {formatDate(d.date)}
+                              {(calendarAvailable || caldavAvailable) && (
+                                <CalendarButton
+                                  googleAvailable={calendarAvailable}
+                                  googleAdded={!!d.calendarEventId}
+                                  caldavAvailable={caldavAvailable}
+                                  caldavAdded={!!d.caldavEventId}
+                                  syncing={syncingDates.has(
+                                    `${event.id}:${d.date}`
+                                  )}
+                                  onClick={() =>
+                                    addEventToCalendar(event.id, d.date)
+                                  }
+                                />
+                              )}
+                            </span>
                             {d.isNew && (
                               <span className='rounded-full bg-yellow-300 text-neutral-800 text-[10px] font-semibold px-1.5 py-0.5 text-shadow-none'>
                                 New
                               </span>
                             )}
+                          </div>
+                          {/* Row 2: ticket links, wrapping onto more lines as needed */}
+                          <div className='flex flex-wrap items-center gap-x-3 gap-y-0.5'>
+                            {d.urls?.map(u => (
+                              <a
+                                key={u.url}
+                                href={u.url}
+                                target='_blank'
+                                rel='noreferrer'
+                                className='text-blue-300 hover:underline whitespace-nowrap'
+                              >
+                                {u.name}
+                                <StatusBadge
+                                  status={u.status}
+                                  sales={u.sales}
+                                />
+                              </a>
+                            ))}
                           </div>
                         </div>
                       ))}

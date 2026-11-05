@@ -31,7 +31,7 @@ How these are combined is influenced by the **Combination Mode** in **Settings**
 
 ## Event Search
 
-Pick one or both sources under **Event Search > Event Search Sources**:
+Pick one or more sources under **Event Search > Event Search Sources**:
 
 - **Ticketmaster**:
   - **Note**: The first time Ticketmaster is searched it will take longer. This is so that it can cache the `attraction ID` of each artist. After that, it will batch search 25 artists at a time, making the search process much quicker. It will refresh these `attraction IDs` every 30 days.
@@ -39,6 +39,9 @@ Pick one or both sources under **Event Search > Event Search Sources**:
   - `Lat/Long` of your area can be found at [latlong.net](https://www.latlong.net/). Add more than one location by putting each on its own line.
   - `Radius` (in miles or km) - applies to every location.
   - `Include VIP/hospitality package listings` - Ticketmaster sells VIP, hospitality and premium-seat packages, listed separately alongside the ordinary ticket for the same show ("VIP Packages", "PACKAGE ...", "Premium Packages", "Logen-Seat", "Hospitality"), so one concert can come back as four or five results. Off by default, which keeps just the ordinary listing. Turn it on to get an extra link per package on the show's card. A package is only hidden when the ordinary listing for that same venue and night was found too, so a show should not disappear entirely.
+- **JamBase** (off by default): adds shows from other ticketing sources (AXS, DICE, TicketWeb, etc.). Each show gets links to its primary sellers plus a JamBase link, which lists the resale sites (StubHub, SeatGeek, etc.) so they aren't added individually. Get a key from [data.jambase.com](https://data.jambase.com/) - the free Developer plan allows 1,000 calls/month, non-commercial use only, with attribution to JamBase.
+  - Artists are searched 25 per request and filtered to your Ticketmaster `Lat/Long`, `Radius` and `Units`, so a full run costs roughly `artists / 25` calls per location. `Max API calls per search` stops a run early as a safety limit.
+  - When Ticketmaster is also enabled, JamBase's Ticketmaster links are left out to avoid duplicates.
 - **Resident Advisor**: no API key needed. Just open the **Resident Advisor** subsection and use the region search box to find and add your city/country - matching events near those regions are pulled automatically. More than one region can be added.
 
 ## Notifications
