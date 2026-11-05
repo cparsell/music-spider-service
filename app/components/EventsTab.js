@@ -229,7 +229,13 @@ export default function EventsTab() {
   const applyRunningState = data => {
     if (data.phase) setStatusMessage(data.phase)
     setProgress(
-      data.total > 0 ? { completed: data.completed, total: data.total } : null
+      data.total > 0
+        ? {
+            completed: data.completed,
+            total: data.total,
+            sources: data.sources || []
+          }
+        : null
     )
   }
 

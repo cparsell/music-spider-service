@@ -151,10 +151,12 @@ const parseLatLongList = raw => {
  * API Explorer: https://developer.ticketmaster.com/api-explorer/v2/
  * Reference: https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/#search-events-v2
  * @param {array} artistsArr
- * @param {(completed: number, total: number) => void} [onProgress] called as each artist is resolved to an attraction ID
+ * @param {(completed: number, total: number, phase: 'resolve'|'search'|'images') => void} [onProgress]
+ *   called as work finishes in each phase: artists resolved to attraction IDs, event-search requests made, then image lookups
+ * @param {(err: Error) => void} [onError] called when a search request (or the run itself) fails; whatever was found is still returned
  * @returns {array} matched events, shaped for lib/eventsStore.js
  */
-export const searchTMLoop = async (artistsArr, onProgress) => {
+export const searchTMLoop = async (artistsArr, onProgress, onError) => {
   const resolved = await getResolvedConfig()
   const apiKey = resolved.ticketmasterApiKey
   const radius = resolved.radius
@@ -178,7 +180,7 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
       }
       if (attractionId) resolvedAttractionIds.push(attractionId)
       else unresolvedArtists.push(name)
-      onProgress?.(i + 1, artistsArr.length)
+      onProgress?.(i + 1, artistsArr.length, 'resolve')
     }
 
     const attractionIdChunks = chunkArray(
@@ -186,14 +188,20 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
       ATTRACTION_IDS_PER_REQUEST
     )
 
+    // One unit per search request group (a batch of IDs, or one unresolved
+    // artist) per location - the bulk of the run, so it gets its own progress.
+    const searchUnits =
+      latlongList.length * (attractionIdChunks.length + unresolvedArtists.length)
+    let searchesDone = 0
     for (const latlong of latlongList) {
       if (isCancelRequested()) break
-      const locationConfig = { apiKey, latlong, radius, units }
+      const locationConfig = { apiKey, latlong, radius, units, onError }
 
       for (const chunk of attractionIdChunks) {
         if (isCancelRequested()) break
         const data = await tmSearchByAttractionIds(chunk, locationConfig)
         results.push(...parseEvents(data, artistsArr))
+        onProgress?.(++searchesDone, searchUnits, 'search')
         await sleep(180)
       }
 
@@ -201,6 +209,7 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
         if (isCancelRequested()) break
         const data = await tmSearch(name, locationConfig)
         results.push(...parseEvents(data, artistsArr))
+        onProgress?.(++searchesDone, searchUnits, 'search')
         await sleep(180)
       }
     }
@@ -211,13 +220,16 @@ export const searchTMLoop = async (artistsArr, onProgress) => {
 
     console.debug('Ticketmaster Search complete - Results:', results)
 
+    let imagesDone = 0
     await mapWithConcurrency(results, IMAGE_CHECK_CONCURRENCY, async event => {
       event.image = await findLargestImage(event.image)
+      onProgress?.(++imagesDone, results.length, 'images')
     })
 
     return results
   } catch (e) {
     console.error(`searchTMLoop() error - ${e}`)
+    onError?.(e)
     return results
   }
 }
@@ -563,6 +575,7 @@ const tmSearchPaged = async ({ keyword, attractionIds, config, pageSize }) => {
     }
   } catch (err) {
     console.error(`tmSearchPaged() error: ${err}`)
+    config.onError?.(err)
     return results
   }
   return results

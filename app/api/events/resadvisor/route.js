@@ -93,9 +93,10 @@ const returnRAOptions = (page, area) => {
  * Searches Resident Advisor across all configured regions and returns only
  * events whose lineup includes at least one artist from artistList.
  * @param {array} artistList
+ * @param {(err: Error) => void} [onError] called if the search fails
  * @returns {array} matched events, shaped for lib/eventsStore.js
  */
-export const searchRA = async artistList => {
+export const searchRA = async (artistList, onError) => {
   const config = await getResolvedConfig()
   // Comma-separated Resident Advisor area IDs to search, e.g. "518,552"
   const RA_REGIONS = (config.raRegion || '218')
@@ -140,11 +141,12 @@ export const searchRA = async artistList => {
         address: listing.venue?.address
       })
     }
-    console.log('TEST')
+
     console.log(eventMatches)
     return eventMatches
   } catch (err) {
     console.error('searchRA() error:', err)
+    onError?.(err)
     return []
   }
 }
