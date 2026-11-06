@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import StatusBar from './StatusBar'
 import TabLayout from './TabLayout'
 import { RemoveIcon } from '../assets/SvgIcons'
+import { parseArtistNames } from '../../lib/artistNames'
 
 export default function ArtistListManager({ apiPath, addLabel, description }) {
   const [artists, setArtists] = useState([])
@@ -40,10 +41,9 @@ export default function ArtistListManager({ apiPath, addLabel, description }) {
 
   const addArtist = async e => {
     e.preventDefault()
-    const newNames = input
-      .split('\n')
-      .map(n => n.trim())
-      .filter(Boolean)
+    // Strips tabs, non-breaking/zero-width characters, bullet prefixes and
+    // duplicate lines from pasted text.
+    const newNames = parseArtistNames(input)
 
     const existingArtists = artists
     const filteredNames = newNames.filter(
@@ -64,7 +64,7 @@ export default function ArtistListManager({ apiPath, addLabel, description }) {
       body: JSON.stringify(
         filteredNames.length === 1
           ? { name: filteredNames[0] }
-          : { filteredNames }
+          : { names: filteredNames }
       )
     })
     const data = await res.json()
