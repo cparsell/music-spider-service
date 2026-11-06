@@ -95,12 +95,6 @@ function applyPackagePolicy(events, includePackages) {
   return [...kept.filter(e => !e.isPackage), ...kept.filter(e => e.isPackage)]
 }
 
-// Event cards render at a tall aspect-6/8 with object-cover, first drop
-// anything below a minimum resolution, then prefer whichever remaining
-// image's aspect ratio is closest to the card's.
-const MIN_IMAGE_WIDTH = 600
-const TARGET_RATIO = 6 / 8
-
 /**
  * Ticketmaster's `latlong` param wants "lat,long" with no space. Users type
  * this all sorts of ways (comma, space, slash, semicolon, pipe, tab...), so
@@ -151,8 +145,8 @@ const parseLatLongList = raw => {
  * API Explorer: https://developer.ticketmaster.com/api-explorer/v2/
  * Reference: https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/#search-events-v2
  * @param {array} artistsArr
- * @param {(completed: number, total: number, phase: 'resolve'|'search'|'images') => void} [onProgress]
- *   called as work finishes in each phase: artists resolved to attraction IDs, event-search requests made, then image lookups
+ * @param {(completed: number, total: number, phase: 'resolve'|'search') => void} [onProgress]
+ *   called as work finishes in each phase: artists resolved to attraction IDs, then event-search requests made
  * @param {(err: Error) => void} [onError] called when a search request (or the run itself) fails; whatever was found is still returned
  * @returns {array} matched events, shaped for lib/eventsStore.js
  */
@@ -191,7 +185,8 @@ export const searchTMLoop = async (artistsArr, onProgress, onError) => {
     // One unit per search request group (a batch of IDs, or one unresolved
     // artist) per location - the bulk of the run, so it gets its own progress.
     const searchUnits =
-      latlongList.length * (attractionIdChunks.length + unresolvedArtists.length)
+      latlongList.length *
+      (attractionIdChunks.length + unresolvedArtists.length)
     let searchesDone = 0
     for (const latlong of latlongList) {
       if (isCancelRequested()) break
@@ -214,17 +209,9 @@ export const searchTMLoop = async (artistsArr, onProgress, onError) => {
       }
     }
 
-    // Ahead of the image lookups below, so dropped package listings don't
-    // cost a round of HEAD requests each.
     results = applyPackagePolicy(results, includePackages)
 
     console.debug('Ticketmaster Search complete - Results:', results)
-
-    let imagesDone = 0
-    await mapWithConcurrency(results, IMAGE_CHECK_CONCURRENCY, async event => {
-      event.image = await findLargestImage(event.image)
-      onProgress?.(++imagesDone, results.length, 'images')
-    })
 
     return results
   } catch (e) {
@@ -234,103 +221,21 @@ export const searchTMLoop = async (artistsArr, onProgress, onError) => {
   }
 }
 
-// How many events' image checks run at once. Bounds the total number of
-// simultaneous outbound HEAD requests (each event has several image
-// candidates on top of this) so the production container's DNS resolver
-// doesn't get overwhelmed - see the call site for why this exists.
-const IMAGE_CHECK_CONCURRENCY = 6
-
 /**
- * Runs fn over items with at most `limit` calls in flight at once.
+ * Picks the image to show for an event from Ticketmaster's list of versions
+ * of the same artwork (TABLET_LANDSCAPE_16_9, RETINA_PORTRAIT_3_2, ...), by
+ * pixel area from the width/height each one reports - the largest wins.
+ * @param {{url: string, width?: number, height?: number}[]} images
+ * @returns {string} the image URL, or '' if there are none
  */
-async function mapWithConcurrency(items, limit, fn) {
-  let cursor = 0
-  const worker = async () => {
-    while (cursor < items.length) {
-      const item = items[cursor++]
-      await fn(item)
-    }
+function pickLargestImage(images) {
+  if (!Array.isArray(images) || images.length === 0) return ''
+  const area = img => (img.width || 0) * (img.height || 0)
+  let best = images[0]
+  for (const img of images) {
+    if (area(img) > area(best)) best = img
   }
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, worker)
-  )
-}
-
-/**
- * Finds the largest image from an array of image objects based on content
- * length. Checks all candidate URLs concurrently (rather than one at a
- * time), with a per-request timeout so one slow/hanging image host can't
- * stall the whole search. Falls back to the metadata-based pick if every
- * HEAD check fails, rather than leaving the event with no image at all.
- * @param {*} imagesObj
- * @returns
- */
-async function findLargestImage(imagesObj) {
-  if (!imagesObj || imagesObj.length < 1) {
-    console.error('findLargestImage() - no images provided')
-    return ''
-  }
-
-  const sizes = await Promise.all(
-    imagesObj.map(async image => {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 5000)
-      try {
-        const response = await fetch(image.url, {
-          method: 'HEAD',
-          signal: controller.signal
-        })
-        const contentLength = response.headers.get('Content-Length')
-        return {
-          url: image.url,
-          size: contentLength ? parseInt(contentLength, 10) : 0
-        }
-      } catch (error) {
-        console.error(
-          `findLargestImage() Error fetching ${image.url}: ${error}`
-        )
-        return { url: image.url, size: 0 }
-      } finally {
-        clearTimeout(timeout)
-      }
-    })
-  )
-
-  const largest = sizes.reduce((max, curr) =>
-    curr.size > max.size ? curr : max
-  )
-
-  return largest.size > 0 ? largest.url : pickCoverImage(imagesObj)
-}
-
-/**
- * Pick the best image from an array of Ticketmaster images, based on minimum width and aspect ratio.
- * So far this is still returning low-res images for some events
- * @param {*} imagesArr
- * @returns
- */
-function pickCoverImage(imagesArr) {
-  if (!imagesArr || imagesArr.length < 1) {
-    console.error('pickCoverImage() - no images provided')
-    return ''
-  }
-
-  const bySize = [...imagesArr].sort((a, b) => (b.width || 0) - (a.width || 0))
-  const highRes = bySize.filter(img => (img.width || 0) >= MIN_IMAGE_WIDTH)
-  const pool = highRes.length > 0 ? highRes : bySize
-
-  let best = null
-  let bestDistance = Infinity
-  for (const img of pool) {
-    if (!img.width || !img.height) continue
-    const distance = Math.abs(img.width / img.height - TARGET_RATIO)
-    if (distance < bestDistance) {
-      bestDistance = distance
-      best = img
-    }
-  }
-
-  return (best || pool[0])?.url || ''
+  return best.url || ''
 }
 
 /**
@@ -351,7 +256,7 @@ function parseEvents(data, artistsArr) {
 
   data.forEach(item => {
     const url = item.url
-    const image = item.images
+    const image = pickLargestImage(item.images)
     const attractions = item?._embedded?.attractions || []
     let acts = attractions.map(act => act.name)
     const isNameInList = attractions.some(attraction =>
