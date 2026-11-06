@@ -2,7 +2,8 @@ import {
   sleep,
   chunkArray,
   arrayRemoveDupes,
-  stringSimilarity
+  stringSimilarity,
+  formatLogDate
 } from '@/lib/common.js'
 import { getResolvedConfig } from '@/lib/settings.js'
 import { isCancelRequested } from '@/lib/searchProgress.js'
@@ -211,8 +212,6 @@ export const searchTMLoop = async (artistsArr, onProgress, onError) => {
 
     results = applyPackagePolicy(results, includePackages)
 
-    console.debug('Ticketmaster Search complete - Results:', results)
-
     return results
   } catch (e) {
     console.error(`searchTMLoop() error - ${e}`)
@@ -313,6 +312,9 @@ function parseEvents(data, artistsArr) {
       address: `${venueAddress}, ${venueCity}, ${venueState}`,
       isPackage
     })
+    console.info(
+      `  [Ticketmaster] ${formatLogDate(date)} | ${item.name} @ ${venueName || 'unknown venue'}`
+    )
   })
   return eventsArr
 }

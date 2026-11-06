@@ -1,5 +1,9 @@
 import { queryRAEventListings } from '@/lib/resAdv.js'
-import { formatDateDashes, formatDateTimeB } from '@/lib/common.js'
+import {
+  formatDateDashes,
+  formatDateTimeB,
+  formatLogDate
+} from '@/lib/common.js'
 import { getResolvedConfig } from '@/lib/settings.js'
 import { isCancelRequested } from '@/lib/searchProgress.js'
 
@@ -121,9 +125,9 @@ export const searchRA = async (artistList, onError) => {
       const acts = (listing.artists || []).map(a => a.name.toString())
       const shouldAddEvent = acts.some(act => artistList.includes(act))
       if (!shouldAddEvent) continue
-
+      const eventDate = new Date(listing.startTime)
       eventMatches.push({
-        date: formatDateTimeB(new Date(listing.startTime)),
+        date: formatDateTimeB(eventDate),
         eName: listing.title,
         city: '',
         venue: listing.venue?.name,
@@ -140,9 +144,11 @@ export const searchRA = async (artistList, onError) => {
         acts,
         address: listing.venue?.address
       })
+      console.info(
+        `  [Resident Advisor] ${formatLogDate(eventDate)} | ${listing.title} @ ${listing.venue?.name || 'unknown venue'}`
+      )
     }
 
-    console.log(eventMatches)
     return eventMatches
   } catch (err) {
     console.error('searchRA() error:', err)
