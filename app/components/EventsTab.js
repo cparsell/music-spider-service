@@ -184,8 +184,128 @@ function renderActs(actsList, fallback) {
   )
 }
 
+const EMPTY_FORM = {
+  eName: '',
+  venue: '',
+  address: '',
+  city: '',
+  date: '',
+  acts: '',
+  url: '',
+  image: ''
+}
+
+const INPUT_CLASS =
+  'rounded bg-neutral-800 border border-neutral-600 px-2 py-1 text-sm text-white w-full'
+
+function AddEventForm({ onSubmit, onCancel, saving }) {
+  const [form, setForm] = useState(EMPTY_FORM)
+  const set = key => e => setForm(prev => ({ ...prev, [key]: e.target.value }))
+
+  const submit = e => {
+    e.preventDefault()
+    onSubmit({
+      eName: form.eName,
+      venue: form.venue,
+      address: form.address,
+      city: form.city,
+      date: form.date, // datetime-local, parsed as local time server-side
+      acts: form.acts.split(',').map(a => a.trim()).filter(Boolean),
+      image: form.image,
+      urls: form.url.trim() ? [{ name: 'Manual', url: form.url.trim() }] : []
+    })
+  }
+
+  return (
+    <form
+      onSubmit={submit}
+      className='grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 p-3 rounded-xl bg-neutral-900 border border-neutral-700'
+    >
+      <input
+        required
+        placeholder='Event name *'
+        value={form.eName}
+        onChange={set('eName')}
+        className={INPUT_CLASS}
+      />
+      <input
+        required
+        placeholder='Venue *'
+        value={form.venue}
+        onChange={set('venue')}
+        className={INPUT_CLASS}
+      />
+      <input
+        required
+        type='datetime-local'
+        value={form.date}
+        onChange={set('date')}
+        className={INPUT_CLASS}
+      />
+      <input
+        placeholder='Venue address'
+        value={form.address}
+        onChange={set('address')}
+        className={INPUT_CLASS}
+      />
+      <input
+        placeholder='City'
+        value={form.city}
+        onChange={set('city')}
+        className={INPUT_CLASS}
+      />
+      <input
+        placeholder='Acts (comma-separated)'
+        value={form.acts}
+        onChange={set('acts')}
+        className={INPUT_CLASS}
+      />
+      <input
+        type='url'
+        placeholder='Ticket / info URL'
+        value={form.url}
+        onChange={set('url')}
+        className={INPUT_CLASS}
+      />
+      <input
+        type='url'
+        placeholder='Image URL'
+        value={form.image}
+        onChange={set('image')}
+        className={INPUT_CLASS}
+      />
+      <div className='sm:col-span-2 flex gap-2 justify-end'>
+        <button
+          type='button'
+          onClick={onCancel}
+          className='px-3 py-0.5 rounded-2xl border border-neutral-500 text-white cursor-pointer'
+        >
+          Cancel
+        </button>
+        <button
+          type='submit'
+          disabled={saving}
+          className='px-3 py-0.5 rounded-2xl bg-neutral-200 text-gray-800 disabled:opacity-50 cursor-pointer'
+        >
+          {saving ? 'Saving...' : 'Add event'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function CustomBadge() {
+  return (
+    <span className='rounded-full bg-neutral-600 text-white text-[10px] font-semibold px-1.5 py-0.5 text-shadow-none'>
+      Custom
+    </span>
+  )
+}
+
 export default function EventsTab() {
   const [events, setEvents] = useState([])
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [savingEvent, setSavingEvent] = useState(false)
   const [loading, setLoading] = useState(true)
   const [searching, setSearching] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
@@ -354,6 +474,32 @@ export default function EventsTab() {
     await fetch('/api/events/search/cancel', { method: 'POST' })
   }
 
+  const addCustomEvent = async payload => {
+    setSavingEvent(true)
+    try {
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setStatusMessage(data.error || 'Failed to add event')
+        setStatusError(true)
+        return
+      }
+      setEvents(data.events || [])
+      setStatusMessage('Event added')
+      setStatusError(false)
+      setShowAddForm(false)
+    } catch (err) {
+      setStatusMessage(err.message || 'Failed to add event')
+      setStatusError(true)
+    } finally {
+      setSavingEvent(false)
+    }
+  }
+
   const deleteEvent = async (id, { ignore = false } = {}) => {
     const res = await fetch('/api/events', {
       method: 'DELETE',
@@ -454,6 +600,13 @@ export default function EventsTab() {
             </button>
           )}
 
+          <button
+            onClick={() => setShowAddForm(s => !s)}
+            className='px-3 py-0.5 rounded-2xl border border-neutral-400 text-white cursor-pointer'
+          >
+            {showAddForm ? 'Close' : 'Add event'}
+          </button>
+
           <div className='flex-1 flex justify-end'>
             <div className='flex rounded-2xl overflow-hidden border border-neutral-500'>
               {['card', 'list'].map(mode => (
@@ -481,6 +634,13 @@ export default function EventsTab() {
         />
       }
     >
+      {showAddForm && (
+        <AddEventForm
+          onSubmit={addCustomEvent}
+          onCancel={() => setShowAddForm(false)}
+          saving={savingEvent}
+        />
+      )}
       {!loading &&
         (sortedEvents.length === 0 ? (
           <p className='text-neutral-500'>
@@ -541,6 +701,7 @@ export default function EventsTab() {
                           New
                         </span>
                       )}
+                      {event.source === 'manual' && <CustomBadge />}
                     </div>
                   </td>
                   <td className='py-2 pr-4'>
@@ -663,7 +824,10 @@ export default function EventsTab() {
                 <div className='absolute inset-0 bg-linear-to-t from-black to-transparent to-70% pointer-events-none ' />
                 <div className='absolute inset-x-0 bottom-0 p-3 flex items-end justify-between gap-2 text-white text-shadow-lg'>
                   <div className='min-w-0 flex-1'>
-                    <p className='font-semibold leading-tight'>{event.eName}</p>
+                    <p className='font-semibold leading-tight'>
+                      {event.eName}{' '}
+                      {event.source === 'manual' && <CustomBadge />}
+                    </p>
                     <p className='text-sm text-neutral-300'>
                       {event.venue}
                       {/* {event.city ? `, ${event.city}` : ""} */}
