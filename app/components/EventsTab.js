@@ -189,6 +189,15 @@ const CARD_MAX_WIDTH = 500
 const CARD_WIDTH_STEP = 20
 const DEFAULT_CARD_MIN_WIDTH = 300
 
+// Text scales gently with card width: 1x at the default width, 0.85x at the
+// smallest card and 1.2x at the largest.
+function getCardTextScale(width) {
+  const delta = width - DEFAULT_CARD_MIN_WIDTH
+  // 200px -> 0.85, 300px -> 1, 500px -> 1.2 (linear on each side of 300)
+  const scale = delta < 0 ? 1 + delta * 0.0015 : 1 + delta * 0.001
+  return Math.min(1.5, Math.max(0.85, scale))
+}
+
 const EMPTY_FORM = {
   eName: '',
   venue: '',
@@ -324,6 +333,13 @@ export default function EventsTab() {
   const [viewMode, setViewMode] = useState('card')
   // Min card width (px) for the card grid; remembered in localStorage
   const [cardMinWidth, setCardMinWidth] = useState(DEFAULT_CARD_MIN_WIDTH)
+  // The grid's minmax(cardMinWidth, 1fr) only sets a *minimum*; cards stretch
+  // to fill the row, so text scales with the width they actually render at.
+  const [renderedCardWidth, setRenderedCardWidth] = useState(
+    DEFAULT_CARD_MIN_WIDTH
+  )
+  const cardGridRef = useRef(null)
+  const cardTextScale = getCardTextScale(renderedCardWidth)
   const [sortConfig, setSortConfig] = useState({
     key: 'date',
     direction: 'asc'
@@ -335,6 +351,30 @@ export default function EventsTab() {
   // A search runs server-side independent of this component's lifecycle -
   // switching tabs unmounts it, but the search keeps going. These track the
   // poll loop and whether we've actually observed it running
+  // Measure the first grid column's resolved width (in px) whenever the
+  // grid resizes (window resize, sidebar, etc.) or the slider changes the
+  // minimum. The grid only exists in card view with at least one event.
+  useEffect(() => {
+    const grid = cardGridRef.current
+    if (!grid) return
+    const measure = () => {
+      const first = getComputedStyle(grid).gridTemplateColumns.split(' ')[0]
+      const w = parseFloat(first)
+      if (w > 0) setRenderedCardWidth(Math.round(w))
+    }
+    measure()
+    // Observe the first card too: the grid's own box doesn't always change
+    // when the column count (and so each card's width) does.
+    const observer = new ResizeObserver(measure)
+    observer.observe(grid)
+    if (grid.firstElementChild) observer.observe(grid.firstElementChild)
+    window.addEventListener('resize', measure)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [viewMode, loading, events.length, cardMinWidth])
+
   const pollRef = useRef(null)
   const sawRunningRef = useRef(false)
 
@@ -638,7 +678,12 @@ export default function EventsTab() {
                 className='flex items-center gap-1.5 text-neutral-300'
                 title={`Card width: ${cardMinWidth}px`}
               >
-                <svg viewBox='0 0 24 24' width='12' height='12' fill='currentColor'>
+                <svg
+                  viewBox='0 0 24 24'
+                  width='12'
+                  height='12'
+                  fill='currentColor'
+                >
                   <rect x='4' y='4' width='6' height='6' />
                   <rect x='14' y='4' width='6' height='6' />
                   <rect x='4' y='14' width='6' height='6' />
@@ -656,7 +701,12 @@ export default function EventsTab() {
                   onKeyUp={e => saveCardMinWidth(Number(e.target.value))}
                   className='w-24 cursor-pointer accent-neutral-200'
                 />
-                <svg viewBox='0 0 24 24' width='16' height='16' fill='currentColor'>
+                <svg
+                  viewBox='0 0 24 24'
+                  width='16'
+                  height='16'
+                  fill='currentColor'
+                >
                   <rect x='3' y='3' width='18' height='18' />
                 </svg>
               </label>
@@ -843,8 +893,17 @@ export default function EventsTab() {
         ) : (
           // Card view
           <ul
+            ref={cardGridRef}
             style={{
-              gridTemplateColumns: `repeat(auto-fill, minmax(${cardMinWidth}px, 1fr))`
+              gridTemplateColumns: `repeat(auto-fill, minmax(${cardMinWidth}px, 1fr))`,
+              // Tailwind v4's text-xs/text-sm read these theme variables, so
+              // overriding them here scales the card text (and anything
+              // inheriting the base size, like the title) without touching
+              // each class. The arbitrary 10px badges use --card-scale.
+              '--card-scale': cardTextScale,
+              '--text-xs': `calc(0.75rem * ${cardTextScale})`,
+              '--text-sm': `calc(0.875rem * ${cardTextScale})`,
+              fontSize: `calc(1rem * ${cardTextScale})`
             }}
             className='grid gap-4 overflow-auto mt-5 pb-3'
           >
@@ -926,7 +985,7 @@ export default function EventsTab() {
                               )}
                             </span>
                             {d.isNew && (
-                              <span className='rounded-full bg-yellow-300 text-neutral-800 text-[10px] font-semibold px-1.5 py-0.5 text-shadow-none'>
+                              <span className='rounded-full bg-yellow-300 text-neutral-800 text-[length:calc(10px*var(--card-scale))] font-semibold px-1.5 py-0.5 text-shadow-none'>
                                 New
                               </span>
                             )}
