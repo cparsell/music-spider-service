@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import StatusBar from './StatusBar'
 import TabLayout from './TabLayout'
 import { getSalePhase } from '../../lib/salePhase'
+import { cardGradientClasses } from '../../lib/cardGradient'
 
 function formatDate(dateValue) {
   const d = new Date(dateValue)
@@ -938,6 +939,12 @@ export default function EventsTab() {
                       className='absolute inset-0 w-full h-full object-cover opacity-80 hover:opacity-100'
                     />
                   ))}
+                {!event.image && (
+                  <div
+                    aria-hidden='true'
+                    className={`absolute inset-0 pointer-events-none ${cardGradientClasses(event.gradient, event.id)}`}
+                  />
+                )}
                 <div className='absolute inset-0 bg-linear-to-t from-black to-transparent to-70% pointer-events-none ' />
                 <div className='absolute inset-x-0 bottom-0 p-3 flex items-end justify-between gap-2 text-white text-shadow-lg'>
                   <div className='min-w-0 flex-1'>
