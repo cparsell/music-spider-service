@@ -184,6 +184,11 @@ function renderActs(actsList, fallback) {
   )
 }
 
+const CARD_MIN_WIDTH = 200
+const CARD_MAX_WIDTH = 500
+const CARD_WIDTH_STEP = 20
+const DEFAULT_CARD_MIN_WIDTH = 300
+
 const EMPTY_FORM = {
   eName: '',
   venue: '',
@@ -210,7 +215,10 @@ function AddEventForm({ onSubmit, onCancel, saving }) {
       address: form.address,
       city: form.city,
       date: form.date, // datetime-local, parsed as local time server-side
-      acts: form.acts.split(',').map(a => a.trim()).filter(Boolean),
+      acts: form.acts
+        .split(',')
+        .map(a => a.trim())
+        .filter(Boolean),
       image: form.image,
       urls: form.url.trim() ? [{ name: 'Manual', url: form.url.trim() }] : []
     })
@@ -314,6 +322,8 @@ export default function EventsTab() {
   // Remembered across reloads/tab switches (localStorage, not server state -
   // purely a per-browser display preference)
   const [viewMode, setViewMode] = useState('card')
+  // Min card width (px) for the card grid; remembered in localStorage
+  const [cardMinWidth, setCardMinWidth] = useState(DEFAULT_CARD_MIN_WIDTH)
   const [sortConfig, setSortConfig] = useState({
     key: 'date',
     direction: 'asc'
@@ -406,9 +416,24 @@ export default function EventsTab() {
     }, 1000)
   }
 
+  // Per-browser display preference (localStorage, like the view mode), so
+  // it isn't shared across devices.
+  const saveCardMinWidth = width => {
+    try {
+      localStorage.setItem('eventsCardMinWidth', String(width))
+    } catch {
+      // storage unavailable (private mode etc.) - just not remembered
+    }
+  }
+
   useEffect(() => {
     const storedViewMode = localStorage.getItem('eventsViewMode')
     if (storedViewMode) setViewMode(storedViewMode)
+
+    try {
+      const w = Number(localStorage.getItem('eventsCardMinWidth'))
+      if (w >= CARD_MIN_WIDTH && w <= CARD_MAX_WIDTH) setCardMinWidth(w)
+    } catch {}
 
     loadEvents()
 
@@ -607,7 +632,35 @@ export default function EventsTab() {
             {showAddForm ? 'Close' : 'Add event'}
           </button>
 
-          <div className='flex-1 flex justify-end'>
+          <div className='flex-1 flex justify-end items-center gap-3'>
+            {viewMode === 'card' && (
+              <label
+                className='flex items-center gap-1.5 text-neutral-300'
+                title={`Card width: ${cardMinWidth}px`}
+              >
+                <svg viewBox='0 0 24 24' width='12' height='12' fill='currentColor'>
+                  <rect x='4' y='4' width='6' height='6' />
+                  <rect x='14' y='4' width='6' height='6' />
+                  <rect x='4' y='14' width='6' height='6' />
+                  <rect x='14' y='14' width='6' height='6' />
+                </svg>
+                <input
+                  type='range'
+                  aria-label='Card size'
+                  min={CARD_MIN_WIDTH}
+                  max={CARD_MAX_WIDTH}
+                  step={CARD_WIDTH_STEP}
+                  value={cardMinWidth}
+                  onChange={e => setCardMinWidth(Number(e.target.value))}
+                  onPointerUp={e => saveCardMinWidth(Number(e.target.value))}
+                  onKeyUp={e => saveCardMinWidth(Number(e.target.value))}
+                  className='w-24 cursor-pointer accent-neutral-200'
+                />
+                <svg viewBox='0 0 24 24' width='16' height='16' fill='currentColor'>
+                  <rect x='3' y='3' width='18' height='18' />
+                </svg>
+              </label>
+            )}
             <div className='flex rounded-2xl overflow-hidden border border-neutral-500'>
               {['card', 'list'].map(mode => (
                 <button
@@ -789,7 +842,12 @@ export default function EventsTab() {
           </table>
         ) : (
           // Card view
-          <ul className='grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 overflow-auto mt-5 pb-3'>
+          <ul
+            style={{
+              gridTemplateColumns: `repeat(auto-fill, minmax(${cardMinWidth}px, 1fr))`
+            }}
+            className='grid gap-4 overflow-auto mt-5 pb-3'
+          >
             {sortedEvents.map(event => (
               <li
                 key={event.id}
