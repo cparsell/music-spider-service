@@ -4,6 +4,7 @@ import StatusBar from './StatusBar'
 import TabLayout from './TabLayout'
 import { getSalePhase } from '../../lib/salePhase'
 import { cardGradientClasses } from '../../lib/cardGradient'
+import { StarIcon } from '../assets/SvgIcons'
 
 function formatDate(dateValue) {
   const d = new Date(dateValue)
@@ -583,6 +584,23 @@ export default function EventsTab() {
     setStatusError(false)
   }
 
+  const toggleFavorite = async id => {
+    const res = await fetch('/api/events', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setStatusMessage(data.error || 'Failed to toggle event as favorite')
+      setStatusError(true)
+      return
+    }
+    setEvents(data.events || [])
+    setStatusMessage('Event favorited')
+    setStatusError(false)
+  }
+
   const addEventToCalendar = async (eventId, date) => {
     const key = `${eventId}:${date}`
     setSyncingDates(prev => new Set([...prev, key]))
@@ -786,7 +804,9 @@ export default function EventsTab() {
               {listEvents.map(event => (
                 <tr
                   key={event.id}
-                  className='border-b border-neutral-700 last:border-0 align-top'
+                  className={`border-b border-neutral-700 last:border-0 align-top ${
+                    event.favorite ? 'bg-yellow-300/10' : ''
+                  }`}
                 >
                   <td className='py-2 pr-4'>
                     {event.image && (
@@ -799,9 +819,32 @@ export default function EventsTab() {
                   </td>
                   <td className='py-2 pr-4 font-semibold'>
                     <div className='flex items-center gap-2'>
+                      <span className=''>
+                        <button
+                          type='button'
+                          onClick={e => {
+                            e.stopPropagation()
+                            toggleFavorite(event.id)
+                          }}
+                          title={
+                            event.favorite ? 'Remove favorite' : 'Favorite'
+                          }
+                          aria-label={
+                            event.favorite ? 'Remove favorite' : 'Favorite'
+                          }
+                          aria-pressed={!!event.favorite}
+                          className={` cursor-pointer drop-shadow-[0_1.5px_1px_rgba(0,0,0,0.8)] ${
+                            event.favorite
+                              ? 'text-yellow-300'
+                              : 'text-neutral-200 hover:text-yellow-300'
+                          }`}
+                        >
+                          <StarIcon filled={event.favorite} className={''} />
+                        </button>
+                      </span>
                       {event.eName}
                       {event.isNew && (
-                        <span className='rounded-full bg-yellow-300 text-neutral-800 text-xs font-semibold px-2 py-0.5'>
+                        <span className='rounded-full ml-auto bg-yellow-300 text-neutral-800 text-xs font-semibold px-2 py-0.5'>
                           New
                         </span>
                       )}
@@ -911,13 +954,36 @@ export default function EventsTab() {
             {sortedEvents.map(event => (
               <li
                 key={event.id}
-                className='relative aspect-6/8 rounded-xl overflow-hidden bg-neutral-800  hover:text-shadow-xlg shadow-black/50 '
+                className={`relative aspect-6/8 rounded-xl overflow-hidden bg-neutral-800  hover:text-shadow-xlg shadow-black/50${
+                  event.favorite
+                    ? ' border border-yellow-300'
+                    : 'text-neutral-200 hover:text-yellow-200'
+                } `}
               >
-                {event.isNew && (
+                {!event.isNew && (
                   <span className='absolute top-2 right-2 z-10 rounded-full bg-yellow-300 text-neutral-800 text-xs font-semibold px-2 py-0.5 shadow'>
                     New
                   </span>
                 )}
+                <span className='absolute top-2 left-2 z-10'>
+                  <button
+                    type='button'
+                    onClick={e => {
+                      e.stopPropagation()
+                      toggleFavorite(event.id)
+                    }}
+                    title={event.favorite ? 'Remove favorite' : 'Favorite'}
+                    aria-label={event.favorite ? 'Remove favorite' : 'Favorite'}
+                    aria-pressed={!!event.favorite}
+                    className={`absolute top-0 left-0 z-10 cursor-pointer drop-shadow-[0_1.5px_1px_rgba(0,0,0,0.8)] ${
+                      event.favorite
+                        ? 'text-yellow-300'
+                        : 'text-neutral-200 hover:text-yellow-200'
+                    }`}
+                  >
+                    <StarIcon filled={event.favorite} className={''} />
+                  </button>
+                </span>
                 {event.image &&
                   (event.dates?.[0]?.urls?.[0]?.url ? (
                     <a

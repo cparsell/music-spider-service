@@ -64,6 +64,20 @@ export function BookmarkIcon({ saved = false, size = 20, className }) {
   )
 }
 
+export function StarIcon({ filled = false, size = 23, className }) {
+  return (
+    <Icon size={size} className={className}>
+      <path
+        d='M10 2.6 12 7.85 17.61 8.13 13.23 11.65 14.7 17.07 10 14 5.3 17.07 6.77 11.65 2.39 8.13 8 7.85Z'
+        fill={filled ? 'currentColor' : 'none'}
+        stroke='currentColor'
+        strokeWidth='1.3'
+        strokeLinejoin='round'
+      />
+    </Icon>
+  )
+}
+
 export function IgnoreIcon({ ignored = false, size = 20, className }) {
   return (
     <Icon size={size} className={className}>

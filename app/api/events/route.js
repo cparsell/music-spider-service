@@ -2,6 +2,7 @@ import {
   attachIsNew,
   getEvents,
   removeEvent,
+  toggleEventFavorite,
   upsertEvent
 } from '@/lib/eventsStore.js'
 import { ignoredEvents } from '@/lib/ignoredEvents.js'
@@ -64,6 +65,7 @@ export async function POST(req) {
 export async function DELETE(req) {
   try {
     const { id, ignore } = await req.json()
+    if (!id) throw new Error('Event id is required')
     if (ignore) {
       const event = (await getEvents()).find(e => e.id === id)
       if (event) {
@@ -74,6 +76,19 @@ export async function DELETE(req) {
       }
     }
     const events = await removeEvent(id)
+    return Response.json({
+      events: attachIsNew(await attachActsDisplay(events))
+    })
+  } catch (err) {
+    return Response.json({ error: err.message }, { status: 400 })
+  }
+}
+
+export async function PATCH(req) {
+  try {
+    const { id } = await req.json()
+    if (!id) throw new Error('Event id is required')
+    const events = await toggleEventFavorite(id)
     return Response.json({
       events: attachIsNew(await attachActsDisplay(events))
     })
